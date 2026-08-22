@@ -1,0 +1,20 @@
+# Artefatos locais de validação e estado interno
+reports/qa/
+.peca/
+.hallmark/
+
+# Pesquisa bruta e ferramentas não distribuíveis
+research/
+tools/
+
+# Credenciais e ambiente
+.env
+.env.*
+!.env.example
+
+# Dependências, logs e arquivos do sistema
+node_modules/
+*.log
+Thumbs.db
+.DS_Store
+
