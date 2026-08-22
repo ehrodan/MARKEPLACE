@@ -4,7 +4,7 @@ Especificação de produto, arquitetura, segurança, operação e direção de a
 
 > **Estado:** GO documental para handoff pré-código. **NO-GO para operar com Standoff 2** sem autorização comercial e técnica escrita da Axlebolt, licença dos ativos e dados, mecanismo autorizado de transferência e PSP contratado.
 
-Este repositório é privado, documental e independente. Não possui afiliação com Axlebolt, Standoff 2, Nesha Store ou standoff-2.com. Não contém PNGs, credenciais, código de checkout nem integração não oficial.
+Este repositório é documental e independente. Não possui afiliação com Axlebolt, Standoff 2, Nesha Store ou standoff-2.com. Não contém PNGs, credenciais, código de checkout nem integração não oficial.
 
 ## Entregáveis
 
@@ -53,4 +53,3 @@ Até esses gates serem atendidos, a implementação permitida é somente um prot
 - [Código de Conduta](https://help.standoff2.com/en/articles/15253027-code-of-conduct)
 - [Central oficial do Marketplace](https://help.standoff2.com/en/collections/3850927-marketplace)
 - [Licença oficial de assets](https://standoff2.com/assets/AXLEBOLT_Assets_license_EN.pages)
-
