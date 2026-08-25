@@ -112,7 +112,7 @@ function detectJpeg(bytes: Uint8Array): DetectedImage {
     while (offset < bytes.length && bytes[offset] === 0xff) offset += 1;
     const marker = bytes[offset];
     offset += 1;
-    if (marker === undefined || marker === 0xd9 || marker === 0xda) break;
+    if (marker === 0xd9 || marker === 0xda) break;
     if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd8)) continue;
     if (offset + 1 >= bytes.length) invalidSignature();
 
@@ -312,7 +312,7 @@ export async function validateReliefFile(
   let decoded: DecodedReliefImage;
   try {
     decoded = await decoder(file);
-    if (!decoded || typeof decoded.width !== "number" || typeof decoded.height !== "number") {
+    if (typeof decoded.width !== "number" || typeof decoded.height !== "number") {
       throw new Error("Decoder retornou dimensões inválidas.");
     }
   } catch {

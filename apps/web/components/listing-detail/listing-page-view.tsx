@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, FileText, LifeBuoy, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ChevronRight, FileText, History, LifeBuoy, ShieldCheck } from "lucide-react";
 import { StatusBadge } from "@midas/ui";
 import { useApiResource } from "@/hooks/use-api-resource";
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/components/marketplace/formatters";
 import { MarketplaceError, MarketplaceLoading } from "@/components/marketplace/marketplace-states";
 import type { PublicCatalogAsset } from "@/components/marketplace/types";
+import { ItemOffersAnchor } from "./item-offers-anchor";
 import { ListingGallery } from "./listing-gallery";
 import { ListingTabs } from "./listing-tabs";
 import { PurchasePanel, type DetailListing } from "./purchase-panel";
@@ -22,7 +23,7 @@ import { SellerSummary } from "./seller-summary";
 import styles from "./listing-detail.module.css";
 
 /**
- * SCR-PUB-006 — a página da oferta.
+ * SCR-PUB-006, a página da oferta.
  *
  * Hierarquia de leitura (é o trabalho principal desta tela):
  *   1. o que é o item      -> galeria + identidade
@@ -36,9 +37,12 @@ import styles from "./listing-detail.module.css";
  * tipográfica, nunca cor: cor aqui só reforça estado que já está escrito.
  *
  * Não existe bloco de "ofertas relacionadas": `GET /v1/listings` não filtra por
- * item do catálogo, então qualquer lista desse tipo seria uma amostra parcial
- * apresentada como se fosse completa. A comparação de ofertas pertence ao
- * item-base (SCR-PUB-005), linkado na trilha.
+ * item do catálogo, então qualquer LISTA desse tipo seria uma amostra parcial
+ * apresentada como se fosse completa. A comparação oferta a oferta pertence ao
+ * item-base (SCR-PUB-005), linkado na trilha. Junto desse link vive só a
+ * âncora agregada (`ItemOffersAnchor`): contagem e menor preço calculados com
+ * a MESMA leitura que SCR-PUB-005 faz, e omitidos em silêncio quando a leitura
+ * falha — nunca um número inventado.
  */
 
 function MetaFact({ label, value }: { label: string; value: string }) {
@@ -83,6 +87,8 @@ function ListingDetail({
         <span aria-current="page">{title}</span>
       </nav>
 
+      <h1 className={styles.visuallyHidden}>{title}</h1>
+
       <div className={styles.mainGrid}>
         <div className={styles.mediaColumn}>
           <ListingGallery
@@ -92,9 +98,9 @@ function ListingDetail({
           />
           <header className={styles.identity}>
             <p className={styles.eyebrow}>
-              {item ? `${item.gameOrigin} · ${itemTypeLabel(item.itemType)}` : "Item do catálogo"}
+              {item ? `${item.gameOrigin} / ${itemTypeLabel(item.itemType)}` : "Item do catálogo"}
             </p>
-            <h1 className={styles.title}>{title}</h1>
+            <p aria-hidden="true" className={styles.title}>{title}</p>
             <div className={styles.identityBadges}>
               <StatusBadge tone={published ? "success" : "warning"}>
                 {published ? "Oferta publicada" : `Oferta ${humanizeCode(listing.listingStatus)}`}
@@ -105,14 +111,19 @@ function ListingDetail({
               {item?.craftQuality ? (
                 <StatusBadge tone="neutral">{craftQualityLabel(item.craftQuality)}</StatusBadge>
               ) : null}
-              {plan?.planCode ? <span className={styles.planBadge}>{plan.planCode}</span> : null}
+              {/* O código do plano é metadado de auditoria: mora na
+                  "Procedência do anúncio" abaixo, não na identidade do item. */}
             </div>
             {itemHref ? (
-              <p className={styles.identityLink}>
+              <div className={styles.identityLink}>
                 <Link className="text-link" href={itemHref}>
                   Voltar ao item-base e comparar ofertas
                 </Link>
-              </p>
+                <ItemOffersAnchor
+                  catalogItemId={listing.catalogItemId}
+                  currency={listing.currency}
+                />
+              </div>
             ) : (
               <p className={styles.regionNote}>
                 A API não enviou o item do catálogo vinculado a esta oferta; o item-base e a
@@ -138,7 +149,12 @@ function ListingDetail({
         </div>
       </div>
 
-      <section aria-label="Procedência da publicação" className={styles.metaStrip}>
+      {/* Metadados de auditoria (revisão, datas, plano) ficam recolhidos:
+          continuam a um clique de distância, mas não disputam a decisão. */}
+      <details className={styles.metaStrip}>
+        <summary className={styles.metaSummary}>
+          <History aria-hidden="true" size={15} /> Procedência do anúncio
+        </summary>
         <dl className={styles.metaList}>
           <MetaFact label="Publicado em" value={publishedAt ?? "Data não enviada"} />
           <MetaFact label="Atualizado em" value={updatedAt ?? "Data não enviada"} />
@@ -152,7 +168,7 @@ function ListingDetail({
             value={String(approvedAssets([...assets]).length)}
           />
         </dl>
-      </section>
+      </details>
 
       <ListingTabs assets={assets} item={item} listing={listing} />
 

@@ -1,7 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, CircleDot } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  CircleDot,
+  LockKeyhole,
+  ReceiptText,
+  RotateCcw,
+  ShieldCheck,
+  ShoppingBag,
+  WalletCards,
+} from "lucide-react";
 import { Freshness, Money, PageState, Panel } from "@midas/ui";
 import { PageHeader } from "@/components/page-header";
 import { ResourceError, ResourceLoading } from "@/components/resource-state";
@@ -11,6 +21,40 @@ import { useApiResource } from "@/hooks/use-api-resource";
 import type { AccountOverview } from "@/lib/api-types";
 import { formatDateTime } from "@/lib/date-format";
 import { safeInternalHref } from "@/lib/internal-href";
+import styles from "./account-dashboard.module.css";
+
+/**
+ * Atalhos de navegação estática (nenhum dado inventado — só rotas que existem
+ * em app/conta). O grupo Carteira só aparece quando o servidor devolveu saldo
+ * de vendas: mesma condição da seção de saldo, para não levar quem não vende
+ * a uma área bloqueada.
+ */
+const shortcutGroups = [
+  {
+    id: "compras",
+    title: "Compras",
+    links: [
+      { href: "/conta/compras", label: "Minhas compras", icon: ShoppingBag },
+      { href: "/conta/reembolsos", label: "Reembolsos", icon: RotateCcw },
+    ],
+  },
+  {
+    id: "carteira",
+    title: "Carteira",
+    links: [
+      { href: "/conta/carteira", label: "Saldo de vendas", icon: WalletCards },
+      { href: "/conta/saques", label: "Saques", icon: ReceiptText },
+    ],
+  },
+  {
+    id: "seguranca",
+    title: "Segurança",
+    links: [
+      { href: "/conta/seguranca", label: "Sessões e segurança", icon: ShieldCheck },
+      { href: "/conta/privacidade", label: "Privacidade", icon: LockKeyhole },
+    ],
+  },
+] as const;
 
 export function OverviewView() {
   const resource = useApiResource<AccountOverview>("/v1/me/overview");
@@ -33,6 +77,32 @@ export function OverviewView() {
         {!overview.actionItems?.length ? <PageState kind="empty" title="Nada exige ação agora" description="Quando uma compra, venda, saque ou disputa precisar de você, ela aparecerá aqui." /> : <Panel><ul className="activity-list">{overview.actionItems.map((item) => { const href = safeInternalHref(item.href); return <li key={item.id}><CircleDot aria-hidden="true" size={18} /><div><p><strong>{item.title}</strong></p>{item.description ? <small>{item.description}</small> : null}</div><div>{href ? <Link className="text-link" href={href}>Abrir</Link> : <StatusLabel status={item.status} />}</div></li>; })}</ul></Panel>}
       </section>
       {overview.recentActivity?.length ? <section className="section-stack" aria-labelledby="activity-title"><div className="section-heading"><div><h2 id="activity-title">Atividade recente</h2><p>Eventos permitidos para sua identidade.</p></div></div><Panel><ul className="activity-list">{overview.recentActivity.map((item) => <li key={item.id}><CircleDot aria-hidden="true" size={18} /><div><p>{item.title}</p>{item.description ? <small>{item.description}</small> : null}</div>{item.occurredAt ? <time dateTime={item.occurredAt}>{formatDateTime(item.occurredAt)}</time> : <StatusLabel status={item.status} />}</li>)}</ul></Panel></section> : null}
+      <section className="section-stack" aria-labelledby="account-shortcuts-title">
+        <div className="section-heading"><div><h2 id="account-shortcuts-title">Atalhos da conta</h2><p>Compras, carteira e segurança a um clique.</p></div></div>
+        <div className={styles.quickGroups}>
+          {shortcutGroups
+            .filter((group) => group.id !== "carteira" || Boolean(overview.balanceBuckets?.length))
+            .map((group) => (
+              <Panel className={styles.quickGroup} key={group.id} aria-labelledby={`shortcut-${group.id}`}>
+                <h3 className={styles.quickGroupTitle} id={`shortcut-${group.id}`}>{group.title}</h3>
+                <ul className={styles.quickList}>
+                  {group.links.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <li key={link.href}>
+                        <Link className={styles.quickLink} href={link.href}>
+                          <Icon aria-hidden="true" size={18} />
+                          <span>{link.label}</span>
+                          <ArrowRight aria-hidden="true" size={16} className={styles.quickLinkArrow} />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Panel>
+            ))}
+        </div>
+      </section>
     </>
   );
 }

@@ -276,6 +276,12 @@
 }
 
 .viewControls button:hover:not(:disabled) { border-color: var(--color-action); color: var(--color-action); transform: translateY(-1px); }
+.viewControls button[aria-pressed="true"]:not(:disabled) {
+  border-color: var(--color-action);
+  background: linear-gradient(180deg, color-mix(in oklch, white 24%, transparent), transparent), var(--color-action);
+  color: var(--color-action-foreground);
+  box-shadow: var(--glass-shadow);
+}
 .viewControls button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 .viewControls button:disabled { opacity: .38; cursor: not-allowed; }
 
@@ -441,6 +447,13 @@
   .viewControls button { transition: none; }
   .dropzone:hover,
   .viewControls button:hover:not(:disabled) { transform: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glassPanel,
+  .truthNotice,
+  .twoDimensionalFallback span,
+  .canvasStatus { background: var(--color-surface); backdrop-filter: none; }
 }
 
 @media (forced-colors: active) {

@@ -9,6 +9,7 @@ import {
   listingTitle,
   safeAssetUrl,
 } from "@/components/marketplace/formatters";
+import { rarityPresentation } from "@/components/marketplace/rarity";
 import type { PublicCatalogAsset, PublicListing } from "@/components/marketplace/types";
 import { isSupportedBrandViewerSlug, viewer3dHref } from "@/lib/viewer-routing";
 import styles from "./listing-detail.module.css";
@@ -16,10 +17,14 @@ import styles from "./listing-detail.module.css";
 /**
  * Galeria de SCR-PUB-006.
  *
- * Só entra mídia aprovada e com URL pública resolvível — nenhum placeholder é
+ * Só entra mídia aprovada e com URL pública resolvível; nenhum placeholder é
  * apresentado como se fosse o item. Motion M2: a troca entre mídias tem uma
  * transição curta de entrada (o `key` remonta a imagem), desligada em
  * `prefers-reduced-motion`. Nada aqui anima preço nem move ação.
+ *
+ * `data-rarity` tinge a moldura do palco com a cor da raridade — cor como
+ * INFORMAÇÃO (docs/03): tinta sutil de borda e fundo, nunca superfície
+ * clicável. O rótulo textual da raridade segue no cabeçalho da página.
  */
 
 export interface MediaFrame {
@@ -76,6 +81,7 @@ export function ListingGallery({ listing, assets, itemSlug }: ListingGalleryProp
 
   const frames = useMemo(() => buildMediaFrames(listing, assets), [listing, assets]);
   const artifact3d = useMemo(() => findPublished3dArtifact(assets), [assets]);
+  const rarity = rarityPresentation(listing.catalogItem?.rarity);
   const total = frames.length;
   const safeIndex = activeIndex < total ? activeIndex : 0;
   const frame = frames.at(safeIndex) ?? null;
@@ -102,7 +108,7 @@ export function ListingGallery({ listing, assets, itemSlug }: ListingGalleryProp
   );
 
   return (
-    <section aria-labelledby={headingId} className={styles.gallery}>
+    <section aria-labelledby={headingId} className={styles.gallery} data-rarity={rarity?.value}>
       <h2 className={styles.visuallyHidden} id={headingId}>Mídia publicada do item</h2>
 
       {frame ? (

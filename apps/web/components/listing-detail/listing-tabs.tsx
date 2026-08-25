@@ -169,9 +169,9 @@ export function ListingTabs({ listing, item, assets }: ListingTabsProps) {
                 <li key={asset.catalogAssetId}>
                   <strong>{assetTypeLabel(asset.assetType)}</strong>
                   <span>
-                    {asset.mimeType} · {formatBytes(asset.fileSizeBytes)}
+                    {asset.mimeType} / {formatBytes(asset.fileSizeBytes)}
                     {asset.widthPixels && asset.heightPixels
-                      ? ` · ${String(asset.widthPixels)}x${String(asset.heightPixels)} px`
+                      ? ` / ${String(asset.widthPixels)}x${String(asset.heightPixels)} px`
                       : ""}
                   </span>
                   {approvedAt ? <small>Aprovado em {approvedAt}</small> : null}

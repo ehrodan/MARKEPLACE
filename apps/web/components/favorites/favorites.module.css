@@ -96,9 +96,7 @@
 .card[data-state="DISPONIVEL"] { border-inline-start-color: var(--color-success); }
 .card[data-state="PRECO_MUDOU"] { border-inline-start-color: var(--color-info); }
 .card[data-state="SEM_ESTOQUE"],
-.card[data-state="DESPUBLICADO"],
 .card[data-state="FORA_DO_CATALOGO"] { border-inline-start-color: var(--color-warning); }
-.card[data-state="REMOVIDO"] { border-inline-start-color: var(--color-danger); }
 
 .cardHead {
   display: grid;
@@ -147,6 +145,14 @@
   color: var(--color-text);
   font-size: .88rem;
   line-height: 1.45;
+}
+
+/* Queda REAL de preço: o valor exato da diferença, nunca estimativa. O badge já
+   carrega texto; a cor de sucesso apenas reforça. Sem animação: preço não anima. */
+.priceDrop {
+  display: flex;
+  width: fit-content;
+  margin-top: .35rem;
 }
 
 .watchGroup {

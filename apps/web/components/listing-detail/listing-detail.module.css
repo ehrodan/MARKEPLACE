@@ -1,6 +1,7 @@
 /* SCR-PUB-006, página da oferta.
    Hierarquia por escala tipográfica e região comum (Gestalt), nunca por cor.
-   Ouro é reservado à ação primária; estado sempre tem texto além da cor.
+   --color-action (lime) é reservado à ação primária e ao foco; --color-signal
+   (ciano) marca informação; estado sempre tem texto além da cor.
    Motion M2: só transição de mídia e entrada de seção. Preço e CTA não animam. */
 
 .page {
@@ -57,10 +58,12 @@
   text-transform: uppercase;
 }
 
+/* Título na escala display: é a resposta de "o que é o item" e por isso o
+   maior texto acima da dobra depois do preço. */
 .title {
-  max-width: 30ch;
+  max-width: 26ch;
   margin: .55rem 0 0;
-  font: 760 clamp(1.55rem, 3vw, 2.35rem)/1.02 var(--font-display);
+  font: 760 clamp(1.75rem, 3.6vw, 3rem)/1 var(--font-display);
   letter-spacing: -.025em;
 }
 
@@ -73,20 +76,21 @@
   margin-top: .75rem;
 }
 
-.planBadge {
-  min-height: 1.5rem;
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--och-radius-pill);
-  padding-inline: .55rem;
-  color: var(--color-text-secondary);
-  font: 650 .65rem/1 var(--font-data);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-}
-
 .identityLink { margin: .6rem 0 0; }
+
+/* Âncora de comparação junto do link do item-base: contagem e menor preço
+   REAIS, lidos da mesma fonte que SCR-PUB-005. Ciano = informação (docs/03);
+   quando a leitura falha, a âncora some — nunca vira número inventado. */
+.offerAnchor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .35rem;
+  margin: .45rem 0 0;
+  color: var(--color-signal);
+  font: 550 .72rem/1.4 var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---------- grade principal ---------- */
 
@@ -105,6 +109,17 @@
 
 .gallery { display: grid; gap: .75rem; }
 
+/* Moldura informada pela raridade — cor como INFORMAÇÃO (docs/03, docs/18):
+   tinge borda e um brilho baixo do palco, em dose que nunca disputa o ouro do
+   CTA nem sugere clique. Sem raridade publicada, a moldura fica neutra. */
+.gallery[data-rarity="COMMON"] { --rarity: var(--och-rarity-common); }
+.gallery[data-rarity="UNCOMMON"] { --rarity: var(--och-rarity-uncommon); }
+.gallery[data-rarity="RARE"] { --rarity: var(--och-rarity-rare); }
+.gallery[data-rarity="EPIC"] { --rarity: var(--och-rarity-epic); }
+.gallery[data-rarity="LEGENDARY"] { --rarity: var(--och-rarity-legendary); }
+.gallery[data-rarity="MYTHIC"] { --rarity: var(--och-rarity-mythic); }
+.gallery[data-rarity="CONTRABAND"] { --rarity: var(--och-rarity-contraband); }
+
 .galleryStage {
   position: relative;
   overflow: hidden;
@@ -113,13 +128,18 @@
   aspect-ratio: 1 / .8;
   min-height: 24rem;
   margin: 0;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid color-mix(in oklch, var(--rarity, var(--color-border-strong)) 42%, var(--color-border-strong));
   border-radius: var(--och-radius-card);
+  /* Palco é informação, não botão: o brilho central usa o ciano de sinal.
+     O lime da ação fica exclusivo do CTA — decorar mídia com cor de ação
+     ensinaria o olho errado (docs/03 §10: ciano só informação). */
   background:
-    radial-gradient(circle at 50% 38%, color-mix(in oklch, var(--color-action) 16%, transparent), transparent 45%),
+    radial-gradient(circle at 50% 118%, color-mix(in oklch, var(--rarity, transparent) 13%, transparent), transparent 58%),
+    radial-gradient(circle at 50% 38%, color-mix(in oklch, var(--color-signal) 14%, transparent), transparent 45%),
     radial-gradient(circle at 12% 10%, color-mix(in oklch, var(--color-info) 10%, transparent), transparent 32%),
     linear-gradient(150deg, color-mix(in oklch, var(--color-surface-raised) 94%, white), var(--color-canvas));
   box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--rarity, transparent) 16%, transparent),
     inset 0 1px 0 color-mix(in oklch, white 13%, transparent),
     0 1.2rem 3rem color-mix(in oklch, black 18%, transparent);
 }
@@ -185,10 +205,12 @@
 .thumb:hover { border-color: var(--color-border-strong); }
 
 /* Estado selecionado nunca depende só de cor: ganha borda dupla e realce de
-   superfície, e continua anunciado por aria-pressed. */
+   superfície, e continua anunciado por aria-pressed. A marca de seleção é
+   INFORMAÇÃO ("qual mídia está no palco"), por isso veste o ciano de sinal —
+   o lime da ação segue exclusivo do CTA e do foco. */
 .thumbActive {
-  border-color: var(--color-action);
-  box-shadow: inset 0 0 0 1px var(--color-action);
+  border-color: var(--color-signal);
+  box-shadow: inset 0 0 0 1px var(--color-signal);
   background: var(--color-surface-raised);
 }
 
@@ -264,6 +286,20 @@
   animation: none;
   transition: none;
 }
+
+/* Prova real de venda, junto do preço: `quantitySold` do banco, sem animação.
+   Ícone + texto — o estado nunca depende só da cor. */
+.soldProof {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  margin: .55rem 0 0;
+  color: var(--color-text-secondary);
+  font: 550 .72rem/1.4 var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.soldProof > svg { flex: none; color: var(--color-success); }
 
 .priceMeta {
   margin: .5rem 0 0;
@@ -371,18 +407,22 @@
   margin: 0;
 }
 
+/* Avatar com a inicial do nome público: rosto sem dado novo. Cai no ícone de
+   loja quando a API não envia nome. */
 .sellerMark {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   display: grid;
   place-items: center;
   border: 1px solid var(--color-border-strong);
   border-radius: 50%;
-  color: var(--color-text-secondary);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: 760 1.05rem/1 var(--font-display);
 }
 
 .sellerNames { min-width: 0; display: grid; gap: .15rem; }
-.sellerNames strong { overflow: hidden; font-size: .92rem; text-overflow: ellipsis; white-space: nowrap; }
+.sellerNames strong { overflow: hidden; font-size: .98rem; text-overflow: ellipsis; white-space: nowrap; }
 .sellerNames code { overflow: hidden; color: var(--color-text-muted); font: .64rem/1.35 var(--font-data); text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------- ações ---------- */
@@ -396,6 +436,10 @@
 }
 
 .primaryAction:active { transform: none; }
+
+/* Favoritar é ação secundária: grid estica o botão à largura do CTA sem
+   emprestar a ele o ouro da ação primária. */
+.favoriteRow { display: grid; margin-top: .6rem; }
 
 .blockedNote {
   display: grid;
@@ -421,6 +465,21 @@
   line-height: 1.45;
 }
 
+/* Caminho honesto do aviso de reposição (WIRING-favoritos §3): o opt-in mora
+   em /conta/favoritos. Ícone em ciano de informação; o texto carrega o estado. */
+.watchHint {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: .5rem;
+  margin: .6rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: .73rem;
+  line-height: 1.5;
+}
+
+.watchHint > svg { margin-top: .1rem; color: var(--color-signal); }
+
 .protectionLinks {
   display: flex;
   flex-wrap: wrap;
@@ -430,21 +489,42 @@
 
 .protectionLinks a { gap: .4rem; font-size: .74rem; }
 
-/* ---------- tira de procedência ---------- */
+/* ---------- procedência (recolhida) ----------
+   Metadados de auditoria saem da frente da decisão e ficam a um clique,
+   com o mesmo conteúdo verificável de antes. */
 
 .metaStrip {
   border: 1px solid var(--color-border);
   border-radius: var(--och-radius-card);
   margin-top: clamp(2rem, 5vw, 3.5rem);
-  padding: 1.1rem 1.25rem;
   background: var(--color-surface);
 }
+
+.metaSummary {
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .9rem 1.25rem;
+  color: var(--color-text-muted);
+  font: 650 .66rem/1.2 var(--font-data);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+}
+
+.metaSummary::-webkit-details-marker { display: none; }
+.metaSummary:hover { color: var(--color-text-secondary); }
+.metaSummary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -3px; }
+.metaStrip[open] .metaSummary { border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary); }
 
 .metaList {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: 1rem 1.5rem;
   margin: 0;
+  padding: 1rem 1.25rem 1.1rem;
 }
 
 .metaItem { min-width: 0; display: grid; gap: .2rem; }
@@ -487,7 +567,7 @@
 .tab:hover { color: var(--color-text); }
 .tab:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
 
-/* Aba ativa: superfície e borda, além do aria-selected — nunca só cor. */
+/* Aba ativa: superfície e borda, além do aria-selected; nunca só cor. */
 .tabActive {
   border-color: var(--color-border);
   background: var(--color-surface);
@@ -592,7 +672,7 @@
 
 @media (max-width: 38rem) {
   .page { width: calc(100% - 1rem); }
-  .title { font-size: clamp(1.55rem, 8vw, 2.2rem); }
+  .title { font-size: clamp(1.75rem, 9vw, 2.4rem); }
   .galleryStage { min-height: 16rem; }
   .feeSummary { grid-template-columns: minmax(0, 1fr) auto; }
   .feeSummary > strong { display: none; }

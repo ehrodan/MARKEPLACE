@@ -194,6 +194,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@midas/catalog':
+        specifier: workspace:*
+        version: link:../../modules/catalog
       '@midas/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -206,6 +209,12 @@ importers:
       '@midas/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
+      '@midas/retention':
+        specifier: workspace:*
+        version: link:../../modules/retention
+      drizzle-orm:
+        specifier: 0.45.2
+        version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
       fastify:
         specifier: 5.12.1
         version: 5.12.1

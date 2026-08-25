@@ -11,11 +11,11 @@ import {
 } from "react";
 import {
   ACESFilmicToneMapping,
+  CanvasTexture,
   DoubleSide,
   MeshStandardMaterial,
   PlaneGeometry,
   SRGBColorSpace,
-  TextureLoader,
   Vector3,
   type Texture,
 } from "three";
@@ -44,8 +44,7 @@ const CAMERA_POSITIONS: Record<ReliefView, Vector3> = {
   angle: new Vector3(2.15, 1.05, 3.8),
 };
 
-function WebGlFallback({ onError }: { onError: () => void }) {
-  useEffect(() => { onError(); }, [onError]);
+function WebGlFallback() {
   return (
     <div className={styles.canvasFallback} role="status">
       O navegador não abriu o WebGL. A fonte 2D continua disponível.
@@ -142,25 +141,27 @@ function ReliefSurface({
 
   useEffect(() => {
     let released = false;
-    const loadedTexture = new TextureLoader().load(
-      sourceUrl,
-      (nextTexture) => {
-        if (released) {
-          nextTexture.dispose();
-          return;
-        }
-        nextTexture.colorSpace = SRGBColorSpace;
-        nextTexture.anisotropy = Math.min(4, gl.capabilities.getMaxAnisotropy());
-        nextTexture.needsUpdate = true;
-        setTexture(nextTexture);
-      },
-      undefined,
-      () => { if (!released) onError(); },
-    );
+    let loadedTexture: Texture | null = null;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = sourceUrl;
+
+    void image.decode().then(() => {
+      if (released) return;
+      const nextTexture = new CanvasTexture(image);
+      nextTexture.colorSpace = SRGBColorSpace;
+      nextTexture.anisotropy = Math.min(4, gl.capabilities.getMaxAnisotropy());
+      nextTexture.needsUpdate = true;
+      loadedTexture = nextTexture;
+      setTexture(nextTexture);
+    }).catch(() => {
+      if (!released) onError();
+    });
 
     return () => {
       released = true;
-      loadedTexture.dispose();
+      loadedTexture?.dispose();
+      image.src = "";
     };
   }, [gl, onError, sourceUrl]);
 
@@ -207,7 +208,7 @@ export default function ReliefCanvas(props: ReliefCanvasProps) {
       aria-label="Prévia interativa do relevo 2,5D"
       camera={{ position: [0, 0, 4.6], fov: 34, near: 0.1, far: 50 }}
       dpr={[1, 1.5]}
-      fallback={<WebGlFallback onError={props.onError} />}
+      fallback={<WebGlFallback />}
       frameloop="demand"
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {

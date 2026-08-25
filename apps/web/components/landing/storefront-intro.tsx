@@ -24,9 +24,7 @@ function listingImage(listing: PublicListing): string | null {
 }
 
 function InventoryStack({ listings }: { listings: readonly PublicListing[] }) {
-  const primary = listings[0] ?? null;
-
-  if (!primary) {
+  if (listings.length === 0) {
     return (
       <div className={styles.fallbackArt} aria-hidden="true">
         <Image src={BRAND.assets.posterAngle} alt="" fill priority sizes="28rem" />
@@ -34,6 +32,7 @@ function InventoryStack({ listings }: { listings: readonly PublicListing[] }) {
     );
   }
 
+  const primary = listings[0];
   const primaryImage = listingImage(primary);
 
   return (
@@ -81,18 +80,22 @@ export function StorefrontIntro() {
         <span className={styles.ambientTwo} aria-hidden="true" />
 
         <Reveal className={styles.copy} threshold={0.05}>
+          {/* Desejo com fato: a peça é a figura, o ouro fica só no CTA.
+              Cada afirmação abaixo é capability real — imagem grande na
+              vitrine, preço/estoque do catálogo, vendedor identificado. */}
           <span className={styles.eyebrow}>MARKETPLACE DE ITENS DIGITAIS</span>
           <h1 id="storefront-title">
-            A peça primeiro.
-            <span>O preço sem truque.</span>
+            Aquele item,
+            <span>agora de perto.</span>
           </h1>
           <p>
-            Veja o item em tamanho grande, confira estoque e vendedor e só então avance para o
-            carrinho. Nada de desconto inventado ou urgência falsa.
+            A vitrine mostra a peça em tamanho grande, com preço publicado e estoque do
+            catálogo. Pronta para ir ao carrinho.
           </p>
           <div className={styles.proofs} aria-label="Compromissos da vitrine">
-            <span><ShieldCheck aria-hidden="true" size={15} /> Dados do catálogo</span>
+            <span><ShieldCheck aria-hidden="true" size={15} /> Preço do catálogo</span>
             <span><ShieldCheck aria-hidden="true" size={15} /> Estoque verificável</span>
+            <span><ShieldCheck aria-hidden="true" size={15} /> Vendedor identificado</span>
           </div>
           <div className={styles.actions}>
             <Link className={styles.primaryAction} href="#vitrine">

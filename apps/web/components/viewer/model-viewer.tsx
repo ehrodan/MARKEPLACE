@@ -9,18 +9,14 @@ import { BRAND } from "@/lib/brand";
 
 const ModelViewerCanvas = dynamic(() => import("./model-viewer-canvas"), {
   ssr: false,
-  loading: () => <div className="viewer-loading" role="status">Preparando o objeto 3D…</div>,
+  loading: () => <div className="viewer-loading" role="status">Preparando o objeto 3D.</div>,
 });
 
 type ModelStatus = "loading" | "ready" | "error";
 
 function canUseWebGl() {
-  try {
-    const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") || canvas.getContext("webgl"));
-  } catch {
-    return false;
-  }
+  return typeof WebGL2RenderingContext !== "undefined"
+    || typeof WebGLRenderingContext !== "undefined";
 }
 
 export function ModelViewer() {
@@ -76,13 +72,13 @@ export function ModelViewer() {
     <section className="viewer-experience" aria-label="Visualizador 3D OCHPOCH MARKET">
       <div className="viewer-toolbar" aria-label="Controles de visualização">
         <div className="viewer-view-buttons" role="group" aria-label="Vistas predefinidas">
-          <button type="button" onClick={() => { chooseView("front"); }}>Frente</button>
-          <button type="button" onClick={() => { chooseView("angle"); }}>Ângulo</button>
-          <button type="button" onClick={() => { chooseView("side"); }}>Lateral</button>
+          <button aria-pressed={viewRequest.key === "front"} type="button" onClick={() => { chooseView("front"); }}>Frente</button>
+          <button aria-pressed={viewRequest.key === "angle"} type="button" onClick={() => { chooseView("angle"); }}>Ângulo</button>
+          <button aria-pressed={viewRequest.key === "side"} type="button" onClick={() => { chooseView("side"); }}>Lateral</button>
         </div>
         <div className="viewer-action-buttons">
           <button type="button" onClick={resetView}>Redefinir</button>
-          <button type="button" onClick={() => void toggleFullscreen()}>{fullscreen ? "Sair da tela cheia" : "Tela cheia"}</button>
+          <button aria-pressed={fullscreen} type="button" onClick={() => void toggleFullscreen()}>{fullscreen ? "Sair da tela cheia" : "Tela cheia"}</button>
         </div>
       </div>
 
@@ -126,7 +122,7 @@ export function ModelViewer() {
 
         <div className="viewer-stage__status" role="status" aria-live="polite">
           <span>{showFallback ? "2D" : status === "ready" ? "3D pronto" : "Carregando 3D"}</span>
-          <small>{reducedMotion ? "Introdução sem movimento" : "Arraste para girar · role para aproximar"}</small>
+          <small>{reducedMotion ? "Introdução sem movimento" : "Arraste para girar / role para aproximar"}</small>
         </div>
       </div>
     </section>

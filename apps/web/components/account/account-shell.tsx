@@ -4,6 +4,7 @@ import { useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Bell,
   BookOpen,
   Building2,
   LayoutDashboard,
@@ -17,6 +18,10 @@ import {
 } from "lucide-react";
 import { Button } from "@midas/ui";
 import { BrandWordmark } from "@/components/brand-wordmark";
+import {
+  notificationsLinkLabel,
+  useUnreadNotifications,
+} from "@/components/landing/use-unread-notifications";
 import { apiRequest } from "@/lib/api-client";
 import { AccountProvider, useAccountContext } from "./account-context";
 import styles from "./account-shell.module.css";
@@ -131,6 +136,34 @@ function RailContent({ onNavigate, mobile = false }: { onNavigate?: () => void; 
   );
 }
 
+/**
+ * Sino do topo da conta: o mesmo contrato do sino público (número REAL de não
+ * lidas via use-unread-notifications). Sem dado confiável, o sino fica sem
+ * badge — nunca inventa contagem. Badge em --color-signal: informação, não
+ * ação; o ouro da conta segue reservado à marca e às ações.
+ */
+function NotificationsBell() {
+  const unread = useUnreadNotifications();
+  return (
+    <Link
+      className={styles.topbarBell}
+      href="/conta/notificacoes"
+      aria-label={notificationsLinkLabel(unread)}
+    >
+      <Bell aria-hidden="true" size={19} />
+      {unread !== null && unread > 0 ? (
+        <span
+          className={styles.topbarBellBadge}
+          aria-hidden="true"
+          data-testid="account-notifications-count"
+        >
+          {unread}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
+
 function AccountFrame({ children }: { children: ReactNode }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -160,16 +193,19 @@ function AccountFrame({ children }: { children: ReactNode }) {
               <strong>Minha conta</strong>
             </div>
           </div>
-          <div className={styles.context} aria-live="polite">
-            <span className={styles.contextIcon} aria-hidden="true"><Building2 size={17} /></span>
-            <div className={styles.contextCopy}>
-              <small>Contexto atual</small>
-              <strong>
-                {sellerAccountsStatus === "loading"
-                  ? "Carregando contexto…"
-                  : selectedSeller?.displayName || "Conta pessoal"}
-              </strong>
+          <div className={styles.topbarEnd}>
+            <div className={styles.context} aria-live="polite">
+              <span className={styles.contextIcon} aria-hidden="true"><Building2 size={17} /></span>
+              <div className={styles.contextCopy}>
+                <small>Contexto atual</small>
+                <strong>
+                  {sellerAccountsStatus === "loading"
+                    ? "Carregando contexto…"
+                    : selectedSeller?.displayName || "Conta pessoal"}
+                </strong>
+              </div>
             </div>
+            <NotificationsBell />
           </div>
         </header>
         <main id="conteudo-principal" className={styles.content}>{children}</main>

@@ -9,8 +9,8 @@ O inventário canônico tem **95 telas e 95 rotas presentes**. Não há URL ause
 
 | Estado | Quantidade |
 |---|---:|
-| Tela dedicada | 42 |
-| `CONTRACT_REQUIRED` | 53 |
+| Tela dedicada | 44 |
+| `CONTRACT_REQUIRED` | 51 |
 | Rota ausente | 0 |
 
 O comando termina com código 1 de propósito: o gate estrito considera placeholder contratual como lacuna, mesmo quando a rota responde HTTP 200.
@@ -18,8 +18,8 @@ O comando termina com código 1 de propósito: o gate estrito considera placehol
 ```mermaid
 flowchart LR
   A[Inventário canônico<br/>95 telas] --> B[Rotas presentes<br/>95]
-  B --> C[Telas dedicadas<br/>42]
-  B --> D[CONTRACT_REQUIRED<br/>53]
+  B --> C[Telas dedicadas<br/>44]
+  B --> D[CONTRACT_REQUIRED<br/>51]
   D --> P0[P0: fecha compra, venda e confiança]
   D --> P1[P1: fecha operação e pós-venda]
   D --> P2[P2: governança, master e growth]
@@ -32,11 +32,11 @@ flowchart LR
 | Pública | 15 | 9 | 6 |
 | Conta | 16 | 10 | 6 |
 | Comprador | 12 | 8 | 4 |
-| Vendedor | 17 | 13 | 4 |
+| Vendedor | 17 | 15 | 2 |
 | Admin | 18 | 1 | 17 |
 | Master | 8 | 1 | 7 |
 | Growth | 9 | 0 | 9 |
-| **Total** | **95** | **42** | **53** |
+| **Total** | **95** | **44** | **51** |
 
 ## Ordem recomendada
 
@@ -44,20 +44,19 @@ flowchart LR
 
 1. `SCR-ACC-004` `/verificar-idade`: age assurance e contestação. É gate de elegibilidade anterior ao pedido.
 2. `SCR-ADM-002` `/admin/anuncios[/:listingId]`: claim, checklist e decisão segregada da revisão do anúncio.
-3. `SCR-SEL-017` `/vender/studio`: biblioteca e contribuição de assets. A prévia local 2.5D não substitui submissão, revisão ou publicação.
-4. `SCR-ADM-015` `/admin/catalogo/modelos-3d/:jobId`: job e revisão de uma saída 3D real.
-5. `SCR-ADM-018` `/admin/studio[/:resourceType/:resourceId]`: curadoria, proveniência e publicação separada da criação.
-6. `SCR-BUY-002` `/mensagens/:conversationId`: conversa e proposta estruturada com controle anti-BOLA e anti-PII.
-7. `SCR-PUB-010` `/seguranca`: conteúdo versionado de proteção, fraude, denúncia e recuperação.
+3. `SCR-ADM-015` `/admin/catalogo/modelos-3d/:jobId`: job e revisão de uma saída 3D real.
+4. `SCR-ADM-018` `/admin/studio[/:resourceType/:resourceId]`: curadoria, proveniência e publicação separada da criação.
+5. `SCR-BUY-002` `/mensagens/:conversationId`: conversa e proposta estruturada com controle anti-BOLA e anti-PII.
+6. `SCR-PUB-010` `/seguranca`: conteúdo versionado de proteção, fraude, denúncia e recuperação.
 
-Nota: o detalhe da oferta também precisa deixar de marcar `POST /v1/orders` como inexistente. A rota está registrada e o carrinho já a usa; a correção deve encaminhar para o carrinho real, preservando pagamento e settlement fail-closed.
+Entregue neste corte: `SCR-SEL-002` agora lê contas de vendedor, anúncios, pedidos e saldo por contratos reais; `SCR-SEL-017` agora oferece prévia local 2,5D com um Canvas e fallback 2D. A prévia não é reconstrução 3D e não substitui submissão, revisão ou publicação. O detalhe da oferta agora persiste o carrinho real e encaminha para `/carrinho`, preservando pagamento e settlement fail-closed.
 
 ### P1. Fechar suporte, dinheiro e confiança pública
 
 - Público: `SCR-PUB-003`, `SCR-PUB-008`, `SCR-PUB-009`, `SCR-PUB-011`, `SCR-PUB-012`.
 - Conta: `SCR-ACC-003`, `SCR-ACC-011`, `SCR-ACC-012`, `SCR-ACC-013`.
 - Compra: `SCR-BUY-001`, `SCR-BUY-008`, `SCR-BUY-009`.
-- Venda: `SCR-SEL-002`, `SCR-SEL-003`, `SCR-SEL-014`.
+- Venda: `SCR-SEL-003`, `SCR-SEL-014`.
 - Operação: `SCR-ADM-004` a `SCR-ADM-014`, além de `SCR-ADM-016` e `SCR-ADM-017`.
 
 ### P2. Fechar governança e leitura gerencial
@@ -66,7 +65,7 @@ Nota: o detalhe da oferta também precisa deixar de marcar `POST /v1/orders` com
 - Growth: `SCR-GRW-001` a `SCR-GRW-009`.
 - Progressão de conta: `SCR-ACC-016`.
 
-## Inventário completo das 53 lacunas
+## Inventário completo das 51 lacunas
 
 ### Pública, 6
 
@@ -99,14 +98,12 @@ Nota: o detalhe da oferta também precisa deixar de marcar `POST /v1/orders` com
 | SCR-BUY-008 | `/conta/suporte` | Criar e listar tickets vinculados ao contexto correto. |
 | SCR-BUY-009 | `/conta/suporte/:ticketId` | Thread, SLA, anexos e reabertura. |
 
-### Vendedor, 4
+### Vendedor, 2
 
 | ID | Rota | Resultado funcional esperado |
 |---|---|---|
-| SCR-SEL-002 | `/vender` | Saúde comercial e próximas ações do SellerAccount. |
 | SCR-SEL-003 | `/vender/equipe` | Convite, escopo, validade e revogação de membros. |
 | SCR-SEL-014 | `/conta/saques/:payoutId` | Tentativas, falha, retry, retorno e comprovante. |
-| SCR-SEL-017 | `/vender/studio` | Biblioteca, inspeção e submissão sem duplicar catálogo. |
 
 ### Admin, 17
 
@@ -160,7 +157,7 @@ Nota: o detalhe da oferta também precisa deixar de marcar `POST /v1/orders` com
 
 ```mermaid
 flowchart TD
-  S17[SEL-017 Studio do vendedor] --> C[CatalogLibrary e CatalogAsset]
+  S17[SEL-017 prévia local 2,5D] -. exige contrato de submissão .-> C[CatalogLibrary e CatalogAsset]
   C --> J[Model3DJob e Model3DArtifact]
   J --> A15[ADM-015 revisão do job]
   C --> A18[ADM-018 curadoria global]
@@ -191,7 +188,8 @@ Uma rota só migra para dedicada quando houver, em conjunto:
 
 ```powershell
 pnpm report:screens:functional
-pnpm test:screens
+pnpm lint:screens
+pnpm lint:traceability
 ```
 
 Fontes canônicas: `docs/07-MAPA-DE-TELAS-E-FLUXOS.md`, `docs/12-MATRIZ-DE-IMPLEMENTACAO.md`, `apps/web/lib/screen-contracts.generated.json` e `apps/web/app/**/page.tsx`.

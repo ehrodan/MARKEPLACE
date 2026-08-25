@@ -387,6 +387,57 @@ export function projectOrderSummary(
   };
 }
 
+/**
+ * Fatos do que foi comprado, projetados de `data.items[]` do mesmo envelope.
+ * Origem, tipo e vendedor vêm do `listingSnapshot` que o servidor grava no ato
+ * da compra (modules/orders/src/order-service.ts): fato registrado, não palpite
+ * da interface. Uso: âncora do rail pós-compra (post-purchase-rail.tsx).
+ */
+export interface PurchasedItemFacts {
+  /** Obrigatório: sem o id canônico não dá para ancorar nem excluir recompra. */
+  catalogItemId: string;
+  listingId: string | null;
+  unitPriceMinor: string | null;
+  currency: string | null;
+  sellerAccountId: string | null;
+  gameOrigin: string | null;
+  itemType: string | null;
+}
+
+/**
+ * Projeta os itens comprados do envelope do pedido. Item sem `catalogItemId`
+ * é descartado — campo ausente nunca é inventado. Envelope ilegível → lista
+ * vazia, e quem consome trata vazio como "nada a derivar daqui".
+ */
+export function projectPurchasedItems(
+  envelope: OrderDetailEnvelope | null | undefined,
+): PurchasedItemFacts[] {
+  const data = asRecord(envelope?.data);
+  if (!data) return [];
+  const rawItems = data["items"];
+  if (!Array.isArray(rawItems)) return [];
+
+  const projected: PurchasedItemFacts[] = [];
+  for (const raw of rawItems) {
+    const item = asRecord(raw);
+    if (!item) continue;
+    const catalogItemId = readRequiredString(item, "catalogItemId");
+    if (!catalogItemId) continue;
+    const snapshot = asRecord(item["listingSnapshot"]);
+    const snapshotCatalogItem = snapshot ? asRecord(snapshot["catalogItem"]) : null;
+    projected.push({
+      catalogItemId,
+      listingId: readNullableString(item, "listingId"),
+      unitPriceMinor: readNullableString(item, "unitPriceMinor"),
+      currency: readNullableString(item, "currency"),
+      sellerAccountId: snapshot ? readNullableString(snapshot, "sellerAccountId") : null,
+      gameOrigin: snapshotCatalogItem ? readNullableString(snapshotCatalogItem, "gameOrigin") : null,
+      itemType: snapshotCatalogItem ? readNullableString(snapshotCatalogItem, "itemType") : null,
+    });
+  }
+  return projected;
+}
+
 export function findPaymentById(list: CheckoutPaymentList, paymentId: string): CheckoutPayment | null {
   return list.data.find((payment) => payment.paymentId === paymentId) ?? null;
 }

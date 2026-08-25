@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { PackageSearch, Search, SlidersHorizontal, Store } from "lucide-react";
-import { Button, PageState, StatusBadge } from "@midas/ui";
+import { Check, PackageSearch, Search, SlidersHorizontal, Store } from "lucide-react";
+import { Button, Freshness, PageState } from "@midas/ui";
 import { useApiResource } from "@/hooks/use-api-resource";
 import { apiRequest } from "@/lib/api-client";
-import { formatPublicDate, itemTypeLabel, listingTitle } from "./formatters";
+import { itemTypeLabel, listingTitle } from "./formatters";
 import { ListingCard } from "./listing-card";
 import { MarketplaceError, MarketplaceLoading } from "./marketplace-states";
 import type { PublicListing, PublicListingPage } from "./types";
@@ -136,8 +136,6 @@ function CatalogResults({ initialPage }: { initialPage: PublicListingPage }) {
     );
   }
 
-  const capturedAt = formatPublicDate(asOf);
-
   return (
     <>
       <section className={styles.filters} aria-labelledby="catalog-filter-title">
@@ -205,11 +203,47 @@ function CatalogResults({ initialPage }: { initialPage: PublicListingPage }) {
             </h2>
           </div>
           <div className={styles.resultsMeta}>
-            <StatusBadge tone="success">Catálogo atualizado</StatusBadge>
             <span aria-live="polite">{filtered.length} de {listings.length} exibidos</span>
-            {capturedAt ? <time dateTime={asOf}>Atualizado em {capturedAt}</time> : null}
+            {/* Freshness discreto no lugar do badge de status: o "quando" do
+                dado é informação de rodapé, não um selo de sucesso gritando
+                verde ao lado do título — parecia debug, não vitrine. */}
+            {asOf ? <Freshness asOf={asOf} label="Catálogo" /> : null}
           </div>
         </header>
+
+        {/* Chips de categoria — o filtro de tipo a um toque, colado no grid.
+            Mesmo estado do select "Tipo de item" (um espelha o outro) e as
+            contagens são as reais do conjunto carregado, nunca estimadas.
+            `aria-pressed` diz o estado por semântica; o check diz por ícone —
+            o destaque nunca é só cor. Só aparece com 2+ tipos: com um tipo
+            único o chip não filtra nada, só ocupa espaço. */}
+        {itemTypes.length > 1 ? (
+          <div className={styles.typeChips} role="group" aria-label="Filtrar por tipo de item">
+            <button
+              type="button"
+              className={styles.typeChip}
+              aria-pressed={itemType === "ALL"}
+              onClick={() => { setItemType("ALL"); }}
+            >
+              {itemType === "ALL" ? <Check aria-hidden="true" size={13} /> : null}
+              Todos
+              <span className={styles.chipCount}>{listings.length}</span>
+            </button>
+            {itemTypes.map(({ value, count }) => (
+              <button
+                key={value}
+                type="button"
+                className={styles.typeChip}
+                aria-pressed={itemType === value}
+                onClick={() => { setItemType(itemType === value ? "ALL" : value); }}
+              >
+                {itemType === value ? <Check aria-hidden="true" size={13} /> : null}
+                {itemTypeLabel(value)}
+                <span className={styles.chipCount}>{count}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         {filtered.length === 0 ? (
           <PageState

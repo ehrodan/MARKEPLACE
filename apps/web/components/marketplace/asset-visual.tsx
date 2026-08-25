@@ -1,5 +1,6 @@
 import { Box, ImageOff } from "lucide-react";
 import { assetTypeLabel, listingTitle, primaryImageAsset, safeAssetUrl } from "./formatters";
+import { rarityPresentation } from "./rarity";
 import type { PublicCatalogAsset, PublicListing } from "./types";
 import styles from "./marketplace.module.css";
 
@@ -37,8 +38,18 @@ export function AssetVisual({
     );
   }
 
+  // Sem imagem, o visual não fica cinza-genérico nem ganha foto inventada: o
+  // tratamento usa o dado REAL que o item tem — a raridade — como banho de cor
+  // sutil (tokens --och-rarity-*), com o ícone dizendo o que existe (modelo 3D)
+  // ou o que falta (imagem). `data-rarity` no próprio fallback mantém o efeito
+  // também fora do card (ex.: página do anúncio).
+  const rarity = rarityPresentation(listing.catalogItem?.rarity);
+
   return (
-    <div className={`${detail ? styles.detailVisual : styles.cardVisual} ${styles.assetFallback}`}>
+    <div
+      className={`${detail ? styles.detailVisual : styles.cardVisual} ${styles.assetFallback}`}
+      data-rarity={rarity?.value}
+    >
       {modelAsset
         ? <Box aria-hidden="true" size={detail ? 54 : 36} strokeWidth={1.25} />
         : <ImageOff aria-hidden="true" size={detail ? 54 : 36} strokeWidth={1.25} />}

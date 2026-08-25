@@ -4,6 +4,8 @@ import { useId, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  BadgeCheck,
+  Bell,
   CircleAlert,
   Flag,
   LockKeyhole,
@@ -21,11 +23,12 @@ import {
   writeCart,
   type StorageLike,
 } from "@/components/cart/cart-storage";
+import { FavoriteButton } from "@/components/favorites/favorite-button";
 import {
   formatMinorCurrency,
-  formatPublicDate,
   formatQuantity,
   humanizeCode,
+  listingTitle,
 } from "@/components/marketplace/formatters";
 import type { PublicListing, PublicListingPlan } from "@/components/marketplace/types";
 import styles from "./listing-detail.module.css";
@@ -102,7 +105,7 @@ export interface FeeBreakdown {
 /**
  * Composição da taxa. Doc 01 RF-248 e doc 13 secao 688: o percentual do plano é
  * taxa de serviço deduzida do repasse do vendedor, não um acréscimo ao
- * comprador. A tela mostra a conta inteira exatamente por isso — o total do
+ * comprador. A tela mostra a conta inteira exatamente por isso: o total do
  * comprador continua sendo o preço publicado.
  */
 export function buildFeeBreakdown(listing: DetailListing): FeeBreakdown | null {
@@ -134,6 +137,13 @@ export function buildFeeBreakdown(listing: DetailListing): FeeBreakdown | null {
   return { buyerTotalMinor: listing.priceMinor, lines };
 }
 
+/**
+ * Escassez honesta (docs/03 secao 10, RF-279): abaixo deste teto o estoque REAL
+ * do banco ganha tom de aviso com o número exato. O valor exibido é sempre
+ * `quantityAvailable` como veio da API — nunca contador fabricado nem cronômetro.
+ */
+export const LOW_STOCK_THRESHOLD = 5;
+
 export type PurchaseState =
   | { readonly kind: "open" }
   | { readonly kind: "blocked"; readonly reason: string };
@@ -162,6 +172,16 @@ export function resolvePurchaseState(listing: DetailListing): PurchaseState {
   return { kind: "open" };
 }
 
+/**
+ * O aviso de reposição só faz sentido quando a oferta pode voltar: estoque
+ * zerado ou pausa do vendedor. O opt-in do aviso NÃO mora aqui — mora em
+ * /conta/favoritos (WIRING-favoritos §3: consentimento explícito, nada
+ * pré-marcado). Esta página apenas aponta o caminho real.
+ */
+export function showsRestockWatchHint(listing: DetailListing): boolean {
+  return Boolean(listing.pausedAt) || listing.quantityAvailable <= 0;
+}
+
 export type CartPersistenceResult =
   | { readonly kind: "stored" }
   | { readonly kind: "blocked"; readonly reason: string };
@@ -178,7 +198,7 @@ export function persistListingInCart(
   const line = parseCartLine({
     listingId: listing.listingId,
     publicSlug: listing.publicSlug,
-    title: listing.catalogItem?.displayName || listing.publicSlug,
+    title: listingTitle(listing),
     sellerAccountId: listing.sellerAccountId,
     ...(listing.seller?.displayName ? { sellerDisplayName: listing.seller.displayName } : {}),
     unitPriceMinor: listing.priceMinor,
@@ -204,6 +224,14 @@ export function persistListingInCart(
 
   const written = writeCart(storage, upsertCartLine(current.lines, line));
   const persisted = findCartLine(written.lines, listing.listingId);
+  if (written.issue === "TRIMMED") {
+    // A escolha nova nunca justifica descartar silenciosamente outra linha.
+    writeCart(storage, current.lines);
+    return {
+      kind: "blocked",
+      reason: "O carrinho deste dispositivo atingiu o limite. Remova um item no carrinho e tente novamente.",
+    };
+  }
   if (written.issue === "UNAVAILABLE" || written.issue === "QUOTA" || !persisted) {
     return {
       kind: "blocked",
@@ -234,9 +262,9 @@ export function PurchasePanel({
 
   const fees = buildFeeBreakdown(listing);
   const state = resolvePurchaseState(listing);
-  const publishedAt = formatPublicDate(listing.publishedAt);
   const available = listing.quantityAvailable;
   const inStock = available > 0;
+  const lowStock = inStock && available <= LOW_STOCK_THRESHOLD;
 
   function handleAddToCart() {
     setCartError(null);
@@ -258,26 +286,29 @@ export function PurchasePanel({
         <p className={styles.priceValue}>
           {formatMinorCurrency(listing.priceMinor, listing.currency)}
         </p>
-        <p className={styles.priceMeta}>
-          Valor total do comprador em {listing.currency}.
-          {publishedAt ? ` Preço publicado em ${publishedAt}.` : ""}
-        </p>
+        {/* Prova real de tração, junto do preço: `quantitySold` vem do banco.
+            Zero venda não vira linha — omitir zero não é inventar dado. */}
+        {listing.quantitySold > 0 ? (
+          <p className={styles.soldProof}>
+            <BadgeCheck aria-hidden="true" size={14} />
+            <span>
+              {formatQuantity(listing.quantitySold)}{" "}
+              {listing.quantitySold === 1 ? "unidade vendida" : "unidades vendidas"} neste anúncio
+            </span>
+          </p>
+        ) : null}
+        <p className={styles.priceMeta}>Valor total do comprador em {listing.currency}.</p>
       </div>
 
       <div className={styles.availabilityRegion}>
         <h3 className={styles.regionLabel}>Disponibilidade</h3>
         <p className={styles.availabilityValue}>
           <Package aria-hidden="true" size={18} />
-          <StatusBadge tone={inStock ? "success" : "warning"}>
-            {inStock
-              ? `${formatQuantity(available)} ${available === 1 ? "unidade disponível" : "unidades disponíveis"}`
-              : "Sem unidade disponível"}
+          <StatusBadge tone={inStock && !lowStock ? "success" : "warning"}>
+            {!inStock
+              ? "Sem unidade disponível"
+              : `${lowStock ? "Só " : ""}${formatQuantity(available)} ${available === 1 ? "unidade disponível" : "unidades disponíveis"}`}
           </StatusBadge>
-        </p>
-        <p className={styles.regionNote}>
-          {formatQuantity(listing.quantitySold)}{" "}
-          {listing.quantitySold === 1 ? "unidade vendida" : "unidades vendidas"} neste anúncio,
-          revisão v{listing.version}.
         </p>
       </div>
 
@@ -314,6 +345,33 @@ export function PurchasePanel({
             </p>
           </>
         )}
+        {/* Costura de WIRING-favoritos.md secao 2: uma chamada por clique nas
+            funções puras do storage, sem aviso ligado por efeito colateral.
+            Disponível também com a compra bloqueada — salvar item esgotado é
+            exatamente o caso de uso da watchlist. */}
+        <div className={styles.favoriteRow}>
+          <FavoriteButton
+            listing={{
+              listingId: listing.listingId,
+              publicSlug: listing.publicSlug,
+              title: listingTitle(listing),
+              priceMinor: listing.priceMinor,
+              currency: listing.currency,
+            }}
+            variant="labeled"
+          />
+        </div>
+        {/* WIRING-favoritos §3: nenhum opt-in é criado aqui — o consentimento
+            do aviso mora em /conta/favoritos, desligado por padrão. */}
+        {showsRestockWatchHint(listing) ? (
+          <p className={styles.watchHint}>
+            <Bell aria-hidden="true" size={15} />
+            <span>
+              Salve nos favoritos e ative o aviso de reposição em{" "}
+              <Link className="text-link" href="/conta/favoritos">Favoritos</Link>.
+            </span>
+          </p>
+        ) : null}
         {cartError ? (
           <p className={styles.blockedNote} role="alert">
             <CircleAlert aria-hidden="true" size={16} />
@@ -321,7 +379,7 @@ export function PurchasePanel({
           </p>
         ) : state.kind === "open" ? (
           <p className={styles.actionNote}>
-            Preço, estoque e total serão revalidados no carrinho antes da criação do pedido.
+            O carrinho revalida preço, estoque e total antes do pedido.
           </p>
         ) : null}
       </div>
@@ -354,14 +412,14 @@ export function PurchasePanel({
                 </div>
               </dl>
               <p className={styles.regionNote} id={feeNoteId}>
-                As taxas acima são deduzidas do repasse do vendedor e não são somadas ao seu
-                pagamento. Percentuais e cálculo vêm do plano do anúncio enviado pela API.
+                Taxas deduzidas do repasse do vendedor, nunca somadas ao seu pagamento.
+                Percentuais vêm do plano enviado pela API.
               </p>
             </>
           ) : (
             <p className={styles.regionNote}>
-              A API não enviou as taxas do plano deste anúncio. Nenhum percentual foi estimado pela
-              interface; o valor que você paga é exatamente o preço publicado acima.
+              A API não enviou as taxas deste plano e nada foi estimado: você paga exatamente o
+              preço publicado acima.
             </p>
           )}
         </div>
@@ -374,9 +432,8 @@ export function PurchasePanel({
           <ShieldCheck aria-hidden="true" size={17} /> Proteção e prazos
         </h3>
         <p className={styles.regionNote}>
-          O carrinho revalida preço e estoque antes de criar o pedido. Pagamento, custódia e
-          liquidação só avançam quando os contratos financeiros responderem; esta tela não simula
-          aprovação nem reserva.
+          Pagamento, custódia e liquidação só avançam com resposta real dos contratos
+          financeiros; nada aqui é simulado.
         </p>
         <div className={styles.protectionLinks}>
           <Link className="text-link" href="/seguranca">Como a compra é protegida</Link>

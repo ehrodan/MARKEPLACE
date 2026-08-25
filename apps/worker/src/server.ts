@@ -10,6 +10,8 @@ import {
 } from "@midas/eventing";
 import { outboxPublisherCapability } from "./capability.js";
 import { publishOutboxEvent } from "./publisher.js";
+import { createRetentionTriggerDependencies } from "./retention-trigger-adapters.js";
+import { runRetentionTriggerCycle } from "./retention-trigger.js";
 
 const config = z
   .object({
@@ -50,7 +52,9 @@ const publisherCapability = outboxPublisherCapability({
   ...(config.OUTBOX_PUBLISH_URL ? { endpoint: config.OUTBOX_PUBLISH_URL } : {}),
   ...(config.OUTBOX_PUBLISH_TOKEN ? { token: config.OUTBOX_PUBLISH_TOKEN } : {}),
 });
+const retentionTriggerDependencies = createRetentionTriggerDependencies(database);
 let cycleRunning = false;
+let retentionCycleRunning = false;
 let stopped = false;
 
 app.get("/health/live", () => ({ status: "LIVE", process: "worker" }));
@@ -62,6 +66,8 @@ app.get("/health/ready", async (_request, reply) => {
       database: "AVAILABLE",
       capabilities: {
         outboxPublisher: publisherCapability,
+        // Só precisa do banco (consome o outbox internamente); disponível junto com ele.
+        retentionTrigger: "AVAILABLE",
       },
     };
   } catch {
@@ -99,12 +105,38 @@ async function runCycle(): Promise<void> {
   }
 }
 
+/**
+ * Motor de triggers da watchlist: consome `catalog.listing.updated` do outbox e dispara os
+ * avisos pedidos pela pessoa (preço caiu / voltou ao estoque) via política de retenção.
+ * Independente do publicador HTTP — roda mesmo sem OUTBOX_PUBLISH_URL configurada.
+ */
+async function runRetentionCycle(): Promise<void> {
+  if (retentionCycleRunning || stopped) return;
+  retentionCycleRunning = true;
+  try {
+    const summary = await runRetentionTriggerCycle(retentionTriggerDependencies);
+    if (summary.fetched > 0) {
+      app.log.info(summary, "retention trigger cycle");
+    }
+  } catch (error) {
+    app.log.error({ err: error }, "retention trigger cycle failed");
+  } finally {
+    retentionCycleRunning = false;
+  }
+}
+
 const timer = setInterval(() => void runCycle(), config.OUTBOX_POLL_INTERVAL_MS);
 timer.unref();
+const retentionTimer = setInterval(
+  () => void runRetentionCycle(),
+  config.OUTBOX_POLL_INTERVAL_MS,
+);
+retentionTimer.unref();
 
 async function shutdown(signal: string) {
   stopped = true;
   clearInterval(timer);
+  clearInterval(retentionTimer);
   app.log.info({ signal }, "shutting down");
   await app.close();
   await database.close();

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight, Search } from "lucide-react";
 import { PageState, Panel, StatusBadge } from "@midas/ui";
 import { MinorMoney } from "@/components/operations/minor-money";
 import { PageHeader } from "@/components/page-header";
@@ -11,16 +12,8 @@ import type { OrderDetailResponse } from "@/lib/api-types";
 import { formatDateTime } from "@/lib/date-format";
 import { deliveryStatusView, orderStatusView } from "@/lib/order-status";
 import { DataProvenance } from "./data-provenance";
+import { repurchaseActionFor, snapshotTitle } from "./repurchase";
 import styles from "./account-dashboard.module.css";
-
-/** Título do item vem do snapshot congelado na compra, nunca do catálogo atual. */
-function snapshotTitle(snapshot: Record<string, unknown>): string | null {
-  for (const key of ["displayName", "itemTitle", "title", "publicSlug"]) {
-    const value = snapshot[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-  return null;
-}
 
 export function PurchaseDetailView({ orderId }: { orderId: string }) {
   const resource = useApiResource<OrderDetailResponse>(
@@ -143,11 +136,16 @@ export function PurchaseDetailView({ orderId }: { orderId: string }) {
                     <th scope="col">Quantidade</th>
                     <th scope="col">Preço unitário</th>
                     <th scope="col">Total</th>
+                    <th scope="col"><span className="sr-only">Recompra</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item) => {
                     const title = snapshotTitle(item.listingSnapshot);
+                    /* Recompra (RF-262/263): derivada só do snapshot real do
+                       pedido. O rótulo diz o que o clique faz — nenhum preço
+                       atual é mostrado sem buscar. */
+                    const repurchase = repurchaseActionFor(item.listingSnapshot);
                     return (
                       <tr key={item.orderItemId}>
                         <td className={styles.primaryCell}>
@@ -159,6 +157,18 @@ export function PurchaseDetailView({ orderId }: { orderId: string }) {
                         </td>
                         <td className={styles.numeric}>
                           <MinorMoney amountMinor={item.totalMinor} currency={item.currency} />
+                        </td>
+                        <td className={styles.actionCell}>
+                          {repurchase ? (
+                            <Link className="text-link" href={repurchase.href}>
+                              {repurchase.kind === "OFFER"
+                                ? <ArrowRight aria-hidden="true" size={16} />
+                                : <Search aria-hidden="true" size={16} />}
+                              {repurchase.label}
+                            </Link>
+                          ) : (
+                            <span className={styles.secondaryText}>Sem referência para recompra</span>
+                          )}
                         </td>
                       </tr>
                     );

@@ -128,6 +128,11 @@ export function PurchasesView() {
                           <td><StatusBadge tone={status.tone}>{status.label}</StatusBadge></td>
                           <td className={styles.dateCell}><time dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time></td>
                           <td className={styles.actionCell}>
+                            {/* Recompra (RF-262/263): `GET /v1/me/purchases` devolve só
+                                colunas do pedido — sem título nem referência pública do
+                                anúncio (lib/api-types.ts, PurchaseListItem). Sem esse dado
+                                real, nenhum atalho de recompra é honesto nesta lista; ele
+                                vive no detalhe do pedido, onde o snapshot congelado existe. */}
                             <Link className="text-link" href={`/conta/compras/${encodeURIComponent(item.orderId)}`}>
                               {status.nextAction ?? "Abrir pedido"}
                             </Link>

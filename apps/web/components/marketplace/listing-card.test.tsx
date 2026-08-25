@@ -1,8 +1,13 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { ListingCard } from "./listing-card";
 import type { PublicListing } from "./types";
+
+// Sem `globals: true` no vitest, o auto-cleanup da testing-library não roda —
+// cada render acumularia no mesmo document e os cards de um teste vazariam
+// para as consultas do seguinte.
+afterEach(cleanup);
 
 const listing: PublicListing = {
   listingId: "01900000-0000-7000-8000-000000000001",
@@ -72,5 +77,26 @@ describe("ListingCard", () => {
   it("não apresenta estoque quando a API retorna zero", () => {
     render(<ListingCard listing={{ ...listing, quantityAvailable: 0 }} />);
     expect(screen.getByText("Sem estoque")).toBeInTheDocument();
+  });
+
+  // Escassez HONESTA (RF-279): o aviso "Só N" só existe quando N é o número
+  // real do banco e está em 1..5. De 6 em diante a contagem é neutra — o
+  // limiar nunca fabrica urgência.
+  it("avisa com o número real quando restam poucas unidades", () => {
+    render(<ListingCard listing={{ ...listing, quantityAvailable: 2 }} />);
+    expect(screen.getByText("Só 2 em estoque")).toBeInTheDocument();
+  });
+
+  it("mantém contagem neutra a partir de 6 unidades", () => {
+    render(<ListingCard listing={{ ...listing, quantityAvailable: 6 }} />);
+    expect(screen.getByText("6 em estoque")).toBeInTheDocument();
+    expect(screen.queryByText(/^Só /u)).not.toBeInTheDocument();
+  });
+
+  // O favorito é botão (não link): não entra na regra "todo link do card leva
+  // ao mesmo destino" nem soma parada de tabulação rumo ao anúncio.
+  it("oferece favoritar direto no card", () => {
+    render(<ListingCard listing={listing} />);
+    expect(screen.getByRole("button", { name: "Favoritar" })).toHaveAttribute("aria-pressed", "false");
   });
 });

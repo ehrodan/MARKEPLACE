@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MarketView } from "./market-view";
 import { MarketplaceShell } from "./marketplace-shell";
@@ -48,8 +48,30 @@ const ochpochListing: PublicListing = {
   }],
 };
 
+// Segundo tipo de item no catálogo: os chips de categoria só aparecem quando
+// há mais de um tipo (com um único tipo o chip não filtra nada).
+const stickerListing: PublicListing = {
+  ...ochpochListing,
+  listingId: "01900000-0000-7000-8000-000000000031",
+  publicSlug: "adesivo-holo-founder",
+  catalogItemId: "01900000-0000-7000-8000-000000000032",
+  priceMinor: "4990",
+  assets: [],
+  catalogItem: {
+    catalogItemId: "01900000-0000-7000-8000-000000000032",
+    publicSlug: "adesivo-holo",
+    displayName: "Adesivo Holo",
+    gameOrigin: "OCHPOCH Market",
+    itemType: "STICKER",
+  },
+};
+
 afterEach(() => {
   vi.unstubAllGlobals();
+  // Sem `globals: true` no vitest o auto-cleanup da testing-library não roda;
+  // sem isto, ids duplicados (ex.: market-item-type) entre renders acumulados
+  // quebram a associação label→select do teste seguinte.
+  cleanup();
 });
 
 describe("acessibilidade do marketplace", () => {
@@ -94,6 +116,39 @@ describe("acessibilidade do marketplace", () => {
     expect(screen.getByRole("combobox", { name: "Disponibilidade" })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Ordenar" })).toBeInTheDocument();
     expect(screen.getByText("1 de 1 exibidos")).toHaveAttribute("aria-live", "polite");
+  });
+
+  it("expõe chips de categoria com aria-pressed que aplicam o filtro real", async () => {
+    const response: PublicListingPage = {
+      data: [ochpochListing, stickerListing],
+      nextCursor: null,
+      asOf: "2026-08-24T12:00:00.000Z",
+    };
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response(JSON.stringify(response), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }))));
+
+    render(<MarketView />);
+
+    const chips = await screen.findByRole("group", { name: "Filtrar por tipo de item" });
+    const allChip = within(chips).getByRole("button", { name: /Todos/u });
+    const stickerChip = within(chips).getByRole("button", { name: /Adesivo/u });
+    expect(allChip).toHaveAttribute("aria-pressed", "true");
+    expect(stickerChip).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(stickerChip);
+    expect(stickerChip).toHaveAttribute("aria-pressed", "true");
+    expect(allChip).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("1 de 2 exibidos")).toBeInTheDocument();
+    // O chip e o select "Tipo de item" são o MESMO estado — um espelha o outro.
+    expect(screen.getByRole("combobox", { name: "Tipo de item" })).toHaveValue("STICKER");
+
+    // Clicar o chip ativo desfaz o filtro (comportamento de toggle do
+    // aria-pressed), sem precisar procurar o "Todos".
+    fireEvent.click(stickerChip);
+    expect(stickerChip).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("2 de 2 exibidos")).toBeInTheDocument();
   });
 
   it("anuncia falhas assíncronas sem depender apenas da mudança visual", () => {

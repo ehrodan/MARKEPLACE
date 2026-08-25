@@ -14,10 +14,13 @@
     "test:integration": "vitest run --exclude 'dist/**'"
   },
   "dependencies": {
+    "@midas/catalog": "workspace:*",
     "@midas/contracts": "workspace:*",
     "@midas/database": "workspace:*",
     "@midas/eventing": "workspace:*",
     "@midas/kernel": "workspace:*",
+    "@midas/retention": "workspace:*",
+    "drizzle-orm": "0.45.2",
     "fastify": "5.12.1",
     "zod": "4.4.3"
   },

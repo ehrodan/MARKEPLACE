@@ -1,0 +1,66 @@
+.root {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--och-space-2);
+  min-width: 0;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--och-space-2);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--och-duration-fast) var(--och-ease-out),
+    border-color var(--och-duration-fast) var(--och-ease-out),
+    background-color var(--och-duration-fast) var(--och-ease-out);
+}
+
+.button:hover {
+  color: var(--color-text);
+  border-color: var(--color-control-border);
+}
+
+.labeled {
+  min-height: 2.75rem;
+  padding-inline: var(--och-space-5);
+  border-radius: var(--och-radius-control);
+  font-weight: 650;
+  font-size: 0.92rem;
+}
+
+.iconOnly {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+}
+
+.heart {
+  flex: none;
+}
+
+.saved {
+  color: var(--color-action);
+  border-color: color-mix(in oklch, var(--color-action) 45%, var(--color-border-strong));
+  background: color-mix(in oklch, var(--color-action) 10%, var(--color-surface));
+}
+
+.saved .heart {
+  fill: currentColor;
+}
+
+.note {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  max-width: 16rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}

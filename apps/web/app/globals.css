@@ -97,9 +97,11 @@ img, svg, canvas { display: block; max-width: 100%; }
 .brand-wordmark__type > span { margin-top: .25rem; color: var(--color-text-muted); font: 600 .56rem/1 var(--font-data); letter-spacing: .19em; }
 .brand-wordmark--compact .brand-wordmark__type > span { display: none; }
 
-/* Tema público da loja: neutros frios e um único acento de interface.
-   O dourado continua dentro do logo e da fotografia do produto, não no
-   cenário. Estados semânticos (sucesso, aviso e erro) mantêm suas cores. */
+/* Tema público desta rodada: neutros frios e um único acento liquid-lime.
+   A matiz 100 preserva a direção verde ácida pedida pelo dono e mantém 20° de
+   distância da raridade UNCOMMON (hue 120), acima do guardrail de 12° em
+   components/marketplace/theme-rarity.test.ts. O dourado continua reservado
+   ao símbolo e à fotografia do item; raridade nunca preenche ação clicável. */
 .public-commerce-theme {
   --och-color-paper: oklch(12.5% .014 250);
   --och-color-paper-2: oklch(17% .016 250);
@@ -121,17 +123,17 @@ img, svg, canvas { display: block; max-width: 100%; }
   --color-text-secondary: var(--och-color-ink-2);
   --color-text-muted: var(--och-color-muted);
 
-  /* Verde ácido é o único acento de ação. Ele vem da direção editorial da
-     referência, sem carregar a marca, textos ou assets da referência. */
-  --color-action: oklch(88% .22 128);
-  --color-action-hover: oklch(92% .205 128);
-  --color-action-active: oklch(79% .2 128);
-  --color-action-quiet: oklch(73% .09 128);
+  --color-action: oklch(88% .22 100);
+  --color-action-hover: oklch(92% .205 100);
+  --color-action-active: oklch(79% .2 100);
+  --color-action-quiet: oklch(73% .09 100);
   --color-action-foreground: oklch(14% .018 250);
   --color-action-text: var(--color-action-foreground);
-  --color-focus: oklch(92% .205 128);
-  --color-signal: var(--color-text-secondary);
-  --color-signal-quiet: var(--color-text-muted);
+  --color-focus: oklch(92% .205 100);
+  /* Sinal informativo continua ciano (nunca preenche ação): a 95° do lime da
+     ação e a ≥60° de toda raridade — informação não se veste de botão. */
+  --color-signal: oklch(80% .105 195);
+  --color-signal-quiet: oklch(62% .06 195);
   --color-input: var(--color-canvas);
 
   --button-primary-bg: var(--color-action);
@@ -805,10 +807,16 @@ html[data-landing-motion="true"] [data-reveal]:not([data-visible="true"]) { opac
 }
 
 /* Dedicated 3D viewer */
-.viewer-page { min-height: 100svh; padding: 1rem clamp(1rem, 3vw, 2.5rem) 2rem; }
+.viewer-page {
+  min-height: 100svh;
+  padding: .5rem clamp(.5rem, 2vw, 1.5rem) 1.5rem;
+  background:
+    radial-gradient(circle at 50% 32%, color-mix(in oklch, var(--color-action) 9%, transparent), transparent 32rem),
+    var(--color-canvas);
+}
 .viewer-page__header {
   width: min(100%, 92rem);
-  min-height: 4.5rem;
+  min-height: 4rem;
   margin-inline: auto;
   display: flex;
   align-items: center;
@@ -818,49 +826,63 @@ html[data-landing-motion="true"] [data-reveal]:not([data-visible="true"]) { opac
 .viewer-page__back { color: var(--landing-ink-soft); font-size: .8rem; font-weight: 650; }
 .viewer-page__intro {
   width: min(100%, 92rem);
-  margin: clamp(4rem, 8vw, 8rem) auto clamp(2.5rem, 5vw, 5rem);
+  margin: .75rem auto 1rem;
   display: grid;
-  grid-template-columns: 1.25fr .75fr;
-  align-items: end;
-  gap: 3rem;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2rem;
 }
-.viewer-page h1 { max-width: 10ch; font-size: clamp(4rem, 8vw, 8.5rem); line-height: .8; }
-.viewer-page__intro p { max-width: 34rem; margin: 0 0 .8rem; color: var(--landing-ink-soft); font-size: 1.04rem; }
+.viewer-page h1 { max-width: none; margin: .35rem 0 0; font-size: clamp(2.2rem, 4vw, 4.25rem); line-height: .86; }
+.viewer-page__intro p { max-width: 32rem; margin: 0; color: var(--landing-ink-soft); font-size: .84rem; }
 .viewer-experience { width: min(100%, 92rem); margin-inline: auto; }
 .viewer-toolbar {
-  margin-bottom: .8rem;
+  position: relative;
+  z-index: 5;
+  margin-bottom: .65rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: .65rem;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 999px;
+  padding: .38rem;
+  background: var(--glass-surface-strong);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
 }
 .viewer-view-buttons,
 .viewer-action-buttons { display: flex; flex-wrap: wrap; gap: .45rem; }
 .viewer-toolbar button {
   min-height: 2.65rem;
-  border: 1px solid color-mix(in oklch, var(--landing-ink) 12%, transparent);
+  border: 1px solid var(--glass-stroke);
   border-radius: 999px;
   padding-inline: 1rem;
-  background: color-mix(in oklch, var(--landing-paper) 67%, transparent);
+  background: linear-gradient(180deg, rgb(255 255 255 / .08), transparent 55%), var(--glass-surface);
   color: var(--landing-ink-soft);
   font-size: .72rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: inset 0 1px color-mix(in oklch, var(--landing-ink) 82%, transparent);
-  transition: transform 520ms cubic-bezier(.32, .72, 0, 1), background-color 520ms cubic-bezier(.32, .72, 0, 1), color 520ms cubic-bezier(.32, .72, 0, 1);
+  box-shadow: inset 0 1px rgb(255 255 255 / .12);
+  transition: transform 180ms var(--och-ease-out), background-color 180ms var(--och-ease-out), color 180ms var(--och-ease-out);
 }
-.viewer-toolbar button:hover { background: var(--landing-ink); color: var(--landing-paper); transform: translateY(-1px); }
+.viewer-toolbar button:hover { border-color: var(--color-action); background: var(--color-action); color: var(--color-action-foreground); transform: translateY(-1px); }
+.viewer-toolbar button[aria-pressed="true"] {
+  border-color: var(--color-action);
+  background: linear-gradient(180deg, rgb(255 255 255 / .28), transparent 44%), var(--color-action);
+  color: var(--color-action-foreground);
+  box-shadow: var(--glass-shadow);
+}
 .viewer-stage {
   position: relative;
-  height: min(76svh, 52rem);
-  min-height: 34rem;
+  height: min(calc(100svh - 12.5rem), 54rem);
+  min-height: 30rem;
   overflow: hidden;
-  border: .5rem solid color-mix(in oklch, var(--landing-ink) 6%, transparent);
+  border: .35rem solid var(--glass-stroke);
   border-radius: clamp(2rem, 4vw, 3.5rem);
   background:
-    radial-gradient(circle at 50% 42%, color-mix(in oklch, var(--landing-gold) 18%, transparent), transparent 62%),
+    radial-gradient(circle at 50% 42%, color-mix(in oklch, var(--color-action) 14%, transparent), transparent 62%),
     var(--color-canvas);
-  box-shadow: var(--och-shadow-short), inset 0 1px color-mix(in oklch, var(--landing-ink) 95%, transparent);
+  box-shadow: 0 2rem 5rem rgb(0 0 0 / 42%), inset 0 1px rgb(255 255 255 / .16);
   outline: none;
   cursor: grab;
 }
@@ -1092,8 +1114,17 @@ html[data-landing-motion="true"] [data-reveal]:not([data-visible="true"]) { opac
   .landing-cta { grid-template-columns: 1fr; }
   .public-footer { grid-template-columns: 1fr auto; padding-block: 2rem; }
   .public-footer p { display: none; }
-  .viewer-page__intro { grid-template-columns: 1fr; gap: 1.5rem; }
-  .viewer-toolbar { align-items: flex-start; flex-direction: column; }
+  .viewer-page__intro { grid-template-columns: 1fr; gap: .5rem; }
+  .viewer-toolbar {
+    align-items: center;
+    flex-direction: row;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    border-radius: 1.2rem;
+    scrollbar-width: thin;
+  }
+  .viewer-view-buttons,
+  .viewer-action-buttons { flex: 0 0 auto; flex-wrap: nowrap; }
   .viewer-stage { height: 66svh; min-height: 28rem; }
 
   .auth-page { grid-template-columns: 1fr; }
@@ -1141,7 +1172,7 @@ html[data-landing-motion="true"] [data-reveal]:not([data-visible="true"]) { opac
   .viewer-page { padding-inline: .5rem; }
   .viewer-page__header,
   .viewer-page__intro { width: calc(100% - 1rem); }
-  .viewer-page h1 { font-size: clamp(3.8rem, 19vw, 5.5rem); }
+  .viewer-page h1 { font-size: clamp(2.5rem, 13vw, 3.7rem); }
   .viewer-view-buttons,
   .viewer-action-buttons { width: 100%; }
   .viewer-toolbar button { flex: 1; }
@@ -1168,6 +1199,10 @@ html[data-landing-motion="true"] [data-reveal]:not([data-visible="true"]) { opac
   .landing-story[data-ready] .landing-story__chapter,
   .landing-story[data-ready] .landing-story__chapter[data-active="true"] { opacity: 1; transform: none; }
   .landing-story__chapter::before { transform: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .viewer-toolbar { background: var(--color-surface); backdrop-filter: none; }
 }
 
 @media (forced-colors: active) {

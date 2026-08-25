@@ -205,7 +205,7 @@ Regras:
 | SCR-ACC-013 | `/conta/recurso` | restrição, evidência e recurso | `139–148` | `E2E-SCR-ACC-013` |
 | SCR-ACC-014 | `/conta/notificacoes` | inbox transacional e preferências | `133–138` | `E2E-SCR-ACC-014` |
 | SCR-ACC-015 | `/conta/avaliacoes` | review bilateral/elegibilidade/reveal/moderação/recurso | `230–236` | `E2E-SCR-ACC-015` |
-| SCR-ACC-016 | `/conta/conquistas` | level progress + badge/reward awards e origem | `237–243,254` | `E2E-SCR-ACC-016` |
+| SCR-ACC-016 | `/conta/conquistas` | view dedicada (`AchievementsView`) consulta `GET /v1/seller-accounts/{sellerAccountId}/progression` (nível, badge/reward awards e origem); leitura ainda não servida por `apps/api` → estado indisponível fail-closed citando o contrato ausente, slot vazio sem award inventado (RF-241/243) e regras públicas reais em `/recompensas` e `/ranking` | `237–243,254` | `E2E-SCR-ACC-016` |
 
 ### 5.3 Comprador — 12
 

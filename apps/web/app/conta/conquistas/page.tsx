@@ -1,7 +1,8 @@
-// GERADO por tools/traceability/generate-screen-contracts.mjs.
-// Fonte canônica: docs/07-MAPA-DE-TELAS-E-FLUXOS.md.
-import { ScreenContractPage } from "@/components/screen-contract/screen-contract-page";
+import type { Metadata } from "next";
+import { AchievementsView } from "@/components/progression/achievements-view";
 
-export default function Page() {
-  return <ScreenContractPage screenId="SCR-ACC-016" />;
+export const metadata: Metadata = { title: "Conquistas" };
+
+export default function AccountAchievementsPage() {
+  return <AchievementsView />;
 }

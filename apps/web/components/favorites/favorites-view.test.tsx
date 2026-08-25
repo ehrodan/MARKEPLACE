@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FAVORITES_STORAGE_KEY, type StoredFavorite } from "./favorites-storage";
 import { FavoritesView } from "./favorites-view";
@@ -7,6 +7,14 @@ import { FavoritesView } from "./favorites-view";
 interface ListingFixture {
   priceMinor: string;
   quantityAvailable: number;
+}
+
+/** Entrada da conta no formato REAL de GET /v1/me/watchlist (watchlistEntrySchema). */
+interface AccountEntryFixture {
+  watchlistEntryId: string;
+  listingId: string;
+  kind: string;
+  status?: string;
 }
 
 function favorite(overrides: Partial<StoredFavorite> = {}): StoredFavorite {
@@ -47,13 +55,65 @@ function problem(status: number, code: string, title: string) {
   });
 }
 
-/** A watchlist da conta ainda não foi publicada: a tela opera em modo local. */
-function stubApi(listings: Record<string, ListingFixture | "GONE">) {
-  vi.stubGlobal("fetch", vi.fn((input: unknown) => {
+function accountEntryBody(fixture: AccountEntryFixture) {
+  return {
+    watchlistEntryId: fixture.watchlistEntryId,
+    listingId: fixture.listingId,
+    catalogItemId: `catalog-${fixture.listingId}`,
+    kind: fixture.kind,
+    targetPriceMinor: null,
+    referencePriceMinor: "129900",
+    currency: "BRL",
+    status: fixture.status ?? "ACTIVE",
+    lastNotifiedAt: null,
+    createdAt: "2026-08-01T12:00:00.000Z",
+  };
+}
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+/**
+ * Sem `account`, a watchlist responde 404 e a tela opera em modo local. Com
+ * `account`, GET/POST/DELETE seguem o contrato real de retention-routes.ts:
+ * POST 201 devolve a entrada criada (`watchlistEntryId` = `criada-{kind}`) e
+ * DELETE responde 204.
+ */
+function stubApi(
+  listings: Record<string, ListingFixture | "GONE">,
+  account?: AccountEntryFixture[],
+) {
+  const fetchMock = vi.fn((input: unknown, init?: RequestInit) => {
     const url = typeof input === "string" ? input : String(input);
+    const method = (init?.method ?? "GET").toUpperCase();
 
     if (url.includes("/v1/me/watchlist")) {
-      return Promise.resolve(problem(404, "CAPABILITY_NOT_IMPLEMENTED", "Não implementado"));
+      if (account === undefined) {
+        return Promise.resolve(problem(404, "CAPABILITY_NOT_IMPLEMENTED", "Não implementado"));
+      }
+      if (method === "GET") {
+        return Promise.resolve(json({
+          data: account.map(accountEntryBody),
+          nextCursor: null,
+          asOf: "2026-08-05T12:00:00.000Z",
+        }));
+      }
+      if (method === "POST") {
+        const body = JSON.parse(String(init?.body)) as { listingId: string; kind: string };
+        return Promise.resolve(json(accountEntryBody({
+          watchlistEntryId: `criada-${body.kind}`,
+          listingId: body.listingId,
+          kind: body.kind,
+        }), 201));
+      }
+      if (method === "DELETE") {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      return Promise.resolve(problem(405, "METHOD_NOT_ALLOWED", "Método não permitido"));
     }
 
     const match = /\/v1\/listings\/([^?]+)$/u.exec(url);
@@ -64,11 +124,24 @@ function stubApi(listings: Record<string, ListingFixture | "GONE">) {
       return Promise.resolve(problem(404, "LISTING_NOT_FOUND", "Anúncio não encontrado"));
     }
 
-    return Promise.resolve(new Response(JSON.stringify(listingBody(slug ?? "", fixture)), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    }));
-  }));
+    return Promise.resolve(json(listingBody(slug ?? "", fixture)));
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+/** Chamadas feitas à watchlist da conta, já filtradas por método HTTP. */
+function watchlistCalls(fetchMock: ReturnType<typeof vi.fn>, method: string) {
+  return fetchMock.mock.calls
+    .map((call) => {
+      const [input, init] = call as [unknown, RequestInit | undefined];
+      return {
+        url: typeof input === "string" ? input : String(input),
+        method: (init?.method ?? "GET").toUpperCase(),
+        body: typeof init?.body === "string" ? init.body : null,
+      };
+    })
+    .filter((call) => call.url.includes("/v1/me/watchlist") && call.method === method);
 }
 
 beforeEach(() => {
@@ -117,8 +190,8 @@ describe("FavoritesView", () => {
     expect(scope.getByRole("link", { name: /Procurar no catálogo público/u })).toHaveAttribute("href", "/market");
     expect(scope.getByRole("button", { name: "Remover Item que sumiu dos favoritos" })).toBeInTheDocument();
 
-    // Preço salvo e preço de hoje aparecem juntos, sem adjetivo de oferta.
-    expect(screen.getByText(/menor que o preço salvo/u)).toBeInTheDocument();
+    // Preço salvo e preço de hoje aparecem juntos; a queda cita a diferença exata.
+    expect(screen.getByText(/Preço caiu R\$\s300,00 desde que você salvou/u)).toBeInTheDocument();
     expect(screen.getAllByText("Preço quando você salvou")).toHaveLength(4);
   });
 
@@ -240,5 +313,123 @@ describe("FavoritesView", () => {
     expect(back).toHaveAttribute("aria-pressed", "false");
     const afterDisable = JSON.parse(window.localStorage.getItem(FAVORITES_STORAGE_KEY) ?? "[]") as StoredFavorite[];
     expect(afterDisable[0]?.watch).toHaveLength(0);
+  });
+
+  it("destaca a queda real de preço com a diferença exata, e nunca inventa queda", async () => {
+    window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([
+      favorite({ listingId: "b", publicSlug: "barateou", title: "Item que barateou", savedPriceMinor: "129900" }),
+      favorite({ listingId: "e", publicSlug: "encareceu", title: "Item que encareceu", savedPriceMinor: "129900" }),
+    ]));
+    stubApi({
+      barateou: { priceMinor: "99900", quantityAvailable: 2 },
+      encareceu: { priceMinor: "149900", quantityAvailable: 2 },
+    });
+
+    render(<FavoritesView />);
+
+    // 129900 − 99900 = 30000 minor units → R$ 300,00 exatos, dado real da comparação.
+    const badge = await screen.findByText(/Preço caiu R\$\s300,00 desde que você salvou/u);
+    expect(badge).toBeInTheDocument();
+
+    // Alta não vira queda: o outro item diz apenas que o preço subiu.
+    const encareceu = screen.getByRole("heading", { name: "Item que encareceu" }).closest("article");
+    expect(encareceu).not.toBeNull();
+    expect(within(encareceu as HTMLElement).getByText(/maior que o preço salvo/u)).toBeInTheDocument();
+    expect(within(encareceu as HTMLElement).queryByText(/Preço caiu/u)).not.toBeInTheDocument();
+  });
+});
+
+describe("FavoritesView — sincronização com o contrato real da watchlist", () => {
+  const LISTING_ID = "0198a5c0-0000-7000-8000-00000000000a";
+
+  it("liga um aviso com um upsert por canal, no corpo exato {listingId, kind}", async () => {
+    window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([
+      favorite({ listingId: LISTING_ID, publicSlug: "esgotado", title: "Item esgotado" }),
+    ]));
+    const fetchMock = stubApi({ esgotado: { priceMinor: "129900", quantityAvailable: 0 } }, []);
+
+    render(<FavoritesView />);
+    fireEvent.click(await screen.findByRole("button", { name: "Avisar quando voltar ao estoque — Item esgotado" }));
+
+    await waitFor(() => { expect(watchlistCalls(fetchMock, "POST")).toHaveLength(1); });
+    const [post] = watchlistCalls(fetchMock, "POST");
+    expect(post?.url).toBe("/api/backend/v1/me/watchlist");
+    // Nunca o StoredFavorite inteiro: só o que createWatchlistEntryBodySchema aceita.
+    expect(JSON.parse(String(post?.body))).toEqual({ listingId: LISTING_ID, kind: "BACK_IN_STOCK" });
+  });
+
+  it("manda o alvo só no canal PRICE_DROP e desliga pelo watchlistEntryId devolvido no 201", async () => {
+    window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([
+      favorite({ listingId: LISTING_ID, publicSlug: "esgotado", title: "Item esgotado" }),
+    ]));
+    const fetchMock = stubApi({ esgotado: { priceMinor: "129900", quantityAvailable: 0 } }, []);
+
+    render(<FavoritesView />);
+    const alvo = await screen.findByLabelText("Avisar somente abaixo de (opcional)");
+    fireEvent.change(alvo, { target: { value: "1.199,90" } });
+    fireEvent.click(screen.getByRole("button", { name: "Avisar se o preço cair — Item esgotado" }));
+
+    await waitFor(() => { expect(watchlistCalls(fetchMock, "POST")).toHaveLength(1); });
+    expect(JSON.parse(String(watchlistCalls(fetchMock, "POST")[0]?.body))).toEqual({
+      listingId: LISTING_ID,
+      kind: "PRICE_DROP",
+      targetPriceMinor: "119990",
+    });
+
+    fireEvent.click(await screen.findByRole("button", { name: "Aviso de queda de preço ligado — Item esgotado" }));
+    await waitFor(() => { expect(watchlistCalls(fetchMock, "DELETE")).toHaveLength(1); });
+    expect(watchlistCalls(fetchMock, "DELETE")[0]?.url)
+      .toBe("/api/backend/v1/me/watchlist/criada-PRICE_DROP");
+  });
+
+  it("desliga aviso que já existia na conta pelo id lido no GET, nunca pelo listingId", async () => {
+    const entryId = "0198beef-1111-7000-8000-000000000001";
+    window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([
+      favorite({
+        listingId: LISTING_ID,
+        publicSlug: "esgotado",
+        title: "Item esgotado",
+        watch: [{
+          channel: "BACK_IN_STOCK",
+          optedInAt: "2026-08-02T12:00:00.000Z",
+          policyVersion: "watchlist-optin-2026-08",
+        }],
+      }),
+    ]));
+    const fetchMock = stubApi(
+      { esgotado: { priceMinor: "129900", quantityAvailable: 0 } },
+      [{ watchlistEntryId: entryId, listingId: LISTING_ID, kind: "BACK_IN_STOCK" }],
+    );
+
+    render(<FavoritesView />);
+    fireEvent.click(await screen.findByRole("button", { name: "Aviso de reposição ligado — Item esgotado" }));
+
+    await waitFor(() => { expect(watchlistCalls(fetchMock, "DELETE")).toHaveLength(1); });
+    const [remove] = watchlistCalls(fetchMock, "DELETE");
+    expect(remove?.url).toBe(`/api/backend/v1/me/watchlist/${entryId}`);
+    expect(remove?.url).not.toContain(LISTING_ID);
+  });
+
+  it("ao remover o favorito, cancela na conta os avisos conhecidos daquele anúncio", async () => {
+    window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([
+      favorite({ listingId: LISTING_ID, publicSlug: "esgotado", title: "Item esgotado" }),
+    ]));
+    const fetchMock = stubApi(
+      { esgotado: { priceMinor: "129900", quantityAvailable: 0 } },
+      [
+        { watchlistEntryId: "0198beef-2222-7000-8000-000000000002", listingId: LISTING_ID, kind: "PRICE_DROP" },
+        { watchlistEntryId: "0198beef-3333-7000-8000-000000000003", listingId: LISTING_ID, kind: "BACK_IN_STOCK" },
+      ],
+    );
+
+    render(<FavoritesView />);
+    fireEvent.click(await screen.findByRole("button", { name: "Remover Item esgotado dos favoritos" }));
+
+    await waitFor(() => { expect(watchlistCalls(fetchMock, "DELETE")).toHaveLength(2); });
+    const urls = watchlistCalls(fetchMock, "DELETE").map((call) => call.url).sort();
+    expect(urls).toEqual([
+      "/api/backend/v1/me/watchlist/0198beef-2222-7000-8000-000000000002",
+      "/api/backend/v1/me/watchlist/0198beef-3333-7000-8000-000000000003",
+    ]);
   });
 });

@@ -14,6 +14,7 @@ import {
   parseCartLine,
   parseQuantityInput,
   parseServerCart,
+  preserveSavedMarks,
   readCart,
   removeCartLine,
   removeCartLines,
@@ -434,6 +435,29 @@ describe("carrinho publicado pela conta", () => {
     expect(parseServerCart({}).issue).toBe("CORRUPTED");
     expect(parseServerCart({ data: {} }).issue).toBe("CORRUPTED");
     expect(parseServerCart({ data: { lines: "nao e lista" } }).issue).toBe("CORRUPTED");
+  });
+});
+
+describe("preservação da marca após resposta da conta", () => {
+  it("reaplica guardado para depois por listingId, sem acrescentar nem duplicar linha", () => {
+    const previous = [
+      line({ listingId: "a", savedForLater: true }),
+      line({ listingId: "b" }),
+    ];
+    const fromServer = [
+      line({ listingId: "a", cartLineId: "cl-1" }),
+      line({ listingId: "c", cartLineId: "cl-2" }),
+    ];
+
+    const result = preserveSavedMarks(previous, fromServer);
+    expect(result).toHaveLength(2); // linha removida no servidor não volta
+    expect(result.find((entry) => entry.listingId === "a")?.savedForLater).toBe(true);
+    expect(result.find((entry) => entry.listingId === "c")).not.toHaveProperty("savedForLater");
+  });
+
+  it("sem marca anterior, devolve a resposta do servidor intacta", () => {
+    const fromServer = [line({ listingId: "a" })];
+    expect(preserveSavedMarks([line({ listingId: "a" })], fromServer)).toEqual(fromServer);
   });
 });
 

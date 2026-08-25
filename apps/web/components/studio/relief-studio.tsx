@@ -29,7 +29,7 @@ import styles from "./relief-studio.module.css";
 
 const ReliefCanvas = dynamic(() => import("./relief-canvas"), {
   ssr: false,
-  loading: () => <div className={styles.canvasLoading} role="status">Preparando o Canvas 2,5D…</div>,
+  loading: () => <div className={styles.canvasLoading} role="status">Preparando o Canvas 2,5D.</div>,
 });
 
 type PreviewImage = {
@@ -43,12 +43,8 @@ type CanvasStatus = "idle" | "loading" | "ready" | "error";
 const DEFAULT_DEPTH = 0.09;
 
 function canUseWebGl(): boolean {
-  try {
-    const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") || canvas.getContext("webgl"));
-  } catch {
-    return false;
-  }
+  return typeof WebGL2RenderingContext !== "undefined"
+    || typeof WebGLRenderingContext !== "undefined";
 }
 
 function formatBytes(bytes: number): string {
@@ -140,7 +136,7 @@ export function ReliefStudio() {
   const reliefPercent = Math.round((depth / 0.18) * 100);
 
   return (
-    <main className={styles.page} id="conteudo-principal">
+    <main className={`${styles.page} public-commerce-theme`} id="conteudo-principal">
       <header className={styles.topbar}>
         <BrandWordmark />
         <nav aria-label="Navegação do Studio" className={styles.nav}>
@@ -151,7 +147,7 @@ export function ReliefStudio() {
 
       <section className={styles.hero} aria-labelledby="relief-studio-title">
         <div className={styles.heroCopy}>
-          <span className={styles.eyebrow}>STUDIO EXPERIMENTAL · PROCESSAMENTO LOCAL</span>
+          <span className={styles.eyebrow}>STUDIO EXPERIMENTAL / PROCESSAMENTO LOCAL</span>
           <h1 id="relief-studio-title">Da arte plana<br /><em>ao relevo.</em></h1>
           <p>
             Confira volume, brilho e leitura da skin antes de preparar um asset real.
@@ -159,7 +155,7 @@ export function ReliefStudio() {
           </p>
         </div>
         <div className={styles.heroTags} aria-label="Características do preview">
-          <span>PNG · JPEG · WEBP</span>
+          <span>PNG / JPEG / WEBP</span>
           <span>UM CANVAS</span>
           <span>SEM UPLOAD</span>
         </div>
@@ -168,7 +164,7 @@ export function ReliefStudio() {
       <aside className={styles.truthNotice} aria-label="Limite técnico do preview">
         <ShieldCheck aria-hidden="true" size={22} />
         <div>
-          <strong>Relevo 2,5D local — não é reconstrução 3D.</strong>
+          <strong>Relevo 2,5D local. Não é reconstrução 3D.</strong>
           <p>
             A luminosidade da imagem desloca uma única superfície. Profundidade, laterais e faces ocultas
             não são descobertas, inventadas nem publicadas como modelo do item.
@@ -195,8 +191,8 @@ export function ReliefStudio() {
                 type="file"
               />
               <Upload aria-hidden="true" size={28} />
-              <strong>{validationStatus === "validating" ? "Validando imagem…" : "Selecionar imagem"}</strong>
-              <span>PNG, JPEG ou WebP estático · até 8 MB · até 4096 px por lado</span>
+              <strong>{validationStatus === "validating" ? "Validando imagem." : "Selecionar imagem"}</strong>
+              <span>PNG, JPEG ou WebP estático / até 8 MB / até 4096 px por lado</span>
             </label>
 
             <div aria-live="polite" className={styles.feedbackRegion}>
@@ -242,8 +238,8 @@ export function ReliefStudio() {
             </label>
 
             <div className={styles.viewControls} role="group" aria-label="Vistas do relevo">
-              <button disabled={!preview || !showCanvas} onClick={() => { chooseView("front"); }} type="button">Frente</button>
-              <button disabled={!preview || !showCanvas} onClick={() => { chooseView("angle"); }} type="button">Ângulo</button>
+              <button aria-pressed={viewRequest.view === "front"} disabled={!preview || !showCanvas} onClick={() => { chooseView("front"); }} type="button">Frente</button>
+              <button aria-pressed={viewRequest.view === "angle"} disabled={!preview || !showCanvas} onClick={() => { chooseView("angle"); }} type="button">Ângulo</button>
               <button disabled={!preview || !showCanvas} onClick={resetPreview} type="button">Redefinir</button>
             </div>
 
@@ -292,8 +288,10 @@ export function ReliefStudio() {
                       <img alt="Fallback 2D da imagem selecionada" src={preview.sourceUrl} />
                       <span>
                         {webGlAvailable === null
-                          ? "Verificando WebGL…"
-                          : "WebGL indisponível. Mantendo a fonte em 2D."}
+                          ? "Verificando WebGL."
+                          : webGlAvailable
+                            ? "Não foi possível montar o relevo. Mantendo a fonte em 2D."
+                            : "WebGL indisponível. Mantendo a fonte em 2D."}
                       </span>
                     </div>
                   )}

@@ -6,7 +6,6 @@ import {
   ArrowRight,
   CircleSlash,
   CloudOff,
-  PackageX,
   RefreshCw,
   Tag,
   Trash2,
@@ -24,8 +23,6 @@ import {
   browserStorage,
   clearWatchOptIn,
   findOptIn,
-  mergeFavorites,
-  parseFavorite,
   readFavorites,
   removeFavorite,
   setWatchOptIn,
@@ -39,18 +36,24 @@ import styles from "./favorites.module.css";
 
 const WATCHLIST_PATH = "/v1/me/watchlist";
 
-/** Estados que só a projeção da conta consegue afirmar. */
-type RemoteWatchState = "AVAILABLE" | "OUT_OF_STOCK" | "PRICE_CHANGED" | "UNPUBLISHED" | "REMOVED_BY_SELLER";
-
 interface WatchlistResponse {
   data?: unknown;
   asOf?: unknown;
-  freshness?: unknown;
 }
 
-interface RemoteEntryState {
-  state: RemoteWatchState | null;
-  stateChangedAt: string | null;
+/**
+ * Entrada de vigilância como `GET /v1/me/watchlist` devolve DE VERDADE
+ * (apps/api/src/retention-routes.ts, `watchlistEntrySchema`): a conta guarda
+ * AVISOS por (anúncio, tipo), identificados por `watchlistEntryId` — não uma
+ * lista de favoritos. Título, slug e preço salvos são registro do dispositivo;
+ * a API não os devolve, então nenhum favorito local nasce da conta.
+ */
+interface AccountWatchEntry {
+  watchlistEntryId: string;
+  listingId: string;
+  channel: WatchChannel;
+  /** `WATCHLIST_STATUSES` do módulo: ACTIVE | TRIGGERED | CANCELLED. */
+  status: string;
 }
 
 type ListingCheck =
@@ -59,13 +62,16 @@ type ListingCheck =
   | { status: "GONE" }
   | { status: "FAILED"; message: string };
 
+/*
+ * A watchlist real não afirma estado de anúncio (pausado x removido): ela devolve
+ * apenas os avisos da pessoa. Sem essa projeção, "sumiu do catálogo público" é o
+ * máximo que dá para dizer com honestidade — e é o que o estado abaixo diz.
+ */
 type FavoriteState =
   | "DISPONIVEL"
   | "PRECO_MUDOU"
   | "SEM_ESTOQUE"
-  | "DESPUBLICADO"
   | "FORA_DO_CATALOGO"
-  | "REMOVIDO"
   | "NAO_VERIFICADO"
   | "VERIFICANDO";
 
@@ -87,9 +93,7 @@ const GROUP_ORDER: FavoriteState[] = [
   "DISPONIVEL",
   "PRECO_MUDOU",
   "SEM_ESTOQUE",
-  "DESPUBLICADO",
   "FORA_DO_CATALOGO",
-  "REMOVIDO",
   "NAO_VERIFICADO",
   "VERIFICANDO",
 ];
@@ -113,23 +117,11 @@ const GROUPS: Record<FavoriteState, GroupDescriptor> = {
     explanation: "Continua publicado, porém o vendedor está com zero unidade disponível agora.",
     action: "Abrir anúncio esgotado",
   },
-  DESPUBLICADO: {
-    label: "Despublicado pelo vendedor",
-    tone: "warning",
-    explanation: "O vendedor pausou o anúncio; ele pode voltar ao catálogo sem virar um anúncio novo.",
-    action: "Ver ofertas equivalentes",
-  },
   FORA_DO_CATALOGO: {
     label: "Fora do catálogo público",
     tone: "warning",
-    explanation: "O anúncio deixou de responder no catálogo público e esta sessão não consegue distinguir pausa de remoção sem a lista da sua conta.",
+    explanation: "O anúncio deixou de responder no catálogo público e esta tela não consegue distinguir pausa de remoção definitiva — nenhuma das duas é presumida.",
     action: "Procurar no catálogo público",
-  },
-  REMOVIDO: {
-    label: "Removido pelo vendedor",
-    tone: "danger",
-    explanation: "O vendedor removeu o anúncio em definitivo; ele não volta e não há aviso a acompanhar.",
-    action: "Procurar substituto no catálogo",
   },
   NAO_VERIFICADO: {
     label: "Não verificado",
@@ -157,21 +149,27 @@ function isMinorUnits(value: unknown): value is string {
   return typeof value === "string" && /^\d{1,18}$/u.test(value);
 }
 
-function readRemoteState(raw: unknown): RemoteEntryState {
-  if (typeof raw !== "object" || raw === null) return { state: null, stateChangedAt: null };
+/**
+ * Aceita só o que dá para conferir contra `watchlistEntrySchema`. `ANY_OFFER`
+ * existe na API mas não tem canal local correspondente — a entrada é ignorada
+ * aqui em vez de virar um canal inventado.
+ */
+function parseAccountWatchEntry(raw: unknown): AccountWatchEntry | null {
+  if (typeof raw !== "object" || raw === null) return null;
   const record = raw as Record<string, unknown>;
-  const candidate = record.state;
-  const state = candidate === "AVAILABLE"
-    || candidate === "OUT_OF_STOCK"
-    || candidate === "PRICE_CHANGED"
-    || candidate === "UNPUBLISHED"
-    || candidate === "REMOVED_BY_SELLER"
-    ? candidate
+  const watchlistEntryId = typeof record.watchlistEntryId === "string" && record.watchlistEntryId !== ""
+    ? record.watchlistEntryId
     : null;
-  const changed = typeof record.stateChangedAt === "string" && !Number.isNaN(Date.parse(record.stateChangedAt))
-    ? record.stateChangedAt
-    : null;
-  return { state, stateChangedAt: changed };
+  const listingId = typeof record.listingId === "string" && record.listingId !== "" ? record.listingId : null;
+  const channel = record.kind === "PRICE_DROP" || record.kind === "BACK_IN_STOCK" ? record.kind : null;
+  const status = typeof record.status === "string" && record.status !== "" ? record.status : null;
+  if (!watchlistEntryId || !listingId || !channel || !status) return null;
+  return { watchlistEntryId, listingId, channel, status };
+}
+
+/** Chave de deduplicação da conta: a API upserta por (anúncio, tipo). */
+function accountEntryKey(listingId: string, channel: WatchChannel): string {
+  return `${listingId}:${channel}`;
 }
 
 /** -1 caiu · 0 igual · 1 subiu · null incomparável (moeda diferente ou valor inválido). */
@@ -186,10 +184,7 @@ function comparePrice(entry: StoredFavorite, listing: PublicListing): -1 | 0 | 1
 function resolveState(
   entry: StoredFavorite,
   check: ListingCheck | undefined,
-  remote: RemoteEntryState | undefined,
 ): FavoriteState {
-  if (remote?.state === "REMOVED_BY_SELLER") return "REMOVIDO";
-  if (remote?.state === "UNPUBLISHED") return "DESPUBLICADO";
   if (!check || check.status === "CHECKING") return "VERIFICANDO";
   if (check.status === "FAILED") return "NAO_VERIFICADO";
   if (check.status === "GONE") return "FORA_DO_CATALOGO";
@@ -204,7 +199,7 @@ function channelsFor(state: FavoriteState, entry: StoredFavorite): WatchChannel[
     ? ["PRICE_DROP"]
     : state === "SEM_ESTOQUE"
       ? ["BACK_IN_STOCK", "PRICE_DROP"]
-      : state === "DESPUBLICADO" || state === "FORA_DO_CATALOGO"
+      : state === "FORA_DO_CATALOGO"
         ? ["BACK_IN_STOCK"]
         : [];
   // Um opt-in já dado nunca fica sem botão de desligar, seja qual for o estado.
@@ -229,7 +224,12 @@ export function FavoritesView() {
 
   const checksRef = useRef<ReadonlyMap<string, ListingCheck>>(new Map());
   const mountedRef = useRef(true);
-  const mergedRef = useRef<string | null>(null);
+  /**
+   * (listingId, canal) → watchlistEntryId. É o identificador que o DELETE da API
+   * exige. Alimentado pela leitura da conta e pelas respostas 201 dos POSTs desta
+   * sessão. Ausência de chave = a conta não tem esse aviso (nada a remover lá).
+   */
+  const accountEntryIdsRef = useRef<Map<string, string>>(new Map());
   const entriesRef = useRef<StoredFavorite[]>([]);
   entriesRef.current = entries ?? [];
 
@@ -264,31 +264,24 @@ export function FavoritesView() {
     setChecks(next);
   }, []);
 
-  // Estados que a projeção da conta afirma (pausa x remoção definitiva).
-  const remoteStates = useMemo(() => {
-    const map = new Map<string, RemoteEntryState>();
-    if (watchlist.status !== "ready") return map;
+  /*
+   * Indexa os avisos que a conta já tem, pelo id que o DELETE exige. Entrada
+   * CANCELLED não entra: não há nada para remover dela.
+   *
+   * PENDÊNCIA HONESTA: a resposta não traz `policyVersion` nem slug/título, então
+   * um aviso ligado em OUTRO dispositivo não é importado como opt-in local (não
+   * há evidência de política para gravar). Ele continua valendo na conta e o id
+   * indexado aqui permite desligá-lo desta tela quando o canal for desligado.
+   */
+  useEffect(() => {
+    if (watchlist.status !== "ready") return;
     const payload = Array.isArray(watchlist.data.data) ? watchlist.data.data : [];
     for (const raw of payload) {
-      const parsed = parseFavorite(raw);
-      if (!parsed) continue;
-      map.set(parsed.listingId, readRemoteState(raw));
+      const parsed = parseAccountWatchEntry(raw);
+      if (!parsed || parsed.status === "CANCELLED") continue;
+      accountEntryIdsRef.current.set(accountEntryKey(parsed.listingId, parsed.channel), parsed.watchlistEntryId);
     }
-    return map;
   }, [watchlist.status, watchlist.data]);
-
-  // Merge dispositivo + conta ao entrar: nenhum lado apaga o outro.
-  useEffect(() => {
-    if (watchlist.status !== "ready" || entries === null) return;
-    const asOf = typeof watchlist.data.asOf === "string" ? watchlist.data.asOf : WATCHLIST_PATH;
-    if (mergedRef.current === asOf) return;
-    mergedRef.current = asOf;
-    const remote = (Array.isArray(watchlist.data.data) ? watchlist.data.data : [])
-      .map((raw) => parseFavorite(raw))
-      .filter((item): item is StoredFavorite => item !== null);
-    if (remote.length === 0 && entries.length === 0) return;
-    persist(mergeFavorites(entries, remote));
-  }, [entries, persist, watchlist.status, watchlist.data]);
 
   const verificationKey = useMemo(
     () => (entries ?? []).map((entry) => `${entry.listingId}:${entry.publicSlug}`).join("|"),
@@ -322,24 +315,65 @@ export function FavoritesView() {
     }));
   }, [entries, updateCheck, verificationKey, verifyToken]);
 
-  const pushToAccount = useCallback(async (entry: StoredFavorite | null, listingId: string) => {
+  const reportSyncFailure = useCallback((error: unknown) => {
+    if (!mountedRef.current) return;
+    setSyncWarning(
+      error instanceof Error
+        ? `A alteração ficou salva neste dispositivo, mas a conta não confirmou: ${error.message}`
+        : "A alteração ficou salva neste dispositivo, mas a conta não confirmou o registro.",
+    );
+  }, []);
+
+  /**
+   * Upsert de UM canal na conta, no corpo que `POST /v1/me/watchlist` valida:
+   * `{ listingId, kind, targetPriceMinor? }` — nunca o favorito inteiro. A API
+   * upserta por (anúncio, tipo) e devolve o `watchlistEntryId` do registro.
+   */
+  const pushWatch = useCallback(async (listingId: string, channel: WatchChannel, targetPriceMinor: string | null) => {
     if (!accountSynced) return;
     try {
-      if (entry) {
-        await apiRequest(WATCHLIST_PATH, { method: "POST", body: JSON.stringify(entry) });
-      } else {
-        await apiRequest(`${WATCHLIST_PATH}/${encodeURIComponent(listingId)}`, { method: "DELETE" });
+      const created = await apiRequest<{ watchlistEntryId?: unknown }>(WATCHLIST_PATH, {
+        method: "POST",
+        body: JSON.stringify({
+          listingId,
+          kind: channel,
+          // A API rejeita alvo fora de PRICE_DROP; o campo só viaja quando existe.
+          ...(channel === "PRICE_DROP" && targetPriceMinor !== null ? { targetPriceMinor } : {}),
+        }),
+      });
+      if (typeof created.watchlistEntryId === "string" && created.watchlistEntryId !== "") {
+        accountEntryIdsRef.current.set(accountEntryKey(listingId, channel), created.watchlistEntryId);
       }
       if (mountedRef.current) setSyncWarning(null);
     } catch (error: unknown) {
-      if (!mountedRef.current) return;
-      setSyncWarning(
-        error instanceof Error
-          ? `A alteração ficou salva neste dispositivo, mas a conta não confirmou: ${error.message}`
-          : "A alteração ficou salva neste dispositivo, mas a conta não confirmou o registro.",
-      );
+      reportSyncFailure(error);
     }
-  }, [accountSynced]);
+  }, [accountSynced, reportSyncFailure]);
+
+  /**
+   * `DELETE /v1/me/watchlist/:watchlistEntryId` — o id da ENTRADA, não o do
+   * anúncio. Sem id conhecido não há o que remover na conta: ou ela nunca teve o
+   * aviso, ou ele foi criado com a sincronização pendente e nunca subiu.
+   */
+  const pushUnwatch = useCallback(async (listingId: string, channel: WatchChannel) => {
+    if (!accountSynced) return;
+    const key = accountEntryKey(listingId, channel);
+    const watchlistEntryId = accountEntryIdsRef.current.get(key);
+    if (watchlistEntryId === undefined) return;
+    try {
+      await apiRequest(`${WATCHLIST_PATH}/${encodeURIComponent(watchlistEntryId)}`, { method: "DELETE" });
+      accountEntryIdsRef.current.delete(key);
+      if (mountedRef.current) setSyncWarning(null);
+    } catch (error: unknown) {
+      // 404 = a conta já não tem a entrada; o objetivo (não vigiar) está cumprido.
+      if (isApiError(error) && error.problem.status === 404) {
+        accountEntryIdsRef.current.delete(key);
+        if (mountedRef.current) setSyncWarning(null);
+        return;
+      }
+      reportSyncFailure(error);
+    }
+  }, [accountSynced, reportSyncFailure]);
 
   function handleRemove(entry: StoredFavorite) {
     const next = persist(removeFavorite(entriesRef.current, entry.listingId));
@@ -348,12 +382,14 @@ export function FavoritesView() {
     checksRef.current = rest;
     setChecks(rest);
     setAnnouncement(`${entry.title} saiu dos seus favoritos. Restam ${formatQuantity(next.length)} itens salvos.`);
-    void pushToAccount(null, entry.listingId);
+    // O favorito em si vive no dispositivo; na conta o que existe são os avisos.
+    void pushUnwatch(entry.listingId, "PRICE_DROP");
+    void pushUnwatch(entry.listingId, "BACK_IN_STOCK");
   }
 
   function handleEnable(entry: StoredFavorite, channel: WatchChannel, targetPriceMinor: string | null) {
     const optedInAt = new Date().toISOString();
-    const next = persist(setWatchOptIn(entriesRef.current, entry.listingId, channel, {
+    persist(setWatchOptIn(entriesRef.current, entry.listingId, channel, {
       optedInAt,
       targetPriceMinor,
     }));
@@ -361,13 +397,13 @@ export function FavoritesView() {
       ? " Todo envio traz descadastro de um clique."
       : " O registro fica neste dispositivo e nenhuma mensagem é enviada enquanto a sincronização com a conta estiver pendente.";
     setAnnouncement(`${CHANNEL_NAMES[channel]} ligado para ${entry.title}.${tail}`);
-    void pushToAccount(next.find((item) => item.listingId === entry.listingId) ?? null, entry.listingId);
+    void pushWatch(entry.listingId, channel, targetPriceMinor);
   }
 
   function handleDisable(entry: StoredFavorite, channel: WatchChannel) {
-    const next = persist(clearWatchOptIn(entriesRef.current, entry.listingId, channel));
+    persist(clearWatchOptIn(entriesRef.current, entry.listingId, channel));
     setAnnouncement(`${CHANNEL_NAMES[channel]} desligado para ${entry.title}.`);
-    void pushToAccount(next.find((item) => item.listingId === entry.listingId) ?? null, entry.listingId);
+    void pushUnwatch(entry.listingId, channel);
   }
 
   function handleRecheck(entry: StoredFavorite) {
@@ -382,13 +418,13 @@ export function FavoritesView() {
   const grouped = useMemo(() => {
     const map = new Map<FavoriteState, StoredFavorite[]>();
     for (const entry of entries ?? []) {
-      const state = resolveState(entry, checks.get(entry.listingId), remoteStates.get(entry.listingId));
+      const state = resolveState(entry, checks.get(entry.listingId));
       const bucket = map.get(state);
       if (bucket) bucket.push(entry);
       else map.set(state, [entry]);
     }
     return map;
-  }, [checks, entries, remoteStates]);
+  }, [checks, entries]);
 
   const storageReady = entries !== null;
   const accountSettled = watchlist.status === "ready" || watchlist.status === "error";
@@ -397,12 +433,9 @@ export function FavoritesView() {
     <PageHeader
       eyebrow="MINHA CONTA"
       title="Favoritos e avisos"
-      description="Cada item salvo aparece com o estado real do anúncio — disponível, preço alterado, sem estoque, despublicado ou removido pelo vendedor. Nada sai da lista sem explicação e nenhum aviso vem marcado."
+      description="Cada item salvo aparece com o estado real do anúncio — disponível, preço alterado, sem estoque ou fora do catálogo público. Nada sai da lista sem explicação e nenhum aviso vem marcado."
       meta={accountSynced && typeof watchlist.data.asOf === "string" ? (
-        <Freshness
-          asOf={watchlist.data.asOf}
-          state={watchlist.data.freshness === "STALE" ? "STALE" : "READY"}
-        />
+        <Freshness asOf={watchlist.data.asOf} state="READY" />
       ) : undefined}
     />
   );
@@ -473,7 +506,6 @@ export function FavoritesView() {
                         entry={entry}
                         state={state}
                         check={checks.get(entry.listingId)}
-                        remote={remoteStates.get(entry.listingId)}
                         syncMode={syncMode}
                         onRemove={() => { handleRemove(entry); }}
                         onRecheck={() => { handleRecheck(entry); }}
@@ -506,8 +538,12 @@ function SyncBanner({
       <Panel className={styles.banner} role="status">
         <Tag aria-hidden="true" size={19} />
         <div>
-          <strong>Lista sincronizada com a sua conta</strong><br />
-          <span>Os favoritos deste dispositivo foram unidos aos da conta. Nenhum dos dois lados foi apagado.</span>
+          <strong>Avisos sincronizados com a sua conta</strong><br />
+          <span>
+            Os avisos ligados aqui passam a valer na conta, e desligar aqui desliga lá.
+            A lista de favoritos em si — título e preço que você salvou — fica neste
+            dispositivo: a conta ainda não guarda essa lista.
+          </span>
         </div>
       </Panel>
     );
@@ -561,7 +597,6 @@ function FavoriteCard({
   entry,
   state,
   check,
-  remote,
   syncMode,
   onRemove,
   onRecheck,
@@ -571,7 +606,6 @@ function FavoriteCard({
   entry: StoredFavorite;
   state: FavoriteState;
   check: ListingCheck | undefined;
-  remote: RemoteEntryState | undefined;
   syncMode: WatchSyncMode;
   onRemove: () => void;
   onRecheck: () => void;
@@ -582,6 +616,11 @@ function FavoriteCard({
   const href = `/anuncios/${encodeURIComponent(entry.publicSlug)}`;
   const listing = check?.status === "FOUND" ? check.listing : null;
   const direction = listing ? comparePrice(entry, listing) : null;
+  // Diferença exata entre o preço salvo e o publicado — só existe quando a queda
+  // é real e na mesma moeda (comparePrice já garantiu os dois formatos).
+  const dropMinor = listing !== null && direction === -1
+    ? (BigInt(entry.savedPriceMinor) - BigInt(listing.priceMinor)).toString()
+    : null;
   const openable = state === "DISPONIVEL" || state === "PRECO_MUDOU" || state === "SEM_ESTOQUE";
   const channels = channelsFor(state, entry);
 
@@ -613,9 +652,13 @@ function FavoriteCard({
             <dt>Preço publicado agora</dt>
             <dd>
               {formatMinorCurrency(listing.priceMinor, listing.currency)}
-              {direction === -1 ? " · menor que o preço salvo" : null}
               {direction === 1 ? " · maior que o preço salvo" : null}
               {direction === null ? " · moeda diferente da registrada, sem comparação possível" : null}
+              {dropMinor !== null ? (
+                <StatusBadge className={styles.priceDrop} tone="success">
+                  Preço caiu {formatMinorCurrency(dropMinor, entry.currency)} desde que você salvou
+                </StatusBadge>
+              ) : null}
             </dd>
           </div>
         ) : null}
@@ -623,12 +666,6 @@ function FavoriteCard({
           <div>
             <dt>Unidades disponíveis</dt>
             <dd>{formatQuantity(listing.quantityAvailable)}</dd>
-          </div>
-        ) : null}
-        {remote?.stateChangedAt ? (
-          <div>
-            <dt>Estado alterado em</dt>
-            <dd><time dateTime={remote.stateChangedAt}>{formatDateTime(remote.stateChangedAt)}</time></dd>
           </div>
         ) : null}
         {check?.status === "FAILED" ? (
@@ -661,7 +698,7 @@ function FavoriteCard({
         {openable && group.action ? (
           <Link className="button-link" href={href}>{group.action}</Link>
         ) : null}
-        {state === "DESPUBLICADO" || state === "FORA_DO_CATALOGO" || state === "REMOVIDO" ? (
+        {state === "FORA_DO_CATALOGO" ? (
           <Link className="button-link" href="/market">
             {group.action} <ArrowRight aria-hidden="true" size={15} />
           </Link>
@@ -674,11 +711,9 @@ function FavoriteCard({
         <Button
           variant="ghost"
           size="small"
-          iconBefore={state === "REMOVIDO"
-            ? <PackageX aria-hidden="true" size={15} />
-            : state === "FORA_DO_CATALOGO"
-              ? <CircleSlash aria-hidden="true" size={15} />
-              : <Trash2 aria-hidden="true" size={15} />}
+          iconBefore={state === "FORA_DO_CATALOGO"
+            ? <CircleSlash aria-hidden="true" size={15} />
+            : <Trash2 aria-hidden="true" size={15} />}
           aria-label={`Remover ${entry.title} dos favoritos`}
           onClick={onRemove}
         >

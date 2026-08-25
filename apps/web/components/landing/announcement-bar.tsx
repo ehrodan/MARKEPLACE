@@ -16,9 +16,12 @@ import styles from "./announcement-bar.module.css";
  * anunciar parcelamento seria afirmar capability que não existe (`RF-Q49`:
  * ausência de provider é `UNSUPPORTED`, nunca sucesso mockado).
  *
- * Então a faixa carrega o que É verdade hoje: as três garantias estruturais do
- * produto. Reduzir risco percebido com fato verificável converte tanto quanto
- * cupom, e não vira processo.
+ * Então a faixa carrega o que É verdade hoje, como proposta de valor e não como
+ * burocracia: catálogo publicado, preço real do anúncio e o carrinho que
+ * revalida preço e estoque antes do pedido — capability real, documentada em
+ * `components/cart/cart-storage.ts` (divergência de preço trava o grupo até a
+ * pessoa aceitar). Reduzir risco percebido com fato verificável converte tanto
+ * quanto cupom, e não vira processo.
  *
  * `docs/03 §5` proíbe carrossel automático na home. Por isso existe uma única
  * mensagem, sem temporizador, layout shift ou conteúdo alternado por JavaScript.
@@ -29,8 +32,8 @@ export function AnnouncementBar() {
       <div className={styles.inner}>
         <p>
           <ShieldCheck aria-hidden="true" size={15} />
-          <strong>Compra com contexto:</strong>
-          <span> preço, estoque e vendedor vêm do catálogo publicado.</span>
+          <strong>Catálogo publicado, preço real</strong>
+          <span>. O carrinho revalida preço e estoque antes do pedido.</span>
         </p>
         <Link href="/seguranca">Entenda a proteção</Link>
       </div>

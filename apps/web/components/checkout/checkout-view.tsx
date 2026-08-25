@@ -47,6 +47,7 @@ import { isApiError } from "@/lib/api-client";
 import { formatDateTime } from "@/lib/date-format";
 import { CheckoutSummary } from "./checkout-summary";
 import { PolicyAcceptance, type PolicySnapshot } from "./policy-acceptance";
+import { PostPurchaseRail } from "./post-purchase-rail";
 import {
   checkOrderTotals,
   checkoutSteps,
@@ -484,10 +485,25 @@ export function CheckoutView({ paymentId, returnedFromProvider }: CheckoutViewPr
                     : "não publicado neste corte"}
               </li>
               <li><code>{POLICY_PATH}</code> · não publicado neste corte</li>
+              {state.stage === "SETTLED_BY_WEBHOOK" ? (
+                <li>
+                  <code>GET /v1/listings</code> · candidatos do rail pós-compra, lidos só após a
+                  confirmação por webhook
+                </li>
+              ) : null}
             </ul>
           </section>
         </aside>
       </div>
+
+      {/* Rail pós-compra "Continue a coleção": monta APENAS no estágio
+          SETTLED_BY_WEBHOOK — o painel de confirmação, único ponto
+          pós-conclusão deste fluxo. A decisão de montagem frente à denylist
+          de recomendação está documentada em post-purchase-rail.tsx. */}
+      <PostPurchaseRail
+        stage={state.stage}
+        orderEnvelope={order.status === "ready" ? order.data : null}
+      />
     </CheckoutShell>
   );
 }

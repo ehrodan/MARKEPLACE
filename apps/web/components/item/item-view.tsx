@@ -30,6 +30,14 @@ import styles from "./item.module.css";
 
 type OfferSort = "PRICE_ASC" | "PRICE_DESC" | "RECENT";
 
+export function approvedCatalogAssets(
+  assets: readonly PublicCatalogAsset[],
+): PublicCatalogAsset[] {
+  return assets.filter((asset) => (
+    !asset.approvalStatus || asset.approvalStatus === "APPROVED"
+  ));
+}
+
 function compareMinor(first: string, second: string): number {
   try {
     const a = BigInt(first);
@@ -78,7 +86,7 @@ export function ItemView({ slug }: { slug: string }) {
   const data = item.data;
   // Só asset aprovado e URL em origem permitida entram na página.
   const approvedAssets = assets.status === "ready"
-    ? assets.data.filter((asset) => !asset.approvalStatus || asset.approvalStatus === "APPROVED")
+    ? approvedCatalogAssets(assets.data)
     : [];
   const imageAsset = primaryImageAsset(approvedAssets);
   const primaryImageUrl = imageAsset ? safeAssetUrl(imageAsset.storageUri) : null;
@@ -97,7 +105,7 @@ export function ItemView({ slug }: { slug: string }) {
         <span className="ed-z__trace" aria-hidden="true" />
 
         <Reveal className="ed-z1">
-          <span className="ed-kicker">ITEM DO CATÁLOGO · {data.gameOrigin}</span>
+          <span className="ed-kicker">ITEM DO CATÁLOGO / {data.gameOrigin}</span>
           <h1 className="ed-mega" id="item-title">{data.displayName}</h1>
           {data.description ? <p className="ed-lede">{data.description}</p> : null}
           <p className="ed-cta-note">

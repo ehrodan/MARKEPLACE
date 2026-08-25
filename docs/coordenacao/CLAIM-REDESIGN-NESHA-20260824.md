@@ -2,7 +2,16 @@
 
 **Responsável temporário:** Codex `/root`  
 **Início:** 2026-08-24 16:47 BRT  
-**Estado:** RELEASED — gate final concluído em 2026-08-24 17:26 BRT
+**Estado:** RELEASED — gate da reabertura concluído em 2026-08-25 03:37 BRT
+
+> Coordenação: não sobrescrever `apps/web/app/globals.css` nem os arquivos da
+> vitrine enquanto o gate desta rodada estiver em execução. A ação volta a ser
+> liquid-lime, com matiz separada da raridade `UNCOMMON` pelo teste executável.
+
+**Gate da reabertura:** 56 arquivos/562 testes, TypeScript, ESLint, build de
+produção, 95/95 rotas e smoke em `localhost:3000` passaram. A ação liquid-lime
+usa hue 100; o Studio manteve um Canvas após troca de imagem; o símbolo da marca
+recebe escala específica no card sem reduzir as demais ofertas.
 
 ## Arquivos claimados
 

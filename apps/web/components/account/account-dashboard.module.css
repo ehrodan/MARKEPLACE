@@ -108,6 +108,27 @@
 .holdRow p { margin: 0; }
 .holdRow small { display: flex; align-items: center; gap: .35rem; color: var(--color-text-muted); }
 
+/* Atalhos da conta (overview): grupos Compras / Carteira / Segurança.
+   Navegação estática — nenhum dado dinâmico é exibido aqui. */
+.quickGroups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; }
+.quickGroup { display: grid; gap: .6rem; align-content: start; }
+.quickGroupTitle { margin: 0; color: var(--color-text-muted); font: 650 .68rem/1.2 var(--font-data); letter-spacing: .09em; text-transform: uppercase; }
+.quickList { margin: 0; padding: 0; display: grid; list-style: none; }
+.quickList li + li { border-top: 1px solid var(--color-border); }
+.quickLink {
+  min-height: 2.75rem; /* alvo mínimo 44px */
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  border-radius: calc(var(--och-radius-control) - 2px);
+  padding: .35rem .5rem;
+  color: var(--color-text-secondary);
+  font-weight: 650;
+}
+.quickLink:hover { background: color-mix(in oklch, var(--color-action) 6%, transparent); color: var(--color-text); }
+.quickLink > svg:first-child { flex: none; color: var(--color-action); }
+.quickLinkArrow { flex: none; margin-left: auto; color: var(--color-text-muted); }
+
 @media (max-width: 70rem) {
   .metricGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -115,6 +136,7 @@
 @media (max-width: 48rem) {
   .provenance { grid-template-columns: 1fr; }
   .toolbar { grid-template-columns: 1fr; }
+  .quickGroups { grid-template-columns: 1fr; }
   .resultCount { justify-self: start; }
   .table th, .table td { padding-inline: .8rem; }
   .pager { align-items: flex-start; flex-direction: column; }

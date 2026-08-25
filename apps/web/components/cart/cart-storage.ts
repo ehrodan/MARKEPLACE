@@ -423,7 +423,9 @@ export function removeCartLines(
  * - a quantidade que fica é a maior das duas, porque as duas foram escolhidas
  *   pela mesma pessoa e reduzir seria descartar uma escolha em silêncio;
  * - `addedAt` mantém o registro mais antigo;
- * - `savedForLater` é marca do dispositivo e sobrevive ao merge.
+ * - `savedForLater` sobrevive ao merge. A marca nasce local e, quando há
+ *   sessão, também é persistida/restaurada pelo carrinho salvo da conta
+ *   (`saved-cart-sync.ts`), sempre casada por `listingId`.
  */
 export function mergeCartLines(
   local: readonly StoredCartLine[],
@@ -448,6 +450,27 @@ export function mergeCartLines(
   }
 
   return sortCartLines([...byListing.values()]);
+}
+
+/**
+ * Reaplica a marca "guardado para depois" sobre uma resposta do carrinho da
+ * conta, casando por `listingId`. A projeção do servidor não carrega a marca;
+ * sem esta passagem, cada mutação remota apagaria a escolha da pessoa em
+ * silêncio. Nenhuma linha é acrescentada ou removida aqui.
+ */
+export function preserveSavedMarks(
+  previous: readonly StoredCartLine[],
+  next: readonly StoredCartLine[],
+): StoredCartLine[] {
+  const saved = new Set(
+    previous.filter((line) => line.savedForLater === true).map((line) => line.listingId),
+  );
+  if (saved.size === 0) return [...next];
+  return next.map((line) => (
+    saved.has(line.listingId) && line.savedForLater !== true
+      ? { ...line, savedForLater: true }
+      : line
+  ));
 }
 
 /** Corpo de `POST /v1/me/cart/merge`: só id do anúncio e quantidade. */

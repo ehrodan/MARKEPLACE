@@ -149,6 +149,54 @@
   padding-left: 1rem;
 }
 
+.topbarEnd {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+/* Sino da conta: contagem REAL de não lidas (mesma fonte da página de
+   notificações). Alvo circular ≥44px. */
+.topbarBell {
+  position: relative;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+}
+
+.topbarBell:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+/* Badge em --color-signal: número é informação, não ação — o ouro da conta
+   fica com marca e ações. Piso tipográfico ≥.68rem; sem animação. */
+.topbarBellBadge {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding-inline: 0.2rem;
+  background: var(--color-signal);
+  color: var(--color-canvas);
+  font: 700 0.68rem/1 var(--font-data);
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--color-canvas);
+}
+
 .contextIcon {
   width: 2.25rem;
   height: 2.25rem;
@@ -187,7 +235,8 @@
   .desktopRail { display: none; }
   .menuButton { display: inline-flex !important; }
   .route { display: none; }
-  .context { max-width: calc(100vw - 8rem); border-left: 0; padding-left: 0; }
+  /* O sino ocupa ~3.5rem à direita; o contexto encolhe para não empurrá-lo. */
+  .context { max-width: calc(100vw - 11.5rem); border-left: 0; padding-left: 0; }
 }
 
 @media (max-width: 36rem) {
@@ -197,5 +246,5 @@
 }
 
 @media (forced-colors: active) {
-  .navLink[data-active="true"], .scope, .contextIcon { border-color: CanvasText; }
+  .navLink[data-active="true"], .scope, .contextIcon, .topbarBell { border-color: CanvasText; }
 }

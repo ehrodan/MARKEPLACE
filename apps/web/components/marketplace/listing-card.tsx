@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Store } from "lucide-react";
+import { FavoriteButton } from "@/components/favorites/favorite-button";
 import {
   formatMinorCurrency,
   formatQuantity,
@@ -28,7 +29,8 @@ import styles from "./marketplace.module.css";
  *
  * O que este card NÃO faz, por `docs/03 §10`: não mostra preço riscado que não
  * foi praticado, não mostra contador, não escreve "últimas unidades". O estoque
- * exibido é o número real do banco — se são 40, diz 40.
+ * exibido é o número real do banco — se são 40, diz 40; se são 2, diz
+ * "Só 2 em estoque" em tom de aviso, porque 2 é o dado real e o aviso é útil.
  */
 export function ListingCard({ listing }: { listing: PublicListing }) {
   const item = listing.catalogItem;
@@ -38,7 +40,11 @@ export function ListingCard({ listing }: { listing: PublicListing }) {
   const condition = item?.craftQuality?.replace(/_/g, " ").toLocaleLowerCase("pt-BR") ?? null;
 
   return (
-    <article className={styles.listingCard} data-rarity={rarity?.value}>
+    <article
+      className={styles.listingCard}
+      data-brand-item={item?.publicSlug === "ochpoch-market-emblem" ? "true" : undefined}
+      data-rarity={rarity?.value}
+    >
       <div className={styles.visualLink}>
         {/* A faixa de raridade é a primeira coisa lida, e diz o nível por
             TEXTO além da cor — quem não distingue as matizes lê a palavra. */}
@@ -52,6 +58,21 @@ export function ListingCard({ listing }: { listing: PublicListing }) {
           </p>
         ) : null}
         <AssetVisual listing={listing} />
+        {/* Favoritar mora no canto do visual, oposto à raridade: guarda a
+            oferta sem sair da grade. É botão, não link — não entra na regra
+            de "todo link leva ao mesmo destino". */}
+        <div className={styles.cardFavorite}>
+          <FavoriteButton
+            variant="icon"
+            listing={{
+              listingId: listing.listingId,
+              publicSlug: listing.publicSlug,
+              title: listingTitle(listing),
+              priceMinor: listing.priceMinor,
+              currency: listing.currency,
+            }}
+          />
+        </div>
       </div>
 
       <div className={styles.cardBody}>
@@ -71,8 +92,19 @@ export function ListingCard({ listing }: { listing: PublicListing }) {
             {condition ? <small>{condition}</small> : null}
           </div>
           <div className={styles.purchaseFacts}>
-            <p className={styles.stockFlag} data-stock={inStock ? "in" : "out"}>
-              {inStock ? `${formatQuantity(listing.quantityAvailable)} em estoque` : "Sem estoque"}
+            {/* Escassez HONESTA (RF-279): com 1..5 unidades o número REAL do
+                banco vira aviso — "Só 2 em estoque" quando quantityAvailable=2.
+                Nunca "últimas unidades" sem número, nunca limiar que invente
+                urgência: de 6 em diante a contagem volta ao tom neutro. */}
+            <p
+              className={styles.stockFlag}
+              data-stock={inStock ? (listing.quantityAvailable <= 5 ? "low" : "in") : "out"}
+            >
+              {!inStock
+                ? "Sem estoque"
+                : listing.quantityAvailable <= 5
+                  ? `Só ${formatQuantity(listing.quantityAvailable)} em estoque`
+                  : `${formatQuantity(listing.quantityAvailable)} em estoque`}
             </p>
             {listing.quantitySold > 0 ? (
               <span>{formatQuantity(listing.quantitySold)} {listing.quantitySold === 1 ? "vendido" : "vendidos"}</span>

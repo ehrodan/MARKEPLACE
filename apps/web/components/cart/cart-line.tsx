@@ -196,6 +196,20 @@ export function effectiveUnitPriceMinor(line: StoredCartLine, status: CartLineSt
   return status.currentUnitPriceMinor ?? line.unitPriceMinor;
 }
 
+/**
+ * Queda de preço confirmada pelo catálogo: diferença exata por unidade, em
+ * unidades mínimas, calculada em BigInt — dinheiro nunca passa por Number.
+ * `null` quando não houve queda, quando a moeda mudou (diferença entre moedas
+ * seria mentira) ou quando o preço vigente não foi confirmado.
+ */
+export function priceDropMinor(line: StoredCartLine, status: CartLineStatus): string | null {
+  if (!status.priceChanged || status.currentUnitPriceMinor === null) return null;
+  if (status.currentCurrency !== line.currency) return null;
+  if (!isMinorUnits(status.currentUnitPriceMinor) || !isMinorUnits(line.unitPriceMinor)) return null;
+  const drop = BigInt(line.unitPriceMinor) - BigInt(status.currentUnitPriceMinor);
+  return drop > 0n ? drop.toString() : null;
+}
+
 export interface CartLineProps {
   line: StoredCartLine;
   status: CartLineStatus;
@@ -231,6 +245,7 @@ export function CartLine({
 
   const unitPriceMinor = effectiveUnitPriceMinor(line, status);
   const currency = status.currentCurrency ?? line.currency;
+  const drop = priceDropMinor(line, status);
   const total = lineTotalMinor({ unitPriceMinor, quantity: line.quantity });
   const saved = line.savedForLater === true;
   const quantityErrorId = `${fieldId}-erro`;
@@ -262,6 +277,11 @@ export function CartLine({
             <Link href={`/anuncios/${encodeURIComponent(line.publicSlug)}`}>{line.title}</Link>
           </h4>
           <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+          {drop !== null ? (
+            <StatusBadge tone="success">
+              Preço caiu {formatMinorCurrency(drop, line.currency)} desde que você adicionou
+            </StatusBadge>
+          ) : null}
         </div>
         <p className={styles.lineUnit}>
           <span>{formatMinorCurrency(unitPriceMinor, currency)} por unidade</span>

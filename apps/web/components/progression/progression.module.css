@@ -1,5 +1,7 @@
-/* Superfícies de progressão pública:
-   /recompensas (SCR-PUB-015) e /ranking (SCR-PUB-014).
+/* Superfícies de progressão:
+   /recompensas (SCR-PUB-015), /ranking (SCR-PUB-014) e a superfície da conta
+   /conta/conquistas (SCR-ACC-016, embutida no AccountShell — ver bloco ao
+   final deste arquivo).
 
    Perfil de motion M1 ("somente funcional", docs/07-MAPA-DE-TELAS-E-FLUXOS.md
    linha 48): apenas feedback de seleção, expansão, skeleton e transição curta
@@ -479,6 +481,27 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--och-space-3);
+}
+
+/* ---------- /conta/conquistas (SCR-ACC-016) ----------
+   Superfície embutida no AccountShell (tema base da conta): sem hero público,
+   pilha compacta na largura do painel. Motion M1: skeleton e nada além. */
+
+.accountPage {
+  display: grid;
+  gap: clamp(1.6rem, 3vw, 2.4rem);
+}
+
+.accountStack {
+  display: grid;
+  gap: var(--och-space-5);
+}
+
+.sectionHead h3 {
+  margin: 0;
+  font: 700 clamp(1.15rem, 2vw, 1.4rem)/1.15 var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--color-text);
 }
 
 @media (max-width: 52rem) {

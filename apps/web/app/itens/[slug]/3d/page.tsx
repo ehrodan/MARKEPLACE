@@ -26,17 +26,17 @@ export default async function Item3DPage({
   const returnTo = allowlistedViewerOrigin(query.from) ?? "/";
 
   return (
-    <main id="conteudo-principal" className="viewer-page">
+    <main id="conteudo-principal" className="viewer-page public-commerce-theme">
       <header className="viewer-page__header">
         <BrandWordmark />
         <Link className="viewer-page__back" href={returnTo}>← Voltar</Link>
       </header>
       <div className="viewer-page__intro">
         <div>
-          <span className="landing-kicker">OBJETO DE MARCA · 3D</span>
-          <h1>O símbolo,<br />sob todos os ângulos.</h1>
+          <span className="landing-kicker">OBJETO DE MARCA / 3D</span>
+          <h1>Inspecione o símbolo.</h1>
         </div>
-        <p>Modelo GLB fornecido ao projeto. Use o mouse, o toque ou as vistas predefinidas para inspecionar a forma.</p>
+        <p>Modelo GLB real do projeto. Arraste, aproxime ou escolha uma vista.</p>
       </div>
       <ModelViewer />
       <footer className="viewer-page__footer">

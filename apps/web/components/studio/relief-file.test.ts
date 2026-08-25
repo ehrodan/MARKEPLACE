@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   RELIEF_MAX_FILE_BYTES,
-  ReliefFileError,
   detectReliefImage,
   validateReliefFile,
+  type ReliefFileError,
   type ReliefImageDecoder,
 } from "./relief-file";
 
@@ -67,11 +67,13 @@ function webpBytes(width: number, height: number, animated = false): Uint8Array 
 }
 
 function imageFile(bytes: Uint8Array, type: string, name = "skin"): File {
-  return new File([bytes], name, { type });
+  const owned = new Uint8Array(bytes.byteLength);
+  owned.set(bytes);
+  return new File([owned.buffer], name, { type });
 }
 
 function decoder(width: number, height: number, close = vi.fn()): ReliefImageDecoder {
-  return async () => ({ width, height, close });
+  return () => Promise.resolve({ width, height, close });
 }
 
 async function expectCode(promise: Promise<unknown>, code: ReliefFileError["code"]): Promise<void> {
@@ -88,7 +90,7 @@ describe("detectReliefImage", () => {
   });
 
   it("rejeita conteúdo que apenas finge ser imagem", () => {
-    expect(() => detectReliefImage(new TextEncoder().encode("not-an-image"))).toThrowError(
+    expect(() => detectReliefImage(new TextEncoder().encode("not-an-image"))).toThrow(
       expect.objectContaining({ code: "SIGNATURE_INVALID" }),
     );
   });
@@ -168,7 +170,7 @@ describe("validateReliefFile", () => {
     await expectCode(
       validateReliefFile(
         imageFile(jpegBytes(640, 480), "image/jpeg"),
-        async () => { throw new Error("decoder internals"); },
+        () => Promise.reject(new Error("decoder internals")),
       ),
       "DECODE_FAILED",
     );

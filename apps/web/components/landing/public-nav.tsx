@@ -1,22 +1,26 @@
 import Link from "next/link";
 import {
   Gem,
+  Heart,
   House,
   MessageCircle,
   Search,
-  ShoppingBag,
   Store,
   UserRound,
 } from "lucide-react";
 import { BrandWordmark } from "@/components/brand-wordmark";
+import { NavCartLink } from "./nav-cart-link";
+import { NavNotificationsLink } from "./nav-notifications-link";
 import styles from "./public-nav.module.css";
 
 type PublicSection = "home" | "market";
 
+// "Vender" ganha presença própria (outline), mas nunca o ouro sólido: o
+// preenchimento dourado segue exclusivo da ação primária de compra/busca.
 const primaryLinks = [
-  { href: "/market", label: "Marketplace" },
-  { href: "/midas", label: "Compre do Midas" },
-  { href: "/vender/novo", label: "Vender" },
+  { href: "/market", label: "Marketplace", emphasis: false },
+  { href: "/midas", label: "Compre do Midas", emphasis: false },
+  { href: "/vender/novo", label: "Vender", emphasis: true },
 ] as const;
 
 const mobileLinks = [
@@ -51,13 +55,20 @@ export function PublicNav({ current = "home" }: { current?: PublicSection }) {
             </form>
 
             <nav className={styles.actions} aria-label="Ações da conta">
-              <Link href="/carrinho" aria-label="Abrir carrinho">
-                <ShoppingBag aria-hidden="true" size={19} />
-                <span>Carrinho</span>
+              {/* Favoritos fica em primeiro: é o link que a media query móvel
+                  esconde, preservando Sino (não lidas), Carrinho (contagem) e
+                  Conta. Decisão registrada: no móvel Favoritos continua
+                  alcançável por /conta, e a barra inferior fica com 5 itens —
+                  sino ou favoritos como 6º/7º item poluiriam a navegação. */}
+              <Link href="/conta/favoritos" aria-label="Favoritos">
+                <Heart aria-hidden="true" size={19} />
+                <span className={styles.actionLabel}>Favoritos</span>
               </Link>
-              <Link className={styles.account} href="/conta">
+              <NavNotificationsLink />
+              <NavCartLink />
+              <Link className={styles.account} href="/conta" aria-label="Conta">
                 <UserRound aria-hidden="true" size={18} />
-                <span>Conta</span>
+                <span className={styles.actionLabel}>Conta</span>
               </Link>
             </nav>
           </div>
@@ -68,6 +79,7 @@ export function PublicNav({ current = "home" }: { current?: PublicSection }) {
                 <Link
                   href={link.href}
                   key={link.href}
+                  className={link.emphasis ? styles.sellLink : undefined}
                   aria-current={current === "market" && link.href === "/market" ? "page" : undefined}
                 >
                   {link.label}
