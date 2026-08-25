@@ -17,7 +17,7 @@ import type { SellerAccountSummary } from "@/lib/api-types";
  * é substituído por módulo, exatamente como o AccountShell o entregaria.
  */
 
-const accountContext = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
+const accountContext = vi.hoisted(() => ({ current: {} }));
 
 vi.mock("@/components/account/account-context", () => ({
   useAccountContext: () => accountContext.current,

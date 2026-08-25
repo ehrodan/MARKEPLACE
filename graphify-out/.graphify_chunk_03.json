@@ -1,0 +1,600 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "label": "OCHPOCH MARKET Vault Hero v2 (brand hero image)",
+      "file_type": "image",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_vault_interior_scene",
+      "label": "Vault Interior Scene",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_sci_fi_secure_facility",
+      "label": "Sci-Fi Secure Facility Aesthetic",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_glass_display_bays",
+      "label": "Row of Glass Display Bays / Vitrine Cabinets",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_plinth_pedestal_row",
+      "label": "Raised Platform with Pedestal / Plinth Row",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_cyan_teal_accent_lighting",
+      "label": "Cyan / Teal Accent Light Strips",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_gold_amber_accent_trim",
+      "label": "Gold / Amber Secondary Accent Trim",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_near_black_charcoal_base",
+      "label": "Near-Black Charcoal / Gunmetal Base Palette",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_low_key_cinematic_lighting",
+      "label": "Low-Key Cinematic Lighting",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_recessed_spot_lighting",
+      "label": "Recessed Ceiling Spot Lighting",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_reflective_polished_floor",
+      "label": "Reflective Polished Floor with Light Streaks",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_left_negative_space",
+      "label": "Left-Side Negative Space for Copy Overlay",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_receding_perspective_depth",
+      "label": "Receding One-Point Perspective / Depth Corridor",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_ultrawide_cinematic_crop",
+      "label": "Ultrawide Cinematic Crop (~1.9:1)",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_dark_mode_hero_background",
+      "label": "Dark-Mode Hero Background Usage",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_premium_security_trust_signal",
+      "label": "Premium Security / Custody Trust Signal",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_game_item_showcase_metaphor",
+      "label": "Game-Item Showcase Metaphor (empty bays await products)",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_ochpoch_market_brand",
+      "label": "OCHPOCH MARKET Brand Identity",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_v2_iteration",
+      "label": "v2 Design Iteration of the Vault Hero",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_lime_theme_divergence",
+      "label": "AMBIGUOUS: cyan/gold accents diverge from lime-tech site theme",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_no_visible_typography",
+      "label": "No Visible Logo or Typography Baked Into the Render",
+      "file_type": "concept",
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_vault_interior_scene",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_glass_display_bays",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_plinth_pedestal_row",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_cyan_teal_accent_lighting",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_gold_amber_accent_trim",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_near_black_charcoal_base",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_low_key_cinematic_lighting",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_recessed_spot_lighting",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_reflective_polished_floor",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_left_negative_space",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_receding_perspective_depth",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_ultrawide_cinematic_crop",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_no_visible_typography",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_v2_iteration",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_asset",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_ochpoch_market_brand",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_vault_interior_scene",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_sci_fi_secure_facility",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_vault_interior_scene",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_premium_security_trust_signal",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_glass_display_bays",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_game_item_showcase_metaphor",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_plinth_pedestal_row",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_game_item_showcase_metaphor",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_game_item_showcase_metaphor",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_ochpoch_market_brand",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_premium_security_trust_signal",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_ochpoch_market_brand",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_left_negative_space",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_dark_mode_hero_background",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_no_visible_typography",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_dark_mode_hero_background",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_ultrawide_cinematic_crop",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_dark_mode_hero_background",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_near_black_charcoal_base",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_low_key_cinematic_lighting",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_low_key_cinematic_lighting",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_dark_mode_hero_background",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_recessed_spot_lighting",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_low_key_cinematic_lighting",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_cyan_teal_accent_lighting",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_reflective_polished_floor",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_cyan_teal_accent_lighting",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_sci_fi_secure_facility",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_gold_amber_accent_trim",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_premium_security_trust_signal",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_receding_perspective_depth",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_glass_display_bays",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_receding_perspective_depth",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_left_negative_space",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_cyan_teal_accent_lighting",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_lime_theme_divergence",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.3,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_lime_theme_divergence",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_ochpoch_market_brand",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.3,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_v2_iteration",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_ochpoch_market_brand",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_sci_fi_secure_facility",
+      "target": "apps_web_public_assets_brand_ochpoch_market_vault_hero_v2_game_item_showcase_metaphor",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "C:/Users/ELISOR/Desktop/MARKEPLACE/apps/web/public/assets/brand/ochpoch-market-vault-hero-v2.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

@@ -99,7 +99,12 @@ export class MercadoPagoPaymentAdapter implements PaymentProviderAdapter {
       .update(manifest)
       .digest("hex");
 
-    if (!timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expectedSignature, "hex"))) {
+    // `timingSafeEqual` LANCA `RangeError` com buffers de tamanhos diferentes,
+    // e o tamanho vem de quem envia. Sem esta guarda, uma assinatura curta
+    // derruba a rota com 500 em vez de recusar com 401.
+    const recebida = Buffer.from(signature, "hex");
+    const esperada = Buffer.from(expectedSignature, "hex");
+    if (recebida.length !== esperada.length || !timingSafeEqual(recebida, esperada)) {
       throw new AppProblem({
         status: 401,
         code: "MERCADOPAGO_SIGNATURE_INVALID",
@@ -148,6 +153,10 @@ export class MercadoPagoPaymentAdapter implements PaymentProviderAdapter {
       });
     }
 
+    // ATENCAO ao comparar com o adapter da Stripe: aqui o x100 esta CORRETO.
+    // O Mercado Pago manda `transaction_amount` em unidade MAIOR (179.9 = R$179,90),
+    // enquanto a Stripe manda em unidade menor (17990). Uniformizar os dois
+    // adapters seria introduzir um erro de cem vezes em um deles.
     const amountMinor = BigInt(
       Math.round(toFiniteNumber(data.transaction_amount, 0) * 100),
     );

@@ -13,11 +13,15 @@ import {
   buildPriceNotification,
   buildStockNotification,
   formatMinorAmount,
-  parseListingUpdatedPayload,
+  LISTING_STOCK_CHANGED_EVENT_TYPE,
+  LISTING_UPDATED_EVENT_TYPE,
+  parseListingChangePayload,
   processListingChange,
   runRetentionTriggerCycle,
+  shouldEvaluateStockChange,
   watchlistDedupeKey,
   type ListingChangeEvent,
+  type ListingChangeFacts,
   type ListingChangePorts,
   type RawOutboxEvent,
   type ReminderPort,
@@ -122,6 +126,8 @@ class FakeReminders implements ReminderPort {
 
 class FakeWatchlist implements WatchlistPort {
   markTriggeredCalls: { watchlistEntryIds: string[]; notifiedAt: Date }[] = [];
+  evaluatePriceChangeCalls = 0;
+  evaluateStockChangeCalls = 0;
 
   constructor(
     private readonly hits: WatchlistTriggerHit[] = [],
@@ -129,10 +135,12 @@ class FakeWatchlist implements WatchlistPort {
   ) {}
 
   evaluatePriceChange(): Promise<WatchlistTriggerHit[]> {
+    this.evaluatePriceChangeCalls += 1;
     return Promise.resolve(this.hits);
   }
 
   evaluateStockChange(): Promise<WatchlistEntryRow[]> {
+    this.evaluateStockChangeCalls += 1;
     return Promise.resolve(this.stockRows);
   }
 
@@ -160,14 +168,15 @@ function ports(
 }
 
 function listingEvent(
-  priceMinor: bigint,
+  priceMinor: bigint | null,
   quantityAvailable: number,
+  previousQuantityAvailable: number | null = null,
 ): ListingChangeEvent {
   return {
     eventId: EVENT_ID,
     correlationId: "corr-1",
     occurredAt: OCCURRED_AT,
-    change: { listingId: LISTING_ID, priceMinor, quantityAvailable },
+    change: { listingId: LISTING_ID, priceMinor, previousQuantityAvailable, quantityAvailable },
   };
 }
 
@@ -189,22 +198,72 @@ describe("formatMinorAmount — exatidão BigInt, sem passar por Number", () => 
   });
 });
 
-describe("parseListingUpdatedPayload — contrato canônico do catálogo", () => {
+describe("parseListingChangePayload — contratos canônicos", () => {
   it("aceita o payload real de catalog.listing.updated e converte preço para BigInt", () => {
-    const result = parseListingUpdatedPayload({
+    const result = parseListingChangePayload(LISTING_UPDATED_EVENT_TYPE, {
       listingId: LISTING_ID,
       priceMinor: "119900",
+      previousQuantityAvailable: 0,
       quantityAvailable: 3,
       revisionNumber: 2,
     });
     expect(result).toEqual({
       ok: true,
-      change: { listingId: LISTING_ID, priceMinor: 119_900n, quantityAvailable: 3 },
+      change: {
+        listingId: LISTING_ID,
+        priceMinor: 119_900n,
+        previousQuantityAvailable: 0,
+        quantityAvailable: 3,
+      },
     });
   });
 
+  it("evento legado de catalog.listing.updated sem estoque anterior vira null explícito", () => {
+    const result = parseListingChangePayload(LISTING_UPDATED_EVENT_TYPE, {
+      listingId: LISTING_ID,
+      priceMinor: "119900",
+      quantityAvailable: 3,
+    });
+    expect(result).toEqual({
+      ok: true,
+      change: {
+        listingId: LISTING_ID,
+        priceMinor: 119_900n,
+        previousQuantityAvailable: null,
+        quantityAvailable: 3,
+      },
+    });
+  });
+
+  it("aceita o payload real de catalog.listing.stock_changed sem preço", () => {
+    const result = parseListingChangePayload(LISTING_STOCK_CHANGED_EVENT_TYPE, {
+      listingId: LISTING_ID,
+      previousQuantityAvailable: 0,
+      quantityAvailable: 2,
+      orderId: "0198f5f8-8f04-7a4d-8af4-3be2437f8a99",
+      reason: "ORDER_CANCELLED",
+    });
+    expect(result).toEqual({
+      ok: true,
+      change: {
+        listingId: LISTING_ID,
+        priceMinor: null,
+        previousQuantityAvailable: 0,
+        quantityAvailable: 2,
+      },
+    });
+  });
+
+  it("recusa stock_changed sem o estoque anterior (obrigatório neste contrato)", () => {
+    const result = parseListingChangePayload(LISTING_STOCK_CHANGED_EVENT_TYPE, {
+      listingId: LISTING_ID,
+      quantityAvailable: 2,
+    });
+    expect(result.ok).toBe(false);
+  });
+
   it("recusa preço que não é inteiro não negativo em string", () => {
-    const result = parseListingUpdatedPayload({
+    const result = parseListingChangePayload(LISTING_UPDATED_EVENT_TYPE, {
       listingId: LISTING_ID,
       priceMinor: "-5",
       quantityAvailable: 3,
@@ -213,26 +272,52 @@ describe("parseListingUpdatedPayload — contrato canônico do catálogo", () =>
   });
 
   it("recusa payload sem os campos canônicos", () => {
-    const result = parseListingUpdatedPayload({ listingId: LISTING_ID });
+    const result = parseListingChangePayload(LISTING_UPDATED_EVENT_TYPE, {
+      listingId: LISTING_ID,
+    });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.issues.length).toBeGreaterThan(0);
   });
 
   it("recusa quantidade negativa ou fracionária", () => {
     expect(
-      parseListingUpdatedPayload({
+      parseListingChangePayload(LISTING_UPDATED_EVENT_TYPE, {
         listingId: LISTING_ID,
         priceMinor: "100",
         quantityAvailable: -1,
       }).ok,
     ).toBe(false);
     expect(
-      parseListingUpdatedPayload({
+      parseListingChangePayload(LISTING_UPDATED_EVENT_TYPE, {
         listingId: LISTING_ID,
         priceMinor: "100",
         quantityAvailable: 1.5,
       }).ok,
     ).toBe(false);
+  });
+});
+
+describe("shouldEvaluateStockChange — só a transição real 0→N é notícia", () => {
+  function change(
+    previousQuantityAvailable: number | null,
+    quantityAvailable: number,
+  ): ListingChangeFacts {
+    return { listingId: LISTING_ID, priceMinor: null, previousQuantityAvailable, quantityAvailable };
+  }
+
+  it("0→N avalia; débito 10→9 e reposição 3→10 não avaliam", () => {
+    expect(shouldEvaluateStockChange(change(0, 2))).toBe(true);
+    expect(shouldEvaluateStockChange(change(10, 9))).toBe(false);
+    expect(shouldEvaluateStockChange(change(3, 10))).toBe(false);
+  });
+
+  it("estoque final zerado nunca avalia", () => {
+    expect(shouldEvaluateStockChange(change(0, 0))).toBe(false);
+    expect(shouldEvaluateStockChange(change(null, 0))).toBe(false);
+  });
+
+  it("evento legado sem estoque anterior mantém o comportamento antigo (avalia)", () => {
+    expect(shouldEvaluateStockChange(change(null, 5))).toBe(true);
   });
 });
 
@@ -327,6 +412,57 @@ describe("processListingChange — estoque e ANY_OFFER", () => {
     expect(reminders.notifyCalls[0]?.kind).toBe("BACK_IN_STOCK");
     expect(reminders.notifyCalls[0]?.body).toContain("2 unidades disponíveis");
     expect(watchlist.markTriggeredCalls[0]?.watchlistEntryIds).toEqual([ENTRY_ID]);
+  });
+
+  it("débito de compra (stock_changed 10→9) não avalia preço nem estoque", async () => {
+    const watchlist = new FakeWatchlist(
+      [priceHit(watchRow(), 99_900n)],
+      [watchRow({ kind: "BACK_IN_STOCK" })],
+    );
+    const reminders = new FakeReminders();
+
+    const summary = await processListingChange(
+      listingEvent(null, 9, 10),
+      ports(watchlist, reminders),
+      NOW,
+    );
+
+    expect(watchlist.evaluatePriceChangeCalls).toBe(0);
+    expect(watchlist.evaluateStockChangeCalls).toBe(0);
+    expect(reminders.enqueueCalls).toHaveLength(0);
+    expect(summary).toMatchObject({ priceHits: 0, stockHits: 0, closedWatches: 0 });
+  });
+
+  it("restauração por cancelamento (stock_changed 0→2) dispara BACK_IN_STOCK", async () => {
+    const entry = watchRow({ kind: "BACK_IN_STOCK" });
+    const watchlist = new FakeWatchlist([], [entry]);
+    const reminders = new FakeReminders();
+
+    const summary = await processListingChange(
+      listingEvent(null, 2, 0),
+      ports(watchlist, reminders),
+      NOW,
+    );
+
+    expect(watchlist.evaluatePriceChangeCalls).toBe(0);
+    expect(reminders.notifyCalls[0]?.kind).toBe("BACK_IN_STOCK");
+    expect(reminders.notifyCalls[0]?.body).toContain("2 unidades disponíveis");
+    expect(summary).toMatchObject({ priceHits: 0, stockHits: 1, closedWatches: 1 });
+  });
+
+  it("edição do vendedor com anúncio já em estoque (updated 3→10) avalia preço, não estoque", async () => {
+    const watchlist = new FakeWatchlist([], [watchRow({ kind: "BACK_IN_STOCK" })]);
+    const reminders = new FakeReminders();
+
+    const summary = await processListingChange(
+      listingEvent(120_000n, 10, 3),
+      ports(watchlist, reminders),
+      NOW,
+    );
+
+    expect(watchlist.evaluatePriceChangeCalls).toBe(1);
+    expect(watchlist.evaluateStockChangeCalls).toBe(0);
+    expect(summary).toMatchObject({ priceHits: 0, stockHits: 0 });
   });
 
   it("ANY_OFFER atingido por preço E estoque no mesmo evento gera UM aviso (o de preço)", async () => {
@@ -462,6 +598,7 @@ describe("runRetentionTriggerCycle — consumo do outbox", () => {
   function rawEvent(overrides: Partial<RawOutboxEvent> = {}): RawOutboxEvent {
     return {
       eventId: EVENT_ID,
+      eventType: LISTING_UPDATED_EVENT_TYPE,
       correlationId: "corr-1",
       occurredAt: OCCURRED_AT,
       payload: { listingId: LISTING_ID, priceMinor: "99900", quantityAvailable: 5 },

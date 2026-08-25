@@ -394,16 +394,92 @@ As duas violações de doc que existiam neles **já foram corrigidas**: a peça 
 
 **Esta é uma decisão do dono, não das sessões.** Duas sessões dele leram o mesmo doc e chegaram a conclusões opostas sobre a peça 3D na home; ele já escolheu "girar pelo scroll" num menu de decisão, mas a tela hoje não reflete isso.
 
+## Pagamentos: três bugs achados por escrever o primeiro teste
+
+`apps/api/src/adapters/stripe-payment-adapter.ts` e `mercadopago-payment-adapter.ts` já existiam, já estavam **registrados em `app.ts`** — e não tinham **um único teste**. São 480 linhas de verificação de assinatura HMAC de webhook: se erram, a plataforma aceita webhook forjado e credita pagamento que não aconteceu.
+
+Escrever o teste expôs três defeitos, um deles de dinheiro.
+
+### 1. O valor do pagamento entrava CEM VEZES maior
+
+```js
+// antes
+const amountMinor = BigInt(Math.round(toFiniteNumber(data.amount, 0) * 100));
+```
+
+**A Stripe já envia em unidade menor.** `amount: 17990` é R$ 179,90. O `× 100` transformava isso em R$ 17.990,00 — em três lugares: no webhook, no `lookupPayment` e na reconciliação.
+
+Corrigido em `stripeAmountMinor()`, que também passou a preferir **`amount_received`** (o que de fato entrou) sobre `amount` (o que foi pedido). Num pagamento parcial os dois diferem, e é o recebido que vale.
+
+**O Mercado Pago é o oposto e continua com `× 100`, porque está certo:** ele manda `transaction_amount: 179.9` em unidade maior. Uniformizar os dois adapters introduziria o erro de cem vezes em um deles — está escrito no código dos dois, para ninguém "consertar" errado.
+
+### 2. Assinatura curta derrubava a rota com 500
+
+`timingSafeEqual` **lança `RangeError`** quando os buffers têm tamanhos diferentes — e o tamanho é escolhido por quem envia. Mandar `v1=ab` produzia erro não tratado em vez de `401`. Um 500 numa rota de pagamento é ruído que esconde ataque.
+
+Corrigido nos **dois** adapters comparando o comprimento antes. Não vaza nada: o tamanho de um HMAC-SHA256 é público.
+
+### 3. A assinatura não expirava
+
+O carimbo de tempo era extraído e usado no payload assinado, mas **nunca comparado com a hora atual**. A assinatura HMAC não expira sozinha: um webhook capturado seguiria válido para sempre.
+
+Adicionada tolerância de **300s** (o valor de referência da Stripe), com o código `STRIPE_SIGNATURE_TIMESTAMP_OUT_OF_TOLERANCE`.
+
+**Gravidade honesta:** o inbox de eventos (`finance-service.ts:1458`) já recusa o mesmo `externalEventId` duas vezes, com advisory lock. Então replay literal já era barrado — isto é a primeira linha de defesa que faltava, não uma brecha que estava aberta.
+
+**16 testes** novos entre os dois adapters, incluindo o que trava a diferença de unidade entre os provedores.
+
+### O buraco que faltava: nada CRIAVA a cobrança
+
+Achado ao auditar o próprio handoff. A interface `PaymentProviderAdapter` tinha `isConfigured`, `verifyWebhook` e `lookupPayment` — **nenhum método para iniciar uma cobrança**. E não existe rota que a inicie (`createPaymentResolutionCase` é resolução manual, coisa diferente).
+
+Consequência: o pedido chega a `PENDING_PAYMENT` e **para ali**. Ninguém consegue pagar, porque ninguém cria a intenção de pagamento no provedor.
+
+Implementado:
+
+- **`PaymentProviderAdapter.createPayment`**, opcional de propósito: um provedor pode entrar só para reconciliação. `registry.supportsCreate()` distingue os dois casos, e `PROVIDER_CREATE_NOT_SUPPORTED` recusa com motivo em vez de estourar `undefined is not a function`;
+- **`StripePaymentAdapter.createPayment`** — cria o PaymentIntent com `Idempotency-Key` no cabeçalho (clique repetido reusa a cobrança), `automatic_payment_methods` (o método é decidido pela conta Stripe, não por código que envelhece) e `metadata[order_id]`;
+- **conferência do valor de volta**: se a Stripe registrar valor diferente do pedido, recusa com `STRIPE_CREATE_AMOUNT_MISMATCH`. Seguir com uma cobrança de outro valor é pior que falhar;
+- **7 testes**, incluindo o que prova que o `× 100` não reaparece na escrita, que valor zero ou negativo é recusado **antes** de chamar a Stripe, e que sem chave a recusa é 503 em vez de tentativa.
+
+**O que ainda falta para alguém pagar de verdade:** a rota que chama `createPayment` e devolve o `clientAuthorization` ao navegador, e a tela de checkout que o consome. O adapter está pronto e testado; o caminho HTTP não existe.
+
+## Fluxo de compra: o comando ligado na tela
+
+`OrderService.placeOrderFromCartGroup` existia e estava testado, mas **nenhuma tela o chamava**. `cart-view.tsx` fazia um `POST /v1/orders` **por linha**, em laço.
+
+Três defeitos disso, que só aparecem com mais de um item do mesmo vendedor:
+
+1. **falha parcial** — a terceira linha falha, as duas primeiras já viraram pedido e saíram do carrinho;
+2. **taxa arredondada por linha** — três linhas de 101 centavos a 7,5% somam 24 de taxa; sobre o subtotal de 303 a taxa correta é 23. O centavo a mais sai do vendedor, toda vez;
+3. **N pedidos do mesmo vendedor** — três entregas e três confirmações para uma compra só.
+
+Agora, com o carrinho **da conta**, a tela chama o comando uma vez. Sem conta, o carrinho é do dispositivo e não existe no servidor, então o caminho por item continua sendo o único possível — e está mantido.
+
+`cart-view-checkout.test.tsx`, **5 casos**: uma chamada em vez de duas, corpo com vendedor e idempotência, nada sai do carrinho quando a API recusa, capability nomeada, e o caminho do dispositivo preservado.
+
+## Conta de staff: 25 telas que não podiam nem ser abertas
+
+`ADM` estava em **1/18** e `MST` em **1/8**. Não por falta de código: a autorização é `default deny` e **não existia nenhuma conta com papel administrativo**. Todo trabalho em administração era escrito às cegas.
+
+**`tools/dev-seed/seed-staff.mjs`** cria `admin@teste.local` pelo **fluxo real** (registro + verificação por e-mail no Mailpit) e concede `DEV_PLATFORM_STAFF` com **as 12 permissões que as migrations criaram** — nenhuma inventada. Só o GRANT é SQL, porque não existe rota para conceder papel, e criar essa rota sem gate de segurança seria pior que o problema.
+
+Verificado: `GET /v1/admin/catalog/items/{id}/assets` → **200**.
+
+**Achado no caminho:** `POST /v1/auth/register` devolvia `503 EMAIL_DELIVERY_UNAVAILABLE` porque o `.env` da raiz não tinha `SMTP_HOST`. **Nenhuma conta nova podia ser criada**, e a mensagem de erro não diz que falta configuração de SMTP. Adicionados `SMTP_HOST`, `SMTP_PORT` e `SMTP_FROM` ao `.env`, com o motivo escrito em comentário.
+
 ## Estado verificado por comando
 
 ```
-pnpm typecheck                32/32
-pnpm lint                     32/32 + "Fronteiras arquiteturais válidas."
+pnpm typecheck                33/33
+pnpm lint                     33/33 + "Fronteiras arquiteturais válidas."
 pnpm build                    19/19
-pnpm --filter web test        44 arquivos · 494 testes
+pnpm test (raiz)              33/33 pacotes
+pnpm --filter api test         4 arquivos ·  21 testes
 pnpm --filter @midas/ui test   4 arquivos ·  34 testes
 pnpm --filter @midas/orders test 2 arquivos · 33 testes
-report --functional           42/95 superfícies; 53 CONTRACT_REQUIRED
+report --functional           45/95 superfícies; 50 CONTRACT_REQUIRED
+                              ADM 1/18 · MST 1/8 · GRW 0/9 — onde o trabalho está
 API GET /v1/listings          200 · 21 anúncios · 7 vendedores
 grade da vitrine              altura uniforme por fileira; 0 colisão CTA/preço; 0 overflow
 escada de raridade            6 cores distintas em 19 etiquetas

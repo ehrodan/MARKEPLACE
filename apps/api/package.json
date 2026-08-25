@@ -25,6 +25,7 @@
     "@midas/identity": "workspace:*",
     "@midas/kernel": "workspace:*",
     "@midas/orders": "workspace:*",
+    "@midas/progression": "workspace:*",
     "@midas/retention": "workspace:*",
     "@midas/sellers": "workspace:*",
     "fastify": "5.12.1",

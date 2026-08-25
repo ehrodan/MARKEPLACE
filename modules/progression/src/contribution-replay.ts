@@ -227,7 +227,7 @@ function contributionFingerprint(contribution: ProgressionContribution): string 
   ]);
 }
 
-function fnv1a64(value: string): string {
+export function fnv1a64(value: string): string {
   let hash = 14_695_981_039_346_656_037n;
   const prime = 1_099_511_628_211n;
   for (const character of value) {

@@ -555,6 +555,9 @@ export class CatalogService {
           payload: {
             listingId: input.listingId,
             priceMinor: newPriceMinor.toString(),
+            // O estoque anterior permite ao consumidor distinguir a transição real 0→N
+            // (reabastecimento) de uma edição com o anúncio já em estoque.
+            previousQuantityAvailable: listing.quantityAvailable,
             quantityAvailable: newQuantityAvailable,
             revisionNumber: nextRevisionNumber,
           },

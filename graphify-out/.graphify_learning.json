@@ -1,5 +1,70 @@
 {
-  "generated_at": "2026-08-25T05:47:14.291916+00:00",
-  "nodes": {},
+  "generated_at": "2026-08-25T07:31:46.606886+00:00",
+  "nodes": {
+    "apps_web_components_listing_detail_purchase_panel_purchasepanel": {
+      "code_fingerprint": "f1b86afa6fbea14e650fd5d4c7da75381da2fb7edd6f865cadf1a2126c2d774b",
+      "label": "PurchasePanel()",
+      "last": "2026-08-25T06:37:14.434157+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-25T06:37:14.434157+00:00",
+          "outcome": "useful",
+          "q": "VEJA AS TELAS FALTANS CARA POR FAVOR . VEJA AINDA QO FALT PARA SER RMGRAOD POR FAVOR"
+        }
+      ],
+      "score": 0.999125345,
+      "source_file": "apps/web/components/listing-detail/purchase-panel.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "apps_web_components_screen_contract_screen_contract_page_screencontractpage": {
+      "code_fingerprint": "8ac42c6e02b9449dd99cbe89829010392963746bf9ae8660c4b85ddcb607aad5",
+      "label": "ScreenContractPage()",
+      "last": "2026-08-25T06:37:14.434157+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-25T06:37:14.434157+00:00",
+          "outcome": "useful",
+          "q": "VEJA AS TELAS FALTANS CARA POR FAVOR . VEJA AINDA QO FALT PARA SER RMGRAOD POR FAVOR"
+        }
+      ],
+      "score": 0.999125345,
+      "source_file": "apps/web/components/screen-contract/screen-contract-page.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "modules_orders_src_cart_service_cartview": {
+      "code_fingerprint": "4f2a85d2310f7852d2e53b0c369c086316d04677f01012e51a89239da04a1b58",
+      "label": "CartView",
+      "last": "2026-08-25T06:37:14.434157+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-25T06:37:14.434157+00:00",
+          "outcome": "useful",
+          "q": "VEJA AS TELAS FALTANS CARA POR FAVOR . VEJA AINDA QO FALT PARA SER RMGRAOD POR FAVOR"
+        }
+      ],
+      "score": 0.999125345,
+      "source_file": "modules/orders/src/cart-service.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "tools_traceability_report_screen_routes_strictfunctional": {
+      "code_fingerprint": "378ff47a288283b9513078a120157da1b656c4ca89b01a61db3d42c0f7c7c171",
+      "label": "strictFunctional",
+      "last": "2026-08-25T06:37:14.434157+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-25T06:37:14.434157+00:00",
+          "outcome": "useful",
+          "q": "VEJA AS TELAS FALTANS CARA POR FAVOR . VEJA AINDA QO FALT PARA SER RMGRAOD POR FAVOR"
+        }
+      ],
+      "score": 0.999125345,
+      "source_file": "tools/traceability/report-screen-routes.mjs",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
   "version": 1
 }

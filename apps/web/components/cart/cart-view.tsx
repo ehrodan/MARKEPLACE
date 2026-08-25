@@ -59,6 +59,27 @@ const CART_PATH = "/v1/me/cart";
 const MERGE_PATH = "/v1/me/cart/merge";
 const ORDERS_PATH = "/v1/orders";
 
+/**
+ * Fecha o grupo de UM vendedor como UM pedido, numa transação só.
+ *
+ * Existe porque criar um pedido por linha, em laço, tem três defeitos que só
+ * aparecem com mais de um item do mesmo vendedor:
+ *
+ * 1. **falha parcial** — se a terceira linha falha, as duas primeiras já viraram
+ *    pedido e saíram do carrinho, e a pessoa fica com metade da compra feita;
+ * 2. **comissão arredondada por linha** — três linhas de 101 centavos a 7,5%
+ *    somam 24 centavos de taxa; sobre o subtotal de 303, a taxa correta é 23.
+ *    O centavo a mais sai do vendedor, toda vez;
+ * 3. **N pedidos do mesmo vendedor** — três entregas e três confirmações para
+ *    uma compra só.
+ *
+ * O comando do servidor reserva o estoque de todas as linhas na mesma
+ * transação serializável: ou o grupo inteiro vira pedido, ou nada acontece.
+ */
+function cartGroupOrdersPath(sellerAccountId: string): string {
+  return `${CART_PATH}/checkout-groups/${encodeURIComponent(sellerAccountId)}/orders`;
+}
+
 const STORAGE_ISSUE_COPY: Record<CartStorageIssue, string> = {
   UNAVAILABLE: "Este navegador não permitiu gravar dados locais. O carrinho funciona nesta aba, mas não sobrevive a um recarregamento.",
   CORRUPTED: "O carrinho salvo neste dispositivo estava ilegível e foi descartado em vez de ser interpretado por adivinhação.",
@@ -738,6 +759,73 @@ export function CartView() {
       const created: string[] = [];
       const codes: string[] = [];
 
+      // CAMINHO PREFERIDO: o carrinho vive na conta, então o servidor tem as
+      // linhas e pode fechar o grupo inteiro numa transação — sem falha
+      // parcial e com a comissão calculada uma vez sobre o subtotal.
+      //
+      // O caminho por item continua abaixo para o carrinho do DISPOSITIVO, de
+      // quem ainda não entrou: ali as linhas não existem no servidor, e pedir
+      // "feche o grupo" não teria o que fechar.
+      if (accountAdopted) {
+        const seed = group.lines
+          .map((entry) => `${entry.line.listingId}:${String(entry.line.quantity)}:${entry.unitPriceMinor}`)
+          .join("|");
+        const existingKey = idempotencyRef.current.get(seed);
+        const idempotencyKey = existingKey ?? newIdempotencyKey(group.sellerAccountId);
+        idempotencyRef.current.set(seed, idempotencyKey);
+
+        try {
+          const response = await apiRequest<OrderCommandResponse>(
+            cartGroupOrdersPath(group.sellerAccountId),
+            {
+              method: "POST",
+              body: JSON.stringify({ sellerAccountId: group.sellerAccountId, idempotencyKey }),
+            },
+          );
+          if (!mountedRef.current) return;
+          const code = readOrderCode(response);
+          // O servidor já removeu as linhas do carrinho da conta ao criar o
+          // pedido; a tela espelha isso para não mostrar item já comprado.
+          persist(removeCartLines(linesRef.current, group.lines.map((entry) => entry.line.listingId)), deviceBacked);
+          setGroupStates((current) => ({
+            ...current,
+            [group.sellerAccountId]: { status: "DONE", orderCodes: code === null ? [] : [code] },
+          }));
+          setAnnouncement(`Pedido criado para este vendedor. ${formatQuantity(group.lines.length)} ${group.lines.length === 1 ? "item saiu" : "itens saíram"} do carrinho.`);
+          return;
+        } catch (error: unknown) {
+          if (!mountedRef.current) return;
+          // Nada de parcial aqui: a transação do servidor é tudo-ou-nada, então
+          // o carrinho continua exatamente como estava.
+          const semParcial = " Nenhum pedido foi criado e nada saiu do carrinho.";
+          if (isApiError(error)) {
+            const { problem } = error;
+            const capability = problem.status === 404 || problem.status === 501 || problem.code === "CAPABILITY_NOT_IMPLEMENTED";
+            setGroupStates((current) => ({
+              ...current,
+              [group.sellerAccountId]: {
+                status: "FAILED",
+                title: capability ? "Comando de pedido ainda não publicado." : problem.title,
+                detail: capability
+                  ? `A API não expôs o fechamento por vendedor nesta versão.${semParcial}`
+                  : `${problem.detail ?? "A API recusou o comando."}${semParcial}`,
+                ...(problem.correlationId === undefined ? {} : { reference: problem.correlationId }),
+              },
+            }));
+            return;
+          }
+          setGroupStates((current) => ({
+            ...current,
+            [group.sellerAccountId]: {
+              status: "FAILED",
+              title: "A conexão com a API falhou.",
+              detail: `${error instanceof Error ? error.message : "Motivo não informado."}${semParcial}`,
+            },
+          }));
+          return;
+        }
+      }
+
       for (const entry of group.lines) {
         const seed = `${entry.line.listingId}:${String(entry.line.quantity)}:${entry.unitPriceMinor}`;
         const existingKey = idempotencyRef.current.get(seed);
@@ -800,7 +888,7 @@ export function CartView() {
       }));
       setAnnouncement(`Pedido criado para este vendedor. ${formatQuantity(created.length)} ${created.length === 1 ? "item saiu" : "itens saíram"} do carrinho.`);
     })();
-  }, [deviceBacked, persist]);
+  }, [accountAdopted, deviceBacked, persist]);
 
   // ----------------------------------------------------------------- render
   const activeCount = totalItemCount(activeLines(lines ?? []));

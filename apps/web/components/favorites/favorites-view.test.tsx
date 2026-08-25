@@ -103,7 +103,8 @@ function stubApi(
         }));
       }
       if (method === "POST") {
-        const body = JSON.parse(String(init?.body)) as { listingId: string; kind: string };
+        const raw = typeof init?.body === "string" ? init.body : "{}";
+        const body = JSON.parse(raw) as { listingId: string; kind: string };
         return Promise.resolve(json(accountEntryBody({
           watchlistEntryId: `criada-${body.kind}`,
           listingId: body.listingId,
@@ -353,9 +354,9 @@ describe("FavoritesView — sincronização com o contrato real da watchlist", (
 
     await waitFor(() => { expect(watchlistCalls(fetchMock, "POST")).toHaveLength(1); });
     const [post] = watchlistCalls(fetchMock, "POST");
-    expect(post?.url).toBe("/api/backend/v1/me/watchlist");
+    expect(post.url).toBe("/api/backend/v1/me/watchlist");
     // Nunca o StoredFavorite inteiro: só o que createWatchlistEntryBodySchema aceita.
-    expect(JSON.parse(String(post?.body))).toEqual({ listingId: LISTING_ID, kind: "BACK_IN_STOCK" });
+    expect(JSON.parse(post.body ?? "{}")).toEqual({ listingId: LISTING_ID, kind: "BACK_IN_STOCK" });
   });
 
   it("manda o alvo só no canal PRICE_DROP e desliga pelo watchlistEntryId devolvido no 201", async () => {
@@ -406,8 +407,8 @@ describe("FavoritesView — sincronização com o contrato real da watchlist", (
 
     await waitFor(() => { expect(watchlistCalls(fetchMock, "DELETE")).toHaveLength(1); });
     const [remove] = watchlistCalls(fetchMock, "DELETE");
-    expect(remove?.url).toBe(`/api/backend/v1/me/watchlist/${entryId}`);
-    expect(remove?.url).not.toContain(LISTING_ID);
+    expect(remove.url).toBe(`/api/backend/v1/me/watchlist/${entryId}`);
+    expect(remove.url).not.toContain(LISTING_ID);
   });
 
   it("ao remover o favorito, cancela na conta os avisos conhecidos daquele anúncio", async () => {

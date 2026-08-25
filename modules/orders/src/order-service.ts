@@ -138,19 +138,25 @@ export class OrderService {
         throw conflict("CATALOG_ITEM_NOT_AVAILABLE", "O item do catálogo não está disponível.");
       }
 
-      // Reserva atômica: só decrementa se ainda houver a quantidade pedida.
-      const reserved = await transaction
+      // Reserva atômica: só decrementa se ainda houver a quantidade pedida. A version do
+      // aggregate avança porque o estoque É estado do anúncio — e o evento de estoque
+      // publicado abaixo é único por (aggregate, version, tipo) no outbox.
+      const [reservedListing] = await transaction
         .update(listings)
         .set({
           quantityAvailable: sql`${listings.quantityAvailable} - ${quantity}`,
+          version: sql`${listings.version} + 1`,
           updatedAt: now,
         })
         .where(
           and(eq(listings.listingId, listing.listingId), gte(listings.quantityAvailable, quantity)),
         )
-        .returning({ quantityAvailable: listings.quantityAvailable });
+        .returning({
+          quantityAvailable: listings.quantityAvailable,
+          version: listings.version,
+        });
 
-      if (reserved.length === 0) {
+      if (!reservedListing) {
         throw conflict(
           "LISTING_INSUFFICIENT_QUANTITY",
           "O anúncio não possui mais a quantidade solicitada.",
@@ -259,6 +265,21 @@ export class OrderService {
           },
         },
         actor,
+      );
+
+      await appendListingStockChangedEvent(
+        transaction,
+        {
+          listingId: listing.listingId,
+          sellerAccountId: listing.sellerAccountId,
+          listingVersion: reservedListing.version,
+          previousQuantityAvailable: reservedListing.quantityAvailable + quantity,
+          quantityAvailable: reservedListing.quantityAvailable,
+          orderId,
+          reason: "ORDER_PLACED",
+        },
+        actor,
+        now,
       );
 
       await appendAuditEvent(
@@ -407,10 +428,11 @@ export class OrderService {
         }
         currency = listing.currency;
 
-        const reserved = await transaction
+        const [reservedListing] = await transaction
           .update(listings)
           .set({
             quantityAvailable: sql`${listings.quantityAvailable} - ${quantity}`,
+            version: sql`${listings.version} + 1`,
             updatedAt: now,
           })
           .where(
@@ -419,14 +441,32 @@ export class OrderService {
               gte(listings.quantityAvailable, quantity),
             ),
           )
-          .returning({ quantityAvailable: listings.quantityAvailable });
+          .returning({
+            quantityAvailable: listings.quantityAvailable,
+            version: listings.version,
+          });
 
-        if (reserved.length === 0) {
+        if (!reservedListing) {
           throw conflict(
             "LISTING_INSUFFICIENT_QUANTITY",
             "O anúncio não possui mais a quantidade solicitada.",
           );
         }
+
+        await appendListingStockChangedEvent(
+          transaction,
+          {
+            listingId: listing.listingId,
+            sellerAccountId: listing.sellerAccountId,
+            listingVersion: reservedListing.version,
+            previousQuantityAvailable: reservedListing.quantityAvailable + quantity,
+            quantityAvailable: reservedListing.quantityAvailable,
+            orderId,
+            reason: "ORDER_PLACED",
+          },
+          actor,
+          now,
+        );
 
         const terms = await loadCommercialTerms(
           transaction,
@@ -892,6 +932,53 @@ export async function recordOrderEvent(
   });
 }
 
+/**
+ * Evento canônico de estoque do aggregate Listing, produzido pelo fluxo de pedidos.
+ *
+ * O motor de triggers da watchlist (apps/worker) consumia apenas `catalog.listing.updated`,
+ * publicado só quando o vendedor EDITA o anúncio — o débito de reserva e a devolução por
+ * cancelamento mudavam `quantityAvailable` em silêncio e BACK_IN_STOCK nunca disparava
+ * sozinho. `previousQuantityAvailable` permite ao consumidor distinguir a transição real
+ * 0→N (reabastecimento, que é notícia) de um simples débito 10→9 (que não é).
+ */
+async function appendListingStockChangedEvent(
+  transaction: MidasTransaction,
+  input: {
+    listingId: string;
+    sellerAccountId: string;
+    listingVersion: number;
+    previousQuantityAvailable: number;
+    quantityAvailable: number;
+    orderId: string;
+    reason: "ORDER_PLACED" | "ORDER_CANCELLED";
+  },
+  actor: ActorContext,
+  occurredAt: Date,
+): Promise<void> {
+  await appendOutboxEvent(
+    transaction,
+    {
+      eventType: "catalog.listing.stock_changed",
+      schemaVersion: 1,
+      aggregateType: "Listing",
+      aggregateId: input.listingId,
+      aggregateVersion: input.listingVersion,
+      occurredAt,
+      sellerAccountId: input.sellerAccountId,
+      ownerModule: "orders",
+      dataClassification: "PUBLIC",
+      payload: {
+        listingId: input.listingId,
+        previousQuantityAvailable: input.previousQuantityAvailable,
+        quantityAvailable: input.quantityAvailable,
+        orderId: input.orderId,
+        reason: input.reason,
+      },
+    },
+    actor,
+  );
+}
+
 async function cancelOrderInTransaction(
   transaction: MidasTransaction,
   order: OrderRow,
@@ -910,13 +997,36 @@ async function cancelOrderInTransaction(
     .where(eq(orderItems.orderId, order.orderId));
 
   for (const item of items) {
-    await transaction
+    const [restoredListing] = await transaction
       .update(listings)
       .set({
         quantityAvailable: sql`${listings.quantityAvailable} + ${item.quantity}`,
+        version: sql`${listings.version} + 1`,
         updatedAt: occurredAt,
       })
-      .where(eq(listings.listingId, item.listingId));
+      .where(eq(listings.listingId, item.listingId))
+      .returning({
+        quantityAvailable: listings.quantityAvailable,
+        version: listings.version,
+      });
+
+    // Anúncio removido fisicamente não tem estoque a restaurar nem evento a anunciar.
+    if (!restoredListing) continue;
+
+    await appendListingStockChangedEvent(
+      transaction,
+      {
+        listingId: item.listingId,
+        sellerAccountId: order.sellerAccountId,
+        listingVersion: restoredListing.version,
+        previousQuantityAvailable: restoredListing.quantityAvailable - item.quantity,
+        quantityAvailable: restoredListing.quantityAvailable,
+        orderId: order.orderId,
+        reason: "ORDER_CANCELLED",
+      },
+      actor,
+      occurredAt,
+    );
   }
 
   await transaction

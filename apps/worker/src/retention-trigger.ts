@@ -12,9 +12,17 @@ import type {
 /**
  * Motor de triggers da watchlist ("me avise se o preço cair / voltar ao estoque").
  *
- * Consome o evento canônico REAL `catalog.listing.updated` do outbox — publicado por
- * `CatalogService.updateListing` (modules/catalog/src/catalog-service.ts) com o preço e o
- * estoque novos — e liga o circuito que estava aberto:
+ * Consome DOIS eventos canônicos REAIS do outbox:
+ *
+ *   - `catalog.listing.updated` — publicado por `CatalogService.updateListing`
+ *     (modules/catalog/src/catalog-service.ts) quando o vendedor edita o anúncio, com preço
+ *     e estoque novos (e o estoque anterior, para detectar a transição 0→N real);
+ *   - `catalog.listing.stock_changed` — publicado pelo fluxo de pedidos
+ *     (modules/orders/src/order-service.ts) na MESMA transação que debita a reserva na
+ *     compra e devolve o estoque no cancelamento. Sem ele, BACK_IN_STOCK só disparava
+ *     quando o vendedor editava o anúncio.
+ *
+ * e liga o circuito que estava aberto:
  *
  *   evento → WatchlistService.evaluatePriceChange / evaluateStockChange
  *          → ReminderService.enqueue        (a política decide: consent, dedupe, frequência,
@@ -34,6 +42,7 @@ import type {
  */
 
 export const LISTING_UPDATED_EVENT_TYPE = "catalog.listing.updated";
+export const LISTING_STOCK_CHANGED_EVENT_TYPE = "catalog.listing.stock_changed";
 export const RETENTION_TRIGGER_CONSUMER_ID = "retention.watchlist-trigger";
 export const RETENTION_TRIGGER_BATCH_LIMIT = 50;
 
@@ -53,35 +62,71 @@ const listingUpdatedPayloadSchema = z.object({
   listingId: z.uuid(),
   /** Dinheiro trafega como string de minor units no outbox; vira BigInt aqui. */
   priceMinor: z.string().regex(/^\d+$/, "priceMinor deve ser inteiro não negativo em string"),
+  /** Opcional: eventos anteriores ao campo não o carregam (compatível para trás). */
+  previousQuantityAvailable: z.number().int().min(0).optional(),
+  quantityAvailable: z.number().int().min(0),
+});
+
+/** Evento do fluxo de pedidos: só estoque mudou; o preço do anúncio não. */
+const listingStockChangedPayloadSchema = z.object({
+  listingId: z.uuid(),
+  previousQuantityAvailable: z.number().int().min(0),
   quantityAvailable: z.number().int().min(0),
 });
 
 export type ListingChangeFacts = {
   listingId: string;
-  priceMinor: bigint;
+  /** `null` em evento só de estoque: o preço não mudou e a avaliação de preço não roda. */
+  priceMinor: bigint | null;
+  /** `null` em evento legado sem o campo: transição 0→N não pode ser provada. */
+  previousQuantityAvailable: number | null;
   quantityAvailable: number;
 };
 
-export function parseListingUpdatedPayload(
+export function parseListingChangePayload(
+  eventType: string,
   payload: Record<string, unknown>,
 ): { ok: true; change: ListingChangeFacts } | { ok: false; issues: string[] } {
-  const parsed = listingUpdatedPayloadSchema.safeParse(payload);
-  if (!parsed.success) {
+  if (eventType === LISTING_STOCK_CHANGED_EVENT_TYPE) {
+    const parsed = listingStockChangedPayloadSchema.safeParse(payload);
+    if (!parsed.success) return { ok: false, issues: formatIssues(parsed.error.issues) };
     return {
-      ok: false,
-      issues: parsed.error.issues.map(
-        (issue) => `${issue.path.map(String).join(".")}: ${issue.message}`,
-      ),
+      ok: true,
+      change: {
+        listingId: parsed.data.listingId,
+        priceMinor: null,
+        previousQuantityAvailable: parsed.data.previousQuantityAvailable,
+        quantityAvailable: parsed.data.quantityAvailable,
+      },
     };
   }
+
+  const parsed = listingUpdatedPayloadSchema.safeParse(payload);
+  if (!parsed.success) return { ok: false, issues: formatIssues(parsed.error.issues) };
   return {
     ok: true,
     change: {
       listingId: parsed.data.listingId,
       priceMinor: BigInt(parsed.data.priceMinor),
+      previousQuantityAvailable: parsed.data.previousQuantityAvailable ?? null,
       quantityAvailable: parsed.data.quantityAvailable,
     },
   };
+}
+
+function formatIssues(issues: readonly { path: PropertyKey[]; message: string }[]): string[] {
+  return issues.map((issue) => `${issue.path.map(String).join(".")}: ${issue.message}`);
+}
+
+/**
+ * BACK_IN_STOCK é notícia apenas na transição real 0→N. Com `previousQuantityAvailable`
+ * conhecido e > 0, o evento é um débito de compra (10→9) ou reposição com o anúncio já em
+ * estoque (3→10) — avisar "disponível novamente" seria mentira. Evento legado sem o campo
+ * mantém o comportamento anterior (avalia), porque não dá para provar que não foi 0→N.
+ */
+export function shouldEvaluateStockChange(change: ListingChangeFacts): boolean {
+  if (change.quantityAvailable <= 0) return false;
+  return change.previousQuantityAvailable === null || change.previousQuantityAvailable === 0;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -231,8 +276,13 @@ export async function processListingChange(
     priceAvailable: listing !== null,
   };
 
-  const priceHits = await ports.watchlist.evaluatePriceChange(listingId, priceMinor);
-  const stockRows = await ports.watchlist.evaluateStockChange(listingId, quantityAvailable);
+  // Evento só de estoque não carrega preço novo: avaliar preço com o valor antigo poderia
+  // disparar aviso de queda que não aconteceu agora.
+  const priceHits =
+    priceMinor === null ? [] : await ports.watchlist.evaluatePriceChange(listingId, priceMinor);
+  const stockRows = shouldEvaluateStockChange(event.change)
+    ? await ports.watchlist.evaluateStockChange(listingId, quantityAvailable)
+    : [];
 
   // Vigilância armada DEPOIS do evento não é notícia para ela: a referência que a pessoa viu
   // já reflete estado mais novo. Evita citar preço velho em replay de histórico.
@@ -379,13 +429,17 @@ async function triggerWatch(
 
 export type RawOutboxEvent = {
   eventId: string;
+  eventType: string;
   correlationId: string;
   occurredAt: Date;
   payload: Record<string, unknown>;
 };
 
 export type RetentionTriggerDependencies = ListingChangePorts & {
-  /** Eventos `catalog.listing.updated` ainda sem receipt deste consumidor, mais antigos primeiro. */
+  /**
+   * Eventos `catalog.listing.updated` e `catalog.listing.stock_changed` ainda sem receipt
+   * deste consumidor, mais antigos primeiro.
+   */
   fetchUnprocessed(limit: number): Promise<RawOutboxEvent[]>;
   /** Grava o inbox receipt (idempotente). Só é chamado após processar — falha reprocessa. */
   ack(eventId: string): Promise<void>;
@@ -419,7 +473,7 @@ export async function runRetentionTriggerCycle(
   };
 
   for (const raw of events) {
-    const parsed = parseListingUpdatedPayload(raw.payload);
+    const parsed = parseListingChangePayload(raw.eventType, raw.payload);
     if (!parsed.ok) {
       summary.invalid.push({ eventId: raw.eventId, issues: parsed.issues });
       await deps.ack(raw.eventId);

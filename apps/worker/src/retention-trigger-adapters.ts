@@ -1,10 +1,11 @@
-import { and, asc, eq, notExists } from "drizzle-orm";
+import { and, asc, eq, inArray, notExists } from "drizzle-orm";
 import { listings } from "@midas/catalog";
 import { withSerializableTransaction, type DatabaseHandle } from "@midas/database";
 import { inboxReceipts, outboxEvents, recordInboxOnce } from "@midas/eventing";
 import { toPublicId } from "@midas/kernel";
 import { ReminderService, WatchlistService } from "@midas/retention";
 import {
+  LISTING_STOCK_CHANGED_EVENT_TYPE,
   LISTING_UPDATED_EVENT_TYPE,
   RETENTION_TRIGGER_CONSUMER_ID,
   type RetentionTriggerDependencies,
@@ -33,6 +34,7 @@ export function createRetentionTriggerDependencies(
       return handle.db
         .select({
           eventId: outboxEvents.eventId,
+          eventType: outboxEvents.eventType,
           correlationId: outboxEvents.correlationId,
           occurredAt: outboxEvents.occurredAt,
           payload: outboxEvents.payload,
@@ -40,7 +42,10 @@ export function createRetentionTriggerDependencies(
         .from(outboxEvents)
         .where(
           and(
-            eq(outboxEvents.eventType, LISTING_UPDATED_EVENT_TYPE),
+            inArray(outboxEvents.eventType, [
+              LISTING_UPDATED_EVENT_TYPE,
+              LISTING_STOCK_CHANGED_EVENT_TYPE,
+            ]),
             notExists(
               handle.db
                 .select({ eventId: inboxReceipts.eventId })

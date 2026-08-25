@@ -9,8 +9,8 @@
     "start": "node dist/src/server.js",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --exclude 'dist/**'",
-    "test:unit": "vitest run --exclude 'dist/**'",
+    "test": "vitest run --exclude '**/*.integration.test.ts' --exclude 'dist/**'",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts' --exclude 'dist/**'",
     "test:integration": "vitest run --exclude 'dist/**'"
   },
   "dependencies": {
@@ -25,6 +25,9 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@midas/identity": "workspace:*",
+    "@midas/orders": "workspace:*",
+    "@midas/sellers": "workspace:*",
     "@types/node": "24.13.3",
     "tsx": "4.23.12",
     "typescript": "6.0.3",

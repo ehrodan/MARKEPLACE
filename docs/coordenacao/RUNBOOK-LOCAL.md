@@ -32,14 +32,31 @@ Também existe `.claude/launch.json` com os dois serviços nomeados (`web`, `api
 
 ## 2. Contas de teste
 
-Criadas pelo fluxo real: `POST /v1/auth/register` → e-mail no Mailpit → `POST /v1/auth/email-verifications` → `POST /v1/auth/login`. Ambas com `user_status = ACTIVE`.
+Criadas pelo fluxo real: `POST /v1/auth/register` → e-mail no Mailpit → `POST /v1/auth/email-verifications` → `POST /v1/auth/login`. Todas com `user_status = ACTIVE`.
 
 | Papel | E-mail | Senha |
 |---|---|---|
 | Comprador | `comprador@teste.local` | `SenhaDeTeste2026!` |
 | Vendedor | `vendedor@teste.local` | `SenhaDeTeste2026!` |
+| **Staff / admin** | `admin@teste.local` | `SenhaDeTeste2026!` |
 
 São contas de **desenvolvimento local**. Existem apenas no Postgres desta máquina e não têm valor fora dela.
+
+Verificadas por comando em 2026-08-24 — as duas devolvem `204` e gravam a sessão:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" -X POST http://127.0.0.1:3001/v1/auth/login \
+  -H "Content-Type: application/json" -H "x-midas-csrf: 1" \
+  -d '{"email":"comprador@teste.local","password":"SenhaDeTeste2026!"}'
+```
+
+**O cabeçalho `x-midas-csrf: 1` é obrigatório em toda mutação** (`apps/api/src/app.ts`, `requireCsrf`). O navegador manda sozinho; script ou `curl` sem ele leva `403 CSRF_CHECK_FAILED`, que parece erro de senha e não é.
+
+### Duas recusas que parecem bug e não são
+
+**`429 AUTH_RATE_LIMITED` — "Aguarde antes de tentar novamente".** Há proteção contra força bruta no login. Testar em laço (script de E2E, várias tentativas seguidas) dispara o limite, e a partir daí **todo** `POST /v1/auth/login` volta 429 **sem gravar cookie**. O sintoma engana: a tela fica em `/entrar`, `document.cookie` fica vazio, e depois disso todo `/v1/me/*` responde `401 AUTHENTICATION_REQUIRED` — parece sessão quebrada, e é só o limite. Espere a janela passar antes de concluir que algo quebrou.
+
+**`401` em `/v1/me/cart` logo após um 429.** É consequência do acima, não causa. Antes de investigar o carrinho, confirme que o login devolveu `204`.
 
 Entrar em `http://localhost:3000/entrar`. Login devolve `204` e grava o cookie `midas_session` (`HttpOnly`, `SameSite=Lax`, 24h).
 
@@ -51,6 +68,8 @@ curl -X POST http://127.0.0.1:3001/v1/auth/register \
   -d '{"email":"NOVO@teste.local","password":"SenhaDeTeste2026!","displayName":"Nome","acceptedTermsVersion":"v1"}'
 ```
 
+**Pré-requisito:** o `.env` da raiz precisa de `SMTP_HOST=127.0.0.1` e `SMTP_PORT=1025`. Sem eles, `POST /v1/auth/register` devolve `503 EMAIL_DELIVERY_UNAVAILABLE` e **nenhuma conta nova pode ser criada** — o erro não diz que falta config de SMTP.
+
 O token de verificação chega no Mailpit (`http://localhost:8025`). Copiar o `token=` do link e enviar:
 
 ```bash
@@ -58,7 +77,23 @@ curl -X POST http://127.0.0.1:3001/v1/auth/email-verifications \
   -H "Content-Type: application/json" -d '{"token":"COLE_AQUI"}'
 ```
 
-**Não existe conta de staff/admin pronta.** IAM exige grant explícito e não há seed de papel administrativo. As telas `/admin/*` e `/master/*` continuam sob `default deny`.
+### Conta de staff — para abrir `/admin/*` e `/master/*`
+
+```bash
+node tools/dev-seed/seed-staff.mjs
+```
+
+Cria `admin@teste.local` / `SenhaDeTeste2026!` pelo **fluxo real** (registro + verificação por e-mail no Mailpit) e concede o papel `DEV_PLATFORM_STAFF` com **as 12 permissões que as migrations criaram** — nenhuma inventada. Verificado: `GET /v1/admin/catalog/items/{id}/assets` responde **200** com essa conta.
+
+Só o GRANT é aplicado por SQL, porque não existe rota para conceder papel; criar essa rota sem gate de segurança seria pior que o problema.
+
+```bash
+node tools/dev-seed/seed-staff.mjs --undo
+```
+
+Remove o papel e a atribuição. A conta continua existindo, sem permissão nenhuma.
+
+**Por que isso importa:** `ADM` estava em 1/18 superfícies e `MST` em 1/8 — 25 telas que não podiam sequer ser abertas, porque a autorização é `default deny` e não havia conta com papel administrativo. Sem esta semente, todo trabalho em administração é escrito às cegas.
 
 ---
 
@@ -77,9 +112,17 @@ curl -X POST http://127.0.0.1:3001/v1/auth/email-verifications \
 | `/conta/avaliacoes` | Elegibilidade real; envio bloqueado com motivo |
 | `/entrar`, `/cadastro` | Identidade |
 
-Dado real no banco hoje: **21 anúncios publicados de 7 vendedores** — o `OCHPOCH Market Emblem` original mais 20 da semente de desenvolvimento (§3.5).
+Dado real no banco, medido em 2026-08-24 ao subir a stack: **33 anúncios publicados, 46 contas de vendedor**.
 
-**53 das 95 telas ainda são stub** (`ScreenContractPage`). Abrir uma delas mostra o contrato da rota e o estado `CONTRACT_REQUIRED`. É proposital: a tela não inventa dado.
+Sobre as **100 contas** em `identity.users`: só **duas** são utilizáveis à mão — as da tabela acima. As outras 98 terminam em `@example.test` e foram criadas por testes automatizados e de integração; não têm senha conhecida e não devem ser usadas para navegar.
+
+Contagem viva, quando precisar conferir:
+
+```bash
+podman exec midas-local-postgres-1 psql -U midas_local -d midas_local -t -A -c "select count(*) from catalog.listings where listing_status='PUBLISHED';"
+```
+
+**50 das 95 telas ainda são stub** (`ScreenContractPage`). Abrir uma delas mostra o contrato da rota e o estado `CONTRACT_REQUIRED`. É proposital: a tela não inventa dado.
 
 ---
 
@@ -108,7 +151,23 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 node tools/traceability/report-screen-routes.mjs --functional
 ```
 
-Último resultado: **32/32** em typecheck, lint e test; fronteiras arquiteturais válidas; **42/95 superfícies dedicadas, 53 `CONTRACT_REQUIRED`**.
+Último resultado: **33/33** em typecheck e lint; fronteiras arquiteturais válidas; **45/95 superfícies dedicadas, 50 `CONTRACT_REQUIRED`**.
+
+Distribuição, que é onde o trabalho está: `PUB 9/15 · ACC 11/16 · BUY 8/12 · SEL 15/17 · **ADM 1/18** · **MST 1/8** · **GRW 0/9**`.
+
+**Armadilha:** `pnpm typecheck` com `next dev` no ar falha em
+`.next/dev/types/validator.ts`. Esse arquivo é **gerado** pelo Next enquanto o
+`tsc` lê — não é código do repositório. Pare o dev server antes do gate, ou o
+erro parece regressão e não é.
+
+### Fluxo de compra, verificado ponta a ponta
+
+```
+204 login · 200 vitrine · 200 carrinho · 201 adicionar item
+200 agrupar por vendedor · 201 criar pedido · 200 ler pedido · 200 minhas compras
+404 entrega  (correto: sem PSP não há pagamento, logo não há entrega)
+409 item repetido no carrinho  (recusa correta, não bug)
+```
 
 ---
 

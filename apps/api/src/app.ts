@@ -42,6 +42,8 @@ import { registerFinanceRoutes } from "./finance-routes.js";
 import { registerCatalogRoutes } from "./catalog-routes.js";
 import { registerOrderRoutes } from "./order-routes.js";
 import { registerRetentionRoutes } from "./retention-routes.js";
+import { registerProgressionRoutes } from "./progression-routes.js";
+import { ProgressionService } from "@midas/progression";
 import { CartService, DeliveryService, OrderService } from "@midas/orders";
 import {
   ConsentService,
@@ -94,6 +96,7 @@ export function buildApi(options: BuildApiOptions) {
   const carts = new CartService(options.database.db);
   const orders = new OrderService(options.database.db);
   const deliveries = new DeliveryService(options.database.db);
+  const progression = new ProgressionService(options.database.db);
   const savedCarts = new SavedCartService(options.database.db);
   const watchlist = new WatchlistService(options.database.db);
   const reminders = new ReminderService(options.database.db);
@@ -473,6 +476,11 @@ export function buildApi(options: BuildApiOptions) {
     requireCsrf: (request) => {
       requireCsrf(request, options.config);
     },
+  });
+
+  registerProgressionRoutes(app, {
+    progression,
+    requireSession,
   });
 
   async function optionalSession(request: FastifyRequest) {
