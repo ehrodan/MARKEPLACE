@@ -1,0 +1,47 @@
+/* Faixa estática de confiança. Sem rotação e sem sobreposição com o header. */
+
+.bar {
+  position: relative;
+  z-index: 42;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.inner {
+  min-height: 2.25rem;
+  width: min(calc(100% - 2rem), 86rem);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.inner p {
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.inner svg { flex: none; color: var(--color-signal); }
+.inner strong { color: var(--color-text); font-weight: 650; }
+.inner a {
+  min-height: 2.25rem;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-action);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+@media (max-width: 40rem) {
+  .inner { width: calc(100% - 1rem); }
+  .inner p > span { display: none; }
+  .inner a { font-size: 0.7rem; }
+}

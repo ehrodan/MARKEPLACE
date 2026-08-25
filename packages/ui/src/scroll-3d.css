@@ -1,0 +1,246 @@
+/* ============================================================
+   Midas Foundry — profundidade e scroll 3D (dependência zero).
+   Substitui React Bits (bloqueado: docs/coordenacao/REACT-BITS-ALLOWLIST.md).
+
+   Contrato:
+   - sem JS nada esconde conteúdo: o estado inicial só existe sob `.is-ready`,
+     classe aplicada exclusivamente pelo componente React no client;
+   - `prefers-reduced-motion: reduce` zera transform/transition/animation;
+   - ponteiro grosso (touch) não recebe tilt, brilho nem ímã;
+   - nenhum efeito intercepta scroll, foco ou nome acessível.
+   Só tokens semânticos (--och-*, --color-*); novos tokens em --och-3d-*.
+   ============================================================ */
+
+:root {
+  --och-3d-perspective: 900px;
+  --och-3d-reveal-distance: 1.25rem;
+  --och-3d-reveal-rotate: 3deg;
+  --och-3d-reveal-duration: var(--och-duration-reveal);
+  --och-3d-reveal-delay: 0ms;
+  --och-3d-tilt-duration: var(--och-duration-slow);
+  --och-3d-tilt-track: 90ms;
+  --och-3d-parallax-distance: 3rem;
+  --och-3d-depth-step: 18px;
+  --och-3d-shine-reach: 58%;
+  --och-3d-shine-color: color-mix(in oklch, var(--och-color-gold) 22%, transparent);
+  --och-3d-progress-height: 3px;
+  --och-3d-progress-track: color-mix(in oklch, var(--color-border-strong) 55%, transparent);
+}
+
+/* ---------- Reveal ---------- */
+
+.ui-reveal {
+  transform-style: preserve-3d;
+}
+
+/* Estado final: só ganha transição depois que o JS marcou `is-ready`. */
+.ui-reveal.is-ready {
+  opacity: 1;
+  transform: perspective(var(--och-3d-perspective)) translate3d(0, 0, 0) rotateX(0deg);
+  transition:
+    opacity var(--och-3d-reveal-duration) var(--och-ease-out) var(--och-3d-reveal-delay),
+    transform var(--och-3d-reveal-duration) var(--och-ease-out) var(--och-3d-reveal-delay);
+  will-change: opacity, transform;
+}
+
+.ui-reveal.is-ready[data-reveal-state="hidden"] {
+  opacity: 0;
+  transform: perspective(var(--och-3d-perspective))
+    translate3d(0, var(--och-3d-reveal-distance), 0)
+    rotateX(var(--och-3d-reveal-rotate));
+}
+
+/* ---------- Tilt3D ---------- */
+
+.ui-tilt3d {
+  perspective: var(--och-3d-perspective);
+}
+
+.ui-tilt3d__inner {
+  position: relative;
+  height: 100%;
+  border-radius: inherit;
+  transform-style: preserve-3d;
+}
+
+.ui-tilt3d.is-ready .ui-tilt3d__inner {
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform var(--och-3d-tilt-duration) var(--och-ease-out);
+  will-change: transform;
+}
+
+/* Enquanto o ponteiro está sobre o card, o retorno é curto (segue o dedo);
+   ao sair, volta com a duração longa da pose neutra. */
+.ui-tilt3d.is-ready[data-tilt-active="true"] .ui-tilt3d__inner {
+  transition-duration: var(--och-3d-tilt-track);
+}
+
+.ui-tilt3d__glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--shine-x, 50%) var(--shine-y, 50%),
+    var(--och-3d-shine-color),
+    transparent var(--och-3d-shine-reach)
+  );
+  transition: opacity var(--och-duration-fast) var(--och-ease-out);
+}
+
+.ui-tilt3d.is-ready[data-tilt-active="true"] .ui-tilt3d__glare {
+  opacity: 1;
+}
+
+/* ---------- ParallaxLayer ---------- */
+
+.ui-parallax.is-ready {
+  transform: translate3d(0, var(--parallax-offset, 0px), 0);
+  will-change: transform;
+}
+
+/* ---------- DepthStack ---------- */
+
+.ui-depth-stack {
+  position: relative;
+  perspective: var(--och-3d-perspective);
+  transform-style: preserve-3d;
+}
+
+.ui-depth-stack > [data-depth] {
+  transform-style: preserve-3d;
+}
+
+.ui-depth-stack > [data-depth="-1"] {
+  transform: translateZ(calc(var(--och-3d-depth-step) * -1));
+}
+.ui-depth-stack > [data-depth="0"] {
+  transform: translateZ(0);
+}
+.ui-depth-stack > [data-depth="1"] {
+  transform: translateZ(var(--och-3d-depth-step));
+}
+.ui-depth-stack > [data-depth="2"] {
+  transform: translateZ(calc(var(--och-3d-depth-step) * 2));
+}
+.ui-depth-stack > [data-depth="3"] {
+  transform: translateZ(calc(var(--och-3d-depth-step) * 3));
+}
+
+/* ---------- ShineCard ---------- */
+
+.ui-shine-card {
+  position: relative;
+  isolation: isolate;
+}
+
+.ui-shine-card__shine {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--shine-x, 50%) var(--shine-y, 50%),
+    var(--och-3d-shine-color),
+    transparent var(--och-3d-shine-reach)
+  );
+  transition: opacity var(--och-duration-fast) var(--och-ease-out);
+}
+
+.ui-shine-card.is-ready[data-shine-active="true"] .ui-shine-card__shine {
+  opacity: 1;
+}
+
+/* ---------- MagneticCta ---------- */
+
+.ui-magnetic {
+  display: inline-flex;
+}
+
+.ui-magnetic.is-ready {
+  transform: translate3d(var(--magnet-x, 0px), var(--magnet-y, 0px), 0);
+  transition: transform var(--och-duration-slow) var(--och-ease-out);
+  will-change: transform;
+}
+
+/* ---------- ScrollProgress ---------- */
+
+.ui-scroll-progress {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 60;
+  height: var(--och-3d-progress-height);
+  background: var(--och-3d-progress-track);
+  pointer-events: none;
+}
+
+.ui-scroll-progress__fill {
+  display: block;
+  height: 100%;
+  width: var(--scroll-progress, 0%);
+  background: var(--color-action);
+  transition: width var(--och-duration-fast) linear;
+}
+
+/* ---------- Ponteiro grosso: sem tilt, brilho ou ímã ---------- */
+
+@media (hover: none), (pointer: coarse) {
+  .ui-tilt3d.is-ready .ui-tilt3d__inner,
+  .ui-magnetic.is-ready {
+    transform: none;
+  }
+
+  .ui-tilt3d__glare,
+  .ui-shine-card__shine {
+    display: none;
+  }
+}
+
+/* ---------- Movimento reduzido: conteúdo e ação equivalentes ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-reveal,
+  .ui-reveal.is-ready,
+  .ui-reveal.is-ready[data-reveal-state="hidden"] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .ui-tilt3d.is-ready .ui-tilt3d__inner,
+  .ui-tilt3d.is-ready[data-tilt-active="true"] .ui-tilt3d__inner,
+  .ui-magnetic.is-ready,
+  .ui-parallax,
+  .ui-parallax.is-ready,
+  .ui-depth-stack > [data-depth] {
+    transform: none;
+    transition: none;
+    animation: none;
+  }
+
+  .ui-tilt3d__glare,
+  .ui-shine-card__shine {
+    display: none;
+  }
+
+  .ui-scroll-progress__fill {
+    transition: none;
+  }
+}
+
+/* ---------- Alto contraste ---------- */
+
+@media (forced-colors: active) {
+  .ui-tilt3d__glare,
+  .ui-shine-card__shine {
+    display: none;
+  }
+
+  .ui-scroll-progress__fill {
+    background: Highlight;
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "midas-marketplace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Midas Marketplace — monólito modular orientado a domínios",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@11.15.1",
+  "engines": {
+    "node": ">=22.13.0 <25",
+    "pnpm": ">=11.15.0 <12"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint && pnpm lint:architecture",
+    "lint:architecture": "node tools/architecture/check-boundaries.mjs",
+    "lint:traceability": "node tools/traceability/check-contracts.mjs",
+    "generate:screens": "node tools/traceability/generate-screen-contracts.mjs",
+    "report:screens": "node tools/traceability/report-screen-routes.mjs",
+    "report:screens:functional": "node tools/traceability/report-screen-routes.mjs --functional",
+    "lint:screens": "node tools/traceability/report-screen-routes.mjs --strict",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test && pnpm test:architecture",
+    "test:unit": "turbo run test:unit",
+    "test:integration": "turbo run test:integration",
+    "test:architecture": "node --test tools/architecture/check-boundaries.test.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "infra:up": "podman compose --env-file infra/podman/.runtime.env -f infra/podman/compose.yaml up -d",
+    "infra:status": "podman compose --env-file infra/podman/.runtime.env -f infra/podman/compose.yaml ps",
+    "infra:logs": "podman compose --env-file infra/podman/.runtime.env -f infra/podman/compose.yaml logs --tail=200",
+    "infra:stop": "podman compose --env-file infra/podman/.runtime.env -f infra/podman/compose.yaml stop",
+    "infra:down": "podman compose --env-file infra/podman/.runtime.env -f infra/podman/compose.yaml down",
+    "infra:wait": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/infra/wait-for-services.ps1",
+    "db:generate": "pnpm --filter @midas/database db:generate",
+    "db:migrate": "pnpm --filter @midas/database db:migrate",
+    "db:check": "pnpm --filter @midas/database db:check"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "10.9.0",
+    "turbo": "2.10.11",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.67.0",
+    "vitest": "4.1.11"
+  }
+}

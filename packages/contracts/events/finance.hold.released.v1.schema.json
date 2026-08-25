@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.midas.example/events/finance.hold.released.v1",
+  "allOf": [
+    { "$ref": "https://schemas.midas.example/events/outbox-event-envelope.v1" },
+    { "type": "object", "properties": {
+      "eventType": { "const": "finance.hold.released.v1" }, "schemaVersion": { "const": 1 },
+      "aggregateType": { "const": "Hold" }, "sourceModule": { "const": "finance" }, "dataClassification": { "const": "FINANCIAL" },
+      "payload": { "type": "object", "additionalProperties": false,
+        "required": ["holdId","balanceLotId","sellerAccountId","amountMinor","currency","releasedAt"],
+        "properties": {
+          "holdId": { "type": "string", "format": "uuid" }, "balanceLotId": { "type": "string", "format": "uuid" },
+          "sellerAccountId": { "type": "string", "format": "uuid" }, "amountMinor": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+          "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }, "releasedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    } }
+  ]
+}

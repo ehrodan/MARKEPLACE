@@ -1,0 +1,32 @@
+{
+  "name": "@midas/catalog",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "types": "./dist/src/index.d.ts", "default": "./dist/src/index.js" }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --exclude '**/*.integration.test.ts' --exclude 'dist/**'",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts' --exclude 'dist/**'",
+    "test:integration": "vitest run --exclude 'dist/**'"
+  },
+  "dependencies": {
+    "@midas/administration-audit": "workspace:*",
+    "@midas/database": "workspace:*",
+    "@midas/eventing": "workspace:*",
+    "@midas/iam": "workspace:*",
+    "@midas/identity": "workspace:*",
+    "@midas/kernel": "workspace:*",
+    "@midas/sellers": "workspace:*",
+    "drizzle-orm": "0.45.2"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "typescript": "6.0.3",
+    "vitest": "4.1.11"
+  }
+}

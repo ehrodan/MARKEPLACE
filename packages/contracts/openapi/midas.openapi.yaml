@@ -1,0 +1,894 @@
+openapi: 3.1.0
+info:
+  title: Midas Marketplace API
+  version: 0.1.0
+  description: >-
+    Contrato executável dos cortes de identidade, SellerAccount e finanças:
+    capabilities fail-closed, confirmação de pagamento por webhook, resolução
+    administrativa auditável, saldo do seller e payout manual com segregação.
+servers:
+  - url: http://localhost:3001
+paths:
+  /health/live:
+    get:
+      operationId: getApiLiveness
+      tags: [Operations]
+      responses:
+        '200':
+          description: Processo vivo.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, process]
+                properties:
+                  status: { const: LIVE }
+                  process: { const: api }
+  /health/ready:
+    get:
+      operationId: getApiReadiness
+      tags: [Operations]
+      responses:
+        '200':
+          description: Dependência canônica disponível.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, database, capabilities]
+                properties:
+                  status: { const: READY }
+                  database: { const: AVAILABLE }
+                  capabilities:
+                    type: object
+                    required: [emailVerificationDelivery]
+                    properties:
+                      emailVerificationDelivery: { enum: [AVAILABLE, UNAVAILABLE] }
+        '503': { $ref: '#/components/responses/Problem' }
+  /v1/auth/register:
+    post:
+      operationId: registerUser
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterUser' }
+      responses:
+        '202':
+          description: Cadastro pendente de verificação.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [registrationStatus]
+                properties:
+                  registrationStatus: { const: PENDING_VERIFICATION }
+        '422': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /v1/auth/email-verifications:
+    post:
+      operationId: verifyUserEmail
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [token]
+              properties:
+                token: { type: string, minLength: 32, maxLength: 256 }
+      responses:
+        '204': { description: E-mail verificado. }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/auth/login:
+    post:
+      operationId: createSession
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, password]
+              properties:
+                email: { type: string, format: email, maxLength: 320 }
+                password: { type: string, minLength: 1, maxLength: 256 }
+      responses:
+        '204':
+          description: Sessão criada em cookie HttpOnly.
+          headers:
+            Set-Cookie: { schema: { type: string } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+  /v1/auth/session:
+    delete:
+      operationId: deleteCurrentSession
+      tags: [Identity]
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: Sessão atual revogada ou já ausente. }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/me/sessions:
+    get:
+      operationId: listCurrentUserSessions
+      tags: [Identity]
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200':
+          description: Sessões próprias ativas.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionList' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/me/sessions/{sessionId}:
+    delete:
+      operationId: revokeCurrentUserSession
+      tags: [Identity]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: Sessão própria revogada ou já ausente. }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/seller-accounts:
+    post:
+      operationId: createSellerAccount
+      tags: [Sellers]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSellerAccount' }
+      responses:
+        '201':
+          description: Conta e membership OWNER criadas atomicamente.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SellerAccount' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/me/seller-accounts:
+    get:
+      operationId: listCurrentUserSellerAccounts
+      tags: [Sellers]
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200':
+          description: Contas vinculadas à sessão.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, asOf]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/SellerAccount' } }
+                  asOf: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/seller-accounts/{sellerAccountId}/members:
+    get:
+      operationId: listSellerAccountMembers
+      tags: [Sellers]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - name: sellerAccountId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^sac_[0-9a-f-]{36}$' }
+      responses:
+        '200':
+          description: Members autorizados sem e-mail ou contato.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, asOf]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/SellerMember' } }
+                  asOf: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/finance/provider-capability:
+    get:
+      operationId: getPaymentProviderCapability
+      tags: [Finance]
+      description: >-
+        Informa a capability efetiva do adapter de pagamento. A ausência de
+        provider selecionado, contrato, credencial ou adapter nunca é tratada
+        como disponibilidade.
+      parameters:
+        - name: providerCode
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 120 }
+      responses:
+        '200':
+          description: Capability de pagamento avaliada de forma fail-closed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentProviderCapability' }
+  /v1/provider-webhooks/{providerCode}:
+    post:
+      operationId: receivePaymentProviderWebhook
+      tags: [ProviderWebhooks]
+      security: []
+      description: >-
+        Recebe bytes originais do webhook e delega validação de assinatura e
+        parsing ao adapter registrado. Não confirma pagamento sem provider
+        disponível e evento verificável.
+      parameters:
+        - name: providerCode
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 120 }
+      requestBody:
+        required: true
+        content:
+          '*/*':
+            schema: {}
+      responses:
+        '202':
+          description: Evento autenticado recebido, inclusive replay idempotente.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderWebhookAck' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /v1/finance/payout-capability:
+    get:
+      operationId: getPayoutExecutionCapability
+      tags: [Finance]
+      description: >-
+        Avalia a execução de payout manual externo pelo país, moeda e modo,
+        sem presumir contrato ou credencial inexistente.
+      parameters:
+        - name: countryCode
+          in: query
+          required: true
+          schema: { type: string, pattern: '^[A-Z]{2}$' }
+        - name: currency
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/Currency' }
+        - name: mode
+          in: query
+          required: false
+          schema: { const: EXTERNAL_MANUAL, default: EXTERNAL_MANUAL }
+      responses:
+        '200':
+          description: Capability de payout avaliada de forma fail-closed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoutExecutionCapability' }
+  /v1/me/payments:
+    get:
+      operationId: listCurrentBuyerPayments
+      tags: [Finance]
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200':
+          description: Pagamentos vinculados ao comprador autenticado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FinancePaymentList' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/seller-accounts/{sellerAccountId}/finance/balance:
+    get:
+      operationId: getSellerFinancialBalance
+      tags: [Finance]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/SellerAccountId'
+        - name: currency
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/Currency' }
+      responses:
+        '200':
+          description: Saldo financeiro canônico no escopo autorizado do seller.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SellerBalance' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/seller-accounts/{sellerAccountId}/payouts:
+    parameters:
+      - $ref: '#/components/parameters/SellerAccountId'
+    get:
+      operationId: listSellerPayouts
+      tags: [Finance]
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200':
+          description: Solicitações de payout visíveis ao seller autorizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoutRequestList' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: requestSellerPayout
+      tags: [Finance]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePayoutRequest' }
+      responses:
+        '201':
+          description: Solicitação de payout criada sem executar transferência.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoutRequest' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/admin/payment-resolution-cases:
+    get:
+      operationId: listPaymentResolutionCases
+      tags: [FinanceAdmin]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/FinanceStatus'
+      responses:
+        '200':
+          description: Fila administrativa de casos de resolução de pagamento.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentResolutionCaseList' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/admin/payments/{paymentId}/resolution-cases:
+    post:
+      operationId: createPaymentResolutionCase
+      tags: [FinanceAdmin]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/FinanceUuid' }
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePaymentResolutionCase' }
+      responses:
+        '201':
+          description: Caso auditável aberto sem editar o pagamento diretamente.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentResolutionCase' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/admin/payment-resolution-cases/{resolutionCaseId}/decisions:
+    post:
+      operationId: decidePaymentResolutionCase
+      tags: [FinanceAdmin]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - name: resolutionCaseId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/FinanceUuid' }
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecidePaymentResolutionCase' }
+      responses:
+        '200':
+          description: Decisão registrada; aprovação depende de lookup provider SETTLED.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentResolutionCase' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/admin/payouts:
+    get:
+      operationId: listAdminPayouts
+      tags: [FinanceAdmin]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/FinanceStatus'
+      responses:
+        '200':
+          description: Fila administrativa de payouts pendentes ou concluídos.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoutRequestList' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/admin/payouts/{payoutRequestId}/claim:
+    post:
+      operationId: claimAdminPayout
+      tags: [FinanceAdmin]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PayoutRequestId'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '200':
+          description: Payout movido para revisão pelo operador autorizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoutRequest' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /v1/admin/payouts/{payoutRequestId}/approve:
+    post:
+      operationId: approveAdminPayout
+      tags: [FinanceAdmin]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PayoutRequestId'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '200':
+          description: Payout aprovado para execução posterior.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoutRequest' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /v1/admin/payouts/{payoutRequestId}/executions:
+    post:
+      operationId: registerExternalAdminPayoutExecution
+      tags: [FinanceAdmin]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PayoutRequestId'
+        - $ref: '#/components/parameters/CsrfHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterExternalPayoutExecution' }
+      responses:
+        '200':
+          description: Referência e evidência da execução externa registradas.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoutRequest' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/admin/payouts/{payoutRequestId}/confirmations:
+    post:
+      operationId: confirmExternalAdminPayout
+      tags: [FinanceAdmin]
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PayoutRequestId'
+        - $ref: '#/components/parameters/CsrfHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConfirmExternalPayout' }
+      responses:
+        '200':
+          description: Payout confirmado como pago por ator segregado e capability disponível.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoutRequest' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: midas_session
+  parameters:
+    CsrfHeader:
+      name: X-Midas-CSRF
+      in: header
+      required: true
+      schema: { const: '1' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Chave estável por operação lógica; mínimo de 16 caracteres.
+      schema: { type: string, minLength: 16 }
+    SellerAccountId:
+      name: sellerAccountId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^sac_[0-9a-f-]{36}$' }
+    PayoutRequestId:
+      name: payoutRequestId
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/FinanceUuid' }
+    FinanceStatus:
+      name: status
+      in: query
+      required: false
+      schema: { type: string, minLength: 1, maxLength: 40 }
+  responses:
+    Problem:
+      description: Erro tipado.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    RegisterUser:
+      type: object
+      additionalProperties: false
+      required: [email, password, displayName, acceptedTermsVersion]
+      properties:
+        email: { type: string, format: email, maxLength: 320 }
+        password: { type: string, minLength: 12, maxLength: 256, writeOnly: true }
+        displayName: { type: string, minLength: 2, maxLength: 100 }
+        acceptedTermsVersion: { type: string, minLength: 1, maxLength: 64 }
+    CreateSellerAccount:
+      type: object
+      additionalProperties: false
+      required: [displayName, accountType]
+      properties:
+        displayName: { type: string, minLength: 2, maxLength: 120 }
+        accountType: { enum: [INDIVIDUAL, ORGANIZATION] }
+    SellerAccount:
+      type: object
+      additionalProperties: false
+      required: [sellerAccountId, displayName, accountType, sellerAccountStatus, membershipRole, version]
+      properties:
+        sellerAccountId: { type: string, pattern: '^sac_[0-9a-f-]{36}$' }
+        displayName: { type: string }
+        accountType: { enum: [INDIVIDUAL, ORGANIZATION] }
+        sellerAccountStatus: { enum: [ONBOARDING_REQUIRED, ACTIVE, SUSPENDED] }
+        membershipRole: { enum: [OWNER, MANAGER, OPERATOR, FINANCE_VIEWER] }
+        version: { type: integer, minimum: 1 }
+    SellerMember:
+      type: object
+      additionalProperties: false
+      required: [sellerMembershipId, userId, displayName, membershipRole, membershipStatus, validFrom, validUntil, version]
+      properties:
+        sellerMembershipId: { type: string, pattern: '^smb_[0-9a-f-]{36}$' }
+        userId: { type: string, pattern: '^usr_[0-9a-f-]{36}$' }
+        displayName: { type: string }
+        membershipRole: { enum: [OWNER, MANAGER, OPERATOR, FINANCE_VIEWER] }
+        membershipStatus: { enum: [ACTIVE, REVOKED, EXPIRED] }
+        validFrom: { type: string, format: date-time }
+        validUntil: { type: [string, 'null'], format: date-time }
+        version: { type: integer, minimum: 1 }
+    SessionList:
+      type: object
+      additionalProperties: false
+      required: [data, asOf]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [sessionId, createdAt, expiresAt, current]
+            properties:
+              sessionId: { type: string, format: uuid }
+              createdAt: { type: string, format: date-time }
+              expiresAt: { type: string, format: date-time }
+              current: { type: boolean }
+        asOf: { type: string, format: date-time }
+    FinanceUuid:
+      type: string
+      format: uuid
+      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+    AmountMinor:
+      type: string
+      pattern: '^[1-9][0-9]*$'
+    Currency:
+      type: string
+      pattern: '^[A-Z]{3}$'
+    FinanceUserId:
+      type: string
+      pattern: '^usr_[0-9a-f-]{36}$'
+    FinanceSellerAccountId:
+      type: string
+      pattern: '^sac_[0-9a-f-]{36}$'
+    PaymentProviderCapability:
+      type: object
+      additionalProperties: false
+      required: [providerCode, status, reasonCode]
+      properties:
+        providerCode: { type: [string, 'null'], minLength: 1, maxLength: 120 }
+        status: { enum: [AVAILABLE, CONTRACT_REQUIRED, UNSUPPORTED] }
+        reasonCode:
+          enum:
+            - AVAILABLE
+            - PROVIDER_CONTRACT_NOT_SELECTED
+            - PROVIDER_CREDENTIALS_REQUIRED
+            - PROVIDER_ADAPTER_NOT_INSTALLED
+    ProviderWebhookAck:
+      type: object
+      additionalProperties: false
+      required: [duplicate, processingResult, paymentId]
+      properties:
+        duplicate: { type: boolean }
+        processingResult:
+          enum:
+            - SETTLED
+            - PAYMENT_QUARANTINED
+            - IGNORED_PENDING
+            - IGNORED_FAILED
+            - PAYMENT_NOT_FOUND
+        paymentId:
+          oneOf:
+            - $ref: '#/components/schemas/FinanceUuid'
+            - type: 'null'
+    FinancePayment:
+      type: object
+      additionalProperties: false
+      required:
+        - paymentId
+        - orderId
+        - buyerUserId
+        - sellerAccountId
+        - providerCode
+        - amountMinor
+        - currency
+        - paymentStatus
+        - reconciliationStatus
+        - settledAt
+        - createdAt
+      properties:
+        paymentId: { $ref: '#/components/schemas/FinanceUuid' }
+        orderId: { $ref: '#/components/schemas/FinanceUuid' }
+        buyerUserId: { $ref: '#/components/schemas/FinanceUserId' }
+        sellerAccountId: { $ref: '#/components/schemas/FinanceSellerAccountId' }
+        providerCode: { type: [string, 'null'] }
+        amountMinor: { $ref: '#/components/schemas/AmountMinor' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        paymentStatus:
+          enum: [PENDING, SETTLED, FAILED, CANCELLED, PAYMENT_QUARANTINED]
+        reconciliationStatus:
+          enum: [PENDING, RECONCILED_PROVIDER, RECONCILED_MANUAL]
+        settledAt: { type: [string, 'null'], format: date-time }
+        createdAt: { type: string, format: date-time }
+    FinancePaymentList:
+      type: object
+      additionalProperties: false
+      required: [data, asOf]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/FinancePayment' }
+        asOf: { type: string, format: date-time }
+    SellerBalance:
+      type: object
+      additionalProperties: false
+      required:
+        - sellerAccountId
+        - currency
+        - heldAmountMinor
+        - availableAmountMinor
+        - reservedAmountMinor
+        - asOf
+      properties:
+        sellerAccountId: { $ref: '#/components/schemas/FinanceSellerAccountId' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        heldAmountMinor: { type: string, pattern: '^[0-9]+$' }
+        availableAmountMinor: { type: string, pattern: '^[0-9]+$' }
+        reservedAmountMinor: { type: string, pattern: '^[0-9]+$' }
+        asOf: { type: string, format: date-time }
+    PayoutExecutionCapability:
+      type: object
+      additionalProperties: false
+      required: [countryCode, currency, mode, status, reasonCode]
+      properties:
+        countryCode: { type: string, pattern: '^[A-Z]{2}$' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        mode: { const: EXTERNAL_MANUAL }
+        status: { enum: [AVAILABLE, CONTRACT_REQUIRED, UNSUPPORTED] }
+        reasonCode:
+          enum:
+            - AVAILABLE
+            - PAYOUT_CONTRACT_NOT_SELECTED
+            - PAYOUT_CREDENTIALS_REQUIRED
+            - PAYOUT_MODE_UNSUPPORTED
+    PayoutRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - payoutRequestId
+        - sellerAccountId
+        - requestedByUserId
+        - amountMinor
+        - currency
+        - destinationCountry
+        - payoutStatus
+        - claimedByUserId
+        - approvedByUserId
+        - completedByUserId
+        - claimedAt
+        - approvedAt
+        - completedAt
+        - createdAt
+        - version
+      properties:
+        payoutRequestId: { $ref: '#/components/schemas/FinanceUuid' }
+        sellerAccountId: { $ref: '#/components/schemas/FinanceSellerAccountId' }
+        requestedByUserId: { $ref: '#/components/schemas/FinanceUserId' }
+        amountMinor: { $ref: '#/components/schemas/AmountMinor' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        destinationCountry: { type: string, pattern: '^[A-Z]{2}$' }
+        payoutStatus:
+          enum:
+            - REQUESTED
+            - UNDER_REVIEW
+            - INFORMATION_REQUIRED
+            - APPROVED
+            - REJECTED
+            - EXECUTING
+            - CONFIRMATION_PENDING
+            - PAID
+            - FAILED
+            - RETURNED
+            - CANCELED
+        claimedByUserId:
+          oneOf:
+            - $ref: '#/components/schemas/FinanceUserId'
+            - type: 'null'
+        approvedByUserId:
+          oneOf:
+            - $ref: '#/components/schemas/FinanceUserId'
+            - type: 'null'
+        completedByUserId:
+          oneOf:
+            - $ref: '#/components/schemas/FinanceUserId'
+            - type: 'null'
+        claimedAt: { type: [string, 'null'], format: date-time }
+        approvedAt: { type: [string, 'null'], format: date-time }
+        completedAt: { type: [string, 'null'], format: date-time }
+        createdAt: { type: string, format: date-time }
+        version: { type: integer, minimum: 1 }
+    PayoutRequestList:
+      type: object
+      additionalProperties: false
+      required: [data, asOf]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/PayoutRequest' }
+        asOf: { type: string, format: date-time }
+    CreatePayoutRequest:
+      type: object
+      additionalProperties: false
+      required: [amountMinor, currency, destinationCountry]
+      properties:
+        amountMinor: { $ref: '#/components/schemas/AmountMinor' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        destinationCountry: { type: string, pattern: '^[A-Z]{2}$' }
+    RegisterExternalPayoutExecution:
+      type: object
+      additionalProperties: false
+      required: [externalReference, evidenceLocator, evidenceSha256]
+      properties:
+        externalReference: { type: string, minLength: 1, maxLength: 300 }
+        evidenceLocator: { type: string, minLength: 1, maxLength: 1000 }
+        evidenceSha256: { type: string, pattern: '^[0-9a-fA-F]{64}$' }
+    ConfirmExternalPayout:
+      type: object
+      additionalProperties: false
+      required: [confirmationEvidenceLocator, confirmationEvidenceSha256]
+      properties:
+        confirmationEvidenceLocator: { type: string, minLength: 1, maxLength: 1000 }
+        confirmationEvidenceSha256: { type: string, pattern: '^[0-9a-fA-F]{64}$' }
+    PaymentResolutionCase:
+      type: object
+      additionalProperties: false
+      required:
+        - resolutionCaseId
+        - paymentId
+        - caseStatus
+        - reasonCode
+        - evidenceLocator
+        - createdByUserId
+        - reviewedByUserId
+        - reviewReason
+        - createdAt
+        - reviewedAt
+        - version
+      properties:
+        resolutionCaseId: { $ref: '#/components/schemas/FinanceUuid' }
+        paymentId: { $ref: '#/components/schemas/FinanceUuid' }
+        caseStatus: { enum: [OPEN, APPROVED, REJECTED] }
+        reasonCode: { type: string }
+        evidenceLocator: { type: string }
+        createdByUserId: { $ref: '#/components/schemas/FinanceUserId' }
+        reviewedByUserId:
+          oneOf:
+            - $ref: '#/components/schemas/FinanceUserId'
+            - type: 'null'
+        reviewReason: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+        reviewedAt: { type: [string, 'null'], format: date-time }
+        version: { type: integer, minimum: 1 }
+    PaymentResolutionCaseList:
+      type: object
+      additionalProperties: false
+      required: [data, asOf]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/PaymentResolutionCase' }
+        asOf: { type: string, format: date-time }
+    CreatePaymentResolutionCase:
+      type: object
+      additionalProperties: false
+      required: [reasonCode, evidenceLocator]
+      properties:
+        reasonCode: { type: string, minLength: 1, maxLength: 120 }
+        evidenceLocator: { type: string, minLength: 1, maxLength: 1000 }
+    DecidePaymentResolutionCase:
+      type: object
+      additionalProperties: false
+      required: [decision, reviewReason]
+      properties:
+        decision: { enum: [APPROVE, REJECT] }
+        reviewReason: { type: string, minLength: 1, maxLength: 500 }
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [type, title, status, code, detail, correlationId, fieldErrors]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        code: { type: string }
+        detail: { type: string }
+        correlationId: { type: string }
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field: { type: string }
+              message: { type: string }

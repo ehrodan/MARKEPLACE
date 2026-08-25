@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.midas.example/events/finance.payment.quarantined.v1",
+  "allOf": [
+    { "$ref": "https://schemas.midas.example/events/outbox-event-envelope.v1" },
+    { "type": "object", "properties": {
+      "eventType": { "const": "finance.payment.quarantined.v1" }, "schemaVersion": { "const": 1 },
+      "aggregateType": { "const": "Payment" }, "sourceModule": { "const": "finance" }, "dataClassification": { "const": "FINANCIAL" },
+      "payload": { "type": "object", "additionalProperties": false,
+        "required": ["paymentId","orderId","paymentQuarantineId","reasonCode","providerSettledAt"],
+        "properties": { "paymentId": { "type": "string", "format": "uuid" }, "orderId": { "type": "string", "format": "uuid" }, "paymentQuarantineId": { "type": "string", "format": "uuid" }, "reasonCode": { "const": "LATE_SETTLEMENT_ORDER_CANCELLED" }, "providerSettledAt": { "type": "string", "format": "date-time" } }
+      }
+    } }
+  ]
+}

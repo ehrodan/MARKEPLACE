@@ -1,0 +1,120 @@
+/* Portas de entrada da loja.
+   Sem carrossel automático: `docs/07 §1.4` proíbe motion que a pessoa não
+   controla nesta faixa, e um banner que troca sozinho esconde o conteúdo que
+   ela estava lendo. As três portas ficam visíveis ao mesmo tempo. */
+
+.doors {
+  width: min(calc(100% - 2rem), 86rem);
+  margin-inline: auto;
+  padding-block: var(--och-space-6) 0;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  /* A primeira porta é mais larga: ela tem mais ofertas, e a hierarquia
+     visual conta a mesma verdade que o número. */
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: var(--och-space-4);
+}
+
+.door {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 8.5rem;
+  display: grid;
+  align-content: end;
+  gap: 0.2rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-card);
+  padding: var(--och-space-5);
+  background: var(--color-surface);
+  transition:
+    border-color var(--och-duration-fast) var(--och-ease-out),
+    transform var(--och-duration-fast) var(--och-ease-out);
+}
+
+.door::before {
+  /* Halo de canto: dá matéria à porta sem imagem e sem pedir asset novo. */
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -40% -20% auto auto;
+  width: 18rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--color-action) 16%, transparent),
+    transparent 66%
+  );
+}
+
+.door[data-emphasis="lead"]::before {
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--color-signal) 18%, transparent),
+    transparent 66%
+  );
+}
+
+.door:hover {
+  border-color: var(--color-action);
+  transform: translateY(-2px);
+}
+
+.doorLabel {
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.doorCount {
+  color: var(--color-signal);
+  font: 650 0.7rem/1 var(--font-data);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Faixa de preço praticada, não promessa: é o menor e o maior preço que
+   existem nesta categoria agora. */
+.doorRange {
+  color: var(--color-text-secondary);
+  font-family: var(--font-data);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.doorArrow {
+  position: absolute;
+  top: var(--och-space-5);
+  right: var(--och-space-5);
+  color: var(--color-action);
+  font-size: 1.1rem;
+  transition: transform var(--och-duration-fast) var(--och-ease-out);
+}
+
+.door:hover .doorArrow { transform: translateX(0.25rem); }
+
+@media (max-width: 63.9375rem) {
+  .grid { grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .door,
+  .door:hover,
+  .doorArrow,
+  .door:hover .doorArrow { transform: none; transition: none; }
+}

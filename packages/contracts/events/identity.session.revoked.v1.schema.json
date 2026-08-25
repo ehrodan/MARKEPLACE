@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.midas.example/events/identity.session.revoked.v1",
+  "title": "identity.session.revoked.v1",
+  "allOf": [
+    { "$ref": "https://schemas.midas.example/events/outbox-event-envelope.v1" },
+    { "type": "object", "properties": {
+      "eventType": { "const": "identity.session.revoked.v1" },
+      "aggregateType": { "const": "Session" },
+      "aggregateId": { "type": "string", "format": "uuid" },
+      "sourceModule": { "const": "identity" },
+      "payload": { "type": "object", "additionalProperties": false, "required": ["userId"], "properties": {
+        "userId": { "type": "string", "pattern": "^usr_[0-9a-f-]{36}$" }
+      }}
+    }}
+  ]
+}

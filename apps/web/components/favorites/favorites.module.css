@@ -1,0 +1,270 @@
+/* SCR-ACC-009 — favoritos e watchlist.
+   Perfil de motion M1: só feedback funcional (seleção, foco, hover curto).
+   Nenhuma entrada coreografada, contagem, pulso ou animação de urgência.
+   Status nunca é comunicado apenas por cor: cada estado tem rótulo textual. */
+
+.liveRegion {
+  min-height: 1.35rem;
+  margin-bottom: var(--och-space-3);
+  color: var(--color-text-secondary);
+  font-size: .82rem;
+}
+
+.banner {
+  margin-bottom: var(--och-space-4);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-3);
+  padding: var(--och-space-4);
+  color: var(--color-text-secondary);
+  font-size: .84rem;
+  line-height: 1.55;
+}
+
+.banner svg {
+  flex: none;
+  margin-top: .15rem;
+  color: var(--color-action);
+}
+
+.banner strong { color: var(--color-text); }
+.banner code { font: 500 .78rem/1.4 var(--font-data); }
+
+.bannerActions {
+  margin-top: var(--och-space-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--och-space-3);
+}
+
+.groups {
+  display: grid;
+  gap: var(--och-space-8);
+}
+
+.group {
+  display: grid;
+  gap: var(--och-space-4);
+}
+
+.groupHeading {
+  display: grid;
+  gap: var(--och-space-2);
+  justify-items: start;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--och-space-3);
+}
+
+.groupHeading h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.32rem;
+  line-height: 1.15;
+}
+
+.groupHeading p {
+  max-width: var(--page-max-reading);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .86rem;
+  line-height: 1.55;
+}
+
+.cardList {
+  display: grid;
+  gap: var(--och-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  gap: var(--och-space-4);
+  border: 1px solid var(--color-border);
+  border-inline-start: 3px solid var(--color-border-strong);
+  border-radius: var(--och-radius-card);
+  padding: var(--card-padding);
+  background: var(--card-bg);
+  transition: border-color var(--och-duration-fast) var(--och-ease-out);
+}
+
+.card:hover { border-color: var(--color-border-strong); }
+
+/* A faixa lateral reforça o rótulo textual; nunca o substitui. */
+.card[data-state="DISPONIVEL"] { border-inline-start-color: var(--color-success); }
+.card[data-state="PRECO_MUDOU"] { border-inline-start-color: var(--color-info); }
+.card[data-state="SEM_ESTOQUE"],
+.card[data-state="DESPUBLICADO"],
+.card[data-state="FORA_DO_CATALOGO"] { border-inline-start-color: var(--color-warning); }
+.card[data-state="REMOVIDO"] { border-inline-start-color: var(--color-danger); }
+
+.cardHead {
+  display: grid;
+  gap: var(--och-space-2);
+  justify-items: start;
+}
+
+.cardTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.22rem;
+  line-height: 1.2;
+}
+
+.cardTitle a { color: var(--color-text); text-decoration: none; }
+.cardTitle a:hover { color: var(--color-action); text-decoration: underline; }
+
+.cardExplanation {
+  max-width: var(--page-max-reading);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .84rem;
+  line-height: 1.55;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--och-space-3) var(--och-space-5);
+  margin: 0;
+  border-block: 1px solid var(--color-border);
+  padding-block: var(--och-space-3);
+}
+
+.facts > div { display: grid; gap: .2rem; min-width: 0; }
+
+.facts dt {
+  color: var(--color-text-muted);
+  font: 650 .64rem/1.2 var(--font-data);
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.facts dd {
+  margin: 0;
+  color: var(--color-text);
+  font-size: .88rem;
+  line-height: 1.45;
+}
+
+.watchGroup {
+  display: grid;
+  gap: var(--och-space-3);
+}
+
+.watchControl {
+  display: grid;
+  gap: var(--och-space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-control);
+  padding: var(--och-space-3) var(--och-space-4);
+  background: color-mix(in oklch, var(--color-surface-raised) 55%, transparent);
+}
+
+.watchHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--och-space-3);
+}
+
+.watchButton {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-control);
+  padding-inline: var(--och-space-4);
+  background: var(--color-canvas);
+  color: var(--color-text-secondary);
+  font: 650 .82rem/1 var(--font-body);
+  cursor: pointer;
+  transition:
+    border-color var(--och-duration-fast) var(--och-ease-out),
+    background-color var(--och-duration-fast) var(--och-ease-out),
+    color var(--och-duration-fast) var(--och-ease-out);
+}
+
+.watchButton svg { flex: none; }
+.watchButton:hover { border-color: var(--color-action); color: var(--color-text); }
+
+.watchButton:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.watchButton[aria-pressed="true"] {
+  border-color: var(--color-action);
+  background: color-mix(in oklch, var(--color-action) 12%, var(--color-canvas));
+  color: var(--color-text);
+}
+
+.watchExplanation,
+.watchReceipt {
+  max-width: var(--page-max-reading);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .8rem;
+  line-height: 1.55;
+}
+
+.watchReceipt {
+  color: var(--color-text-muted);
+  font-size: .76rem;
+}
+
+.watchExplanation strong { color: var(--color-text); }
+
+.watchField {
+  display: grid;
+  gap: .35rem;
+  max-width: 26rem;
+}
+
+.watchField label {
+  color: var(--color-text-secondary);
+  font-size: .76rem;
+  font-weight: 650;
+}
+
+.watchField input {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: calc(var(--och-radius-control) - 2px);
+  padding: 0 .8rem;
+  background: var(--color-input);
+  color: var(--color-text);
+  font-size: .88rem;
+}
+
+.watchField input:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.watchField input[aria-invalid="true"] { border-color: var(--color-danger); }
+
+.watchError { color: var(--color-danger); font-size: .76rem; }
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--och-space-3);
+}
+
+@media (max-width: 47.9375rem) {
+  .facts { grid-template-columns: 1fr; }
+  .cardActions > * { flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .watchButton {
+    transition: none;
+  }
+}

@@ -1,0 +1,464 @@
+/* SCR-BUY-003 — checkout. Motion M0 (docs/07 §1.4):
+   nenhuma entrada coreografada, nenhum parallax, nenhuma contagem.
+   Só cor de token, borda e foco. Sem hex hardcoded. */
+
+.shell {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(180deg, color-mix(in oklch, var(--color-surface) 30%, transparent), transparent 18rem),
+    var(--color-canvas);
+}
+
+.topbar {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-canvas);
+}
+
+.topbarInner {
+  width: min(calc(100% - 2rem), var(--page-max-operational));
+  min-height: var(--shell-header-height);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--och-space-4);
+}
+
+.topbarInner .text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  min-height: 2.75rem;
+}
+
+.main { flex: 1; width: 100%; }
+
+.content {
+  width: min(calc(100% - 2rem), var(--page-max-operational));
+  margin-inline: auto;
+  padding-block: var(--och-space-8) var(--och-space-16);
+  display: grid;
+  gap: var(--och-space-6);
+}
+
+/* ------------------------------- cabeçalho ------------------------------- */
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--och-space-4);
+}
+
+.heading h1 {
+  margin: var(--och-space-2) 0 var(--och-space-3);
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+  line-height: 1.1;
+  color: var(--color-text);
+}
+
+.heading p {
+  max-width: var(--page-max-reading);
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.eyebrow {
+  font-family: var(--font-data);
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* -------------------------------- stepper -------------------------------- */
+
+.stepper ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--och-space-2);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--och-space-3);
+  min-height: 3.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-card);
+  padding: var(--och-space-3) var(--och-space-4);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.stepIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-pill);
+  font-family: var(--font-data);
+  font-size: .8rem;
+}
+
+.stepLabel { font-size: .88rem; font-weight: 600; }
+
+.stepDone {
+  color: var(--color-text-secondary);
+  border-color: color-mix(in oklch, var(--color-success) 40%, var(--color-border));
+}
+
+.stepDone .stepIndex {
+  border-color: color-mix(in oklch, var(--color-success) 55%, var(--color-border-strong));
+  color: var(--color-success);
+}
+
+.stepActive {
+  color: var(--color-text);
+  border-color: var(--color-action);
+  background: color-mix(in oklch, var(--color-action) 8%, var(--color-surface));
+}
+
+.stepActive .stepIndex {
+  border-color: var(--color-action);
+  color: var(--color-action);
+}
+
+/* -------------------------------- layout --------------------------------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--och-space-6);
+}
+
+.mainColumn,
+.sideColumn {
+  min-width: 0;
+  display: grid;
+  gap: var(--och-space-4);
+}
+
+@media (min-width: 64rem) {
+  .sideColumn {
+    position: sticky;
+    top: var(--och-space-6);
+  }
+}
+
+@media (max-width: 63.99rem) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* -------------------------------- cartões -------------------------------- */
+
+.stateCard,
+.policyCard,
+.identityCard,
+.summaryCard,
+.deadlineCard,
+.pciCard,
+.provenanceCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-card);
+  background: var(--color-surface);
+  padding: var(--och-space-5);
+  display: grid;
+  gap: var(--och-space-3);
+}
+
+.stateHeading,
+.policyHeading,
+.summaryHeading,
+.deadlineHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--och-space-3);
+}
+
+.stateHeading h2,
+.policyHeading h2,
+.summaryHeading h2,
+.deadlineHeading h2,
+.identityCard h2,
+.pciCard h2,
+.provenanceCard h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: .01em;
+  color: var(--color-text);
+}
+
+.stateExplanation {
+  margin: 0;
+  color: var(--color-text-secondary);
+  max-width: var(--page-max-reading);
+}
+
+.settlementRule {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-2);
+  margin: 0;
+  border: 1px solid color-mix(in oklch, var(--color-info) 35%, var(--color-border));
+  border-radius: var(--och-radius-control);
+  padding: var(--och-space-3);
+  background: color-mix(in oklch, var(--color-info) 7%, transparent);
+  color: var(--color-text-secondary);
+  font-size: .88rem;
+}
+
+.settlementRule svg { flex: 0 0 auto; margin-top: .1rem; }
+
+.blockList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--och-space-3);
+  text-align: start;
+}
+
+.blockList li {
+  display: grid;
+  gap: var(--och-space-1);
+  border-inline-start: 2px solid var(--color-warning);
+  padding-inline-start: var(--och-space-3);
+}
+
+.blockList code {
+  font-family: var(--font-data);
+  font-size: .74rem;
+  letter-spacing: .04em;
+  color: var(--color-warning);
+}
+
+.blockList span { color: var(--color-text-secondary); font-size: .88rem; }
+
+.stateActions {
+  display: grid;
+  gap: var(--och-space-2);
+  justify-items: start;
+}
+
+.actionDescription {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: .84rem;
+}
+
+.actionError,
+.summaryAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-2);
+  margin: 0;
+  border: 1px solid color-mix(in oklch, var(--color-danger) 45%, var(--color-border));
+  border-radius: var(--och-radius-control);
+  padding: var(--och-space-3);
+  background: color-mix(in oklch, var(--color-danger) 9%, transparent);
+  color: var(--color-text);
+  font-size: .88rem;
+}
+
+.actionError svg,
+.summaryAlert svg { flex: 0 0 auto; margin-top: .1rem; }
+
+.actionError:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.refreshNotice {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .84rem;
+}
+
+.contractNote {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.contractNote code,
+.provenanceCard code,
+.identityList code {
+  font-family: var(--font-data);
+  font-size: .74rem;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------- aceite de política --------------------------- */
+
+.policyField {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--och-space-3);
+}
+
+.policyField input[type="checkbox"] {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  margin: 0;
+  accent-color: var(--color-action);
+}
+
+.policyField input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.policyField label {
+  color: var(--color-text);
+  font-size: .94rem;
+  line-height: 1.5;
+  /* Alvo de toque confortável junto ao controle. */
+  min-block-size: 1.5rem;
+  cursor: pointer;
+}
+
+.policyHelp {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .85rem;
+}
+
+.policyBlocked {
+  margin: 0;
+  border-inline-start: 2px solid var(--color-warning);
+  padding-inline-start: var(--och-space-3);
+  color: var(--color-text-secondary);
+  font-size: .88rem;
+}
+
+/* ------------------------------- identidade ------------------------------- */
+
+.identityList {
+  margin: 0;
+  display: grid;
+  gap: var(--och-space-3);
+}
+
+.identityList > div {
+  display: grid;
+  grid-template-columns: minmax(9rem, auto) minmax(0, 1fr);
+  gap: var(--och-space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: var(--och-space-3);
+}
+
+.identityList > div:last-child { border-bottom: 0; padding-bottom: 0; }
+
+.identityList dt {
+  color: var(--color-text-muted);
+  font-size: .82rem;
+}
+
+.identityList dd {
+  margin: 0;
+  color: var(--color-text);
+  font-size: .9rem;
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------- resumo --------------------------------- */
+
+.summaryList {
+  margin: 0;
+  display: grid;
+  gap: var(--och-space-2);
+}
+
+.summaryList > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--och-space-4);
+}
+
+.summaryList dt { color: var(--color-text-secondary); font-size: .88rem; }
+.summaryList dd { margin: 0; color: var(--color-text); }
+
+.summaryTotal {
+  border-top: 1px solid var(--color-border-strong);
+  padding-top: var(--och-space-3);
+  margin-top: var(--och-space-1);
+}
+
+.summaryTotal dt { color: var(--color-text); font-weight: 650; }
+
+.money {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+}
+
+.summaryTotal .money { font-size: 1.2rem; color: var(--color-text); }
+
+.summaryNotice {
+  margin: 0;
+  border-inline-start: 2px solid var(--color-warning);
+  padding-inline-start: var(--och-space-3);
+  color: var(--color-text-secondary);
+  font-size: .86rem;
+}
+
+.summaryAlert button {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* --------------------------------- prazo ---------------------------------- */
+
+.deadlineAbsolute {
+  margin: 0;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+
+.deadlineRemaining {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .9rem;
+}
+
+/* ------------------------------- procedência ------------------------------ */
+
+.pciCard p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .88rem;
+}
+
+.provenanceCard ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--och-space-2);
+  color: var(--color-text-muted);
+  font-size: .8rem;
+}

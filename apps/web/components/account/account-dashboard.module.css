@@ -1,0 +1,131 @@
+.pageStack { display: grid; gap: 1.4rem; }
+
+.provenance {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-control);
+  padding: .85rem 1rem;
+  background: color-mix(in oklch, var(--color-surface) 88%, transparent);
+}
+
+.provenanceMain { min-width: 0; display: flex; align-items: center; gap: .8rem; }
+.provenanceIcon { color: var(--color-action); flex: none; }
+.provenanceCopy { min-width: 0; display: grid; gap: .2rem; }
+.provenanceCopy strong { font-size: .83rem; }
+.provenanceCopy span { overflow: hidden; color: var(--color-text-muted); font: 500 .7rem/1.4 var(--font-data); text-overflow: ellipsis; white-space: nowrap; }
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(15rem, 1fr) minmax(11rem, .36fr) auto;
+  gap: .75rem;
+  align-items: end;
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-control);
+  padding: 1rem;
+  background: var(--color-surface);
+}
+
+.field { display: grid; gap: .4rem; }
+.field label { color: var(--color-text-secondary); font-size: .76rem; font-weight: 650; }
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: calc(var(--och-radius-control) - 2px);
+  padding: 0 .8rem;
+  background: var(--color-input);
+  color: var(--color-text);
+}
+.field textarea { min-height: 6rem; padding-block: .7rem; resize: vertical; }
+.field small { color: var(--color-text-muted); font-size: .7rem; }
+
+.resultCount { align-self: center; color: var(--color-text-muted); font: 500 .72rem/1.4 var(--font-data); white-space: nowrap; }
+.tablePanel { overflow: hidden; padding: 0 !important; }
+.tableScroll { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.table caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.table th { color: var(--color-text-muted); font: 650 .65rem/1.2 var(--font-data); letter-spacing: .09em; text-align: left; text-transform: uppercase; }
+.table th,
+.table td { padding: .95rem 1.1rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover { background: color-mix(in oklch, var(--color-action) 4%, transparent); }
+.primaryCell { min-width: 15rem; }
+.primaryCell strong,
+.primaryCell small { display: block; }
+.primaryCell strong { color: var(--color-text); }
+.primaryCell small,
+.secondaryText { margin-top: .15rem; color: var(--color-text-muted); font: 500 .7rem/1.35 var(--font-data); }
+.numeric { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dateCell { min-width: 10rem; color: var(--color-text-secondary); }
+.actionCell { width: 1%; white-space: nowrap; text-align: right; }
+
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.pager p { margin: 0; color: var(--color-text-muted); font-size: .78rem; }
+.pagerActions { display: flex; gap: .5rem; }
+
+.metricGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .85rem; }
+.metricCard { min-height: 9rem; display: grid; gap: .8rem; align-content: space-between; }
+.metricLabel { color: var(--color-text-secondary); font-size: .78rem; }
+.metricValue { font: 720 clamp(1.45rem, 2.5vw, 2.1rem)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.metricMeta { color: var(--color-text-muted); font-size: .7rem; }
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  border: 1px solid color-mix(in oklch, var(--color-action) 38%, var(--color-border));
+  border-radius: var(--och-radius-control);
+  padding: .9rem 1rem;
+  background: color-mix(in oklch, var(--color-action) 7%, var(--color-surface));
+  color: var(--color-text-secondary);
+  font-size: .84rem;
+}
+.notice svg { flex: none; margin-top: .12rem; color: var(--color-action); }
+.notice p { margin: 0; }
+
+.requestGrid { display: grid; grid-template-columns: minmax(0, 42rem); }
+.requestPanel { display: grid; gap: 1.2rem; }
+.requestPanel h2 { margin: 0; font: 700 1.2rem/1.2 var(--font-display); }
+.requestPanel > div > p { margin: .35rem 0 0; color: var(--color-text-secondary); font-size: .84rem; }
+.formStack { display: grid; gap: 1rem; }
+.balanceInline { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--color-border); border-radius: var(--och-radius-control); padding: .8rem; background: var(--color-surface-raised); }
+.balanceInline span { color: var(--color-text-secondary); font-size: .78rem; }
+.balanceInline strong { font-variant-numeric: tabular-nums; }
+.errorText { margin: 0; color: var(--color-danger); font-size: .8rem; }
+.successText { margin: 0; color: var(--color-success); font-size: .8rem; }
+
+.section { display: grid; gap: 1rem; }
+.sectionHeader { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.sectionHeader h2 { margin: 0; font: 700 1.2rem/1.2 var(--font-display); }
+.sectionHeader p { margin: .25rem 0 0; color: var(--color-text-muted); font-size: .8rem; }
+.holdList { display: grid; gap: .65rem; }
+.holdRow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; }
+.holdRow p { margin: 0; }
+.holdRow small { display: flex; align-items: center; gap: .35rem; color: var(--color-text-muted); }
+
+@media (max-width: 70rem) {
+  .metricGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 48rem) {
+  .provenance { grid-template-columns: 1fr; }
+  .toolbar { grid-template-columns: 1fr; }
+  .resultCount { justify-self: start; }
+  .table th, .table td { padding-inline: .8rem; }
+  .pager { align-items: flex-start; flex-direction: column; }
+  .holdRow { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 34rem) {
+  .metricGrid { grid-template-columns: 1fr; }
+  .pagerActions { width: 100%; }
+}
+
+@media (forced-colors: active) {
+  .provenance, .toolbar, .notice { border-color: CanvasText; }
+}

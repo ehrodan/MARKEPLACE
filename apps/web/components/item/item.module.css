@@ -1,0 +1,112 @@
+/* SCR-PUB-005 — item-base. Só layout local: hierarquia, tipografia,
+   figura-fundo e a grade em Z vivem em packages/ui/src/editorial.css. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-ed-gap-outer-loose, var(--och-space-8));
+  width: min(72rem, 100%);
+  margin-inline: auto;
+  padding: var(--och-space-8) var(--och-space-5) var(--och-space-16);
+}
+
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--och-space-2);
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.breadcrumbs a:hover { color: var(--color-text); }
+
+.media {
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+}
+
+.specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--och-ed-gap-inner, var(--och-space-3));
+  margin: var(--och-space-4) 0 0 0;
+}
+
+.specs div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-1);
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--och-space-2);
+}
+
+.specs dt {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.specs dd {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.offerSummary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-2);
+  min-width: min(20rem, 100%);
+}
+
+.offerCount {
+  color: var(--color-text);
+  font: 700 1.375rem / 1.15 var(--font-display);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-ed-gap-outer, var(--och-space-6));
+}
+
+.sectionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--och-space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: var(--och-space-4);
+}
+
+.sortField {
+  display: flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.sortField select {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-control);
+  padding: var(--och-space-2) var(--och-space-3);
+  min-height: 2.75rem;
+  background: var(--color-input);
+  color: var(--color-text);
+}
+
+.offerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: var(--och-ed-gap-outer, var(--och-space-6));
+}
+
+.nextActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--och-space-5);
+}

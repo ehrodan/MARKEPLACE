@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.midas.example/events/outbox-event-envelope.v1",
+  "title": "OutboxEventEnvelopeV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId", "eventType", "schemaVersion", "aggregateType", "aggregateId",
+    "aggregateVersion", "occurredAt", "recordedAt", "correlationId", "causationId",
+    "actorUserId", "sellerAccountId", "sourceModule", "dataClassification", "payload"
+  ],
+  "properties": {
+    "eventId": { "type": "string", "pattern": "^evt_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "eventType": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+\\.v[1-9][0-9]*$" },
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "aggregateType": { "type": "string", "minLength": 1 },
+    "aggregateId": { "type": "string", "minLength": 36, "maxLength": 40 },
+    "aggregateVersion": { "type": "integer", "minimum": 1 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "recordedAt": { "type": "string", "format": "date-time" },
+    "correlationId": { "type": "string", "minLength": 1 },
+    "causationId": { "type": ["string", "null"] },
+    "actorUserId": { "type": ["string", "null"], "pattern": "^usr_[0-9a-f-]{36}$" },
+    "sellerAccountId": { "type": ["string", "null"], "pattern": "^sac_[0-9a-f-]{36}$" },
+    "sourceModule": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "dataClassification": { "enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "FINANCIAL"] },
+    "payload": { "type": "object" }
+  }
+}

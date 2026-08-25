@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.midas.example/events/identity.user.registered.v1",
+  "title": "identity.user.registered.v1",
+  "allOf": [
+    { "$ref": "https://schemas.midas.example/events/outbox-event-envelope.v1" },
+    {
+      "type": "object",
+      "properties": {
+        "eventType": { "const": "identity.user.registered.v1" },
+        "aggregateType": { "const": "User" },
+        "aggregateId": { "type": "string", "pattern": "^usr_[0-9a-f-]{36}$" },
+        "sourceModule": { "const": "identity" },
+        "dataClassification": { "const": "INTERNAL" },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["userId", "userStatus"],
+          "properties": {
+            "userId": { "type": "string", "pattern": "^usr_[0-9a-f-]{36}$" },
+            "userStatus": { "const": "PENDING_VERIFICATION" }
+          }
+        }
+      }
+    }
+  ]
+}

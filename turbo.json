@@ -1,0 +1,50 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "env": [
+        "MIDAS_API_URL",
+        "NEXT_PUBLIC_BRAND_NAME",
+        "NEXT_PUBLIC_TERMS_VERSION"
+      ],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": ["*.tsbuildinfo"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "test:unit": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "test:integration": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "env": [
+        "BRAND_NAME",
+        "CORS_ALLOWED_ORIGINS",
+        "DATABASE_URL",
+        "NODE_ENV",
+        "PUBLIC_WEB_URL",
+        "SMTP_FROM",
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "TEST_DATABASE_URL"
+      ],
+      "outputs": ["coverage/**"]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@midas/iam",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "types": "./dist/src/index.d.ts", "default": "./dist/src/index.js" }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --exclude 'dist/**'",
+    "test:unit": "vitest run --exclude 'dist/**'",
+    "test:integration": "vitest run --exclude 'dist/**'"
+  },
+  "dependencies": {
+    "@midas/kernel": "workspace:*",
+    "drizzle-orm": "0.45.2"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vitest": "4.1.11"
+  }
+}

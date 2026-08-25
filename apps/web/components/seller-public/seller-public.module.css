@@ -1,0 +1,355 @@
+/* ============================================================
+   SCR-PUB-007 — Perfil público do vendedor (/vendedores/:sellerAccountId).
+   Perfil de motion M2: entrada de seção (Reveal), hover/focus e inclinação
+   discreta em elementos SEM preço e SEM ação. O bloco de preço mora dentro
+   de ListingCard e nunca recebe transform aqui.
+   Só tokens semânticos (--color-*, --och-*); zero cor literal.
+   ============================================================ */
+
+.profile {
+  width: min(calc(100% - 2rem), 82rem);
+  margin-inline: auto;
+  padding-top: 1.5rem;
+  padding-bottom: clamp(3rem, 8vw, 6rem);
+}
+
+/* ---------- Trilha ---------- */
+
+.breadcrumb {
+  min-width: 0;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  color: var(--color-text-muted);
+  font-size: .76rem;
+}
+
+.breadcrumb a {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  color: var(--color-text-secondary);
+}
+
+.breadcrumb a:hover { color: var(--color-action); }
+.breadcrumb > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Cabeçalho de identidade ---------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(1.5rem, 5vw, 4rem);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: clamp(2rem, 4vw, 3.25rem);
+}
+
+.heroMain { min-width: 0; }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--color-action);
+  font: 650 .66rem/1.2 var(--font-data);
+  letter-spacing: .14em;
+}
+
+.hero h1 {
+  max-width: 18ch;
+  margin: 1.1rem 0 0;
+  overflow-wrap: anywhere;
+  font: 800 clamp(2.6rem, 6vw, 5.2rem)/.86 var(--font-display);
+  letter-spacing: -.04em;
+}
+
+.heroLead {
+  max-width: 42ch;
+  margin: 1rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: clamp(.95rem, 1.4vw, 1.08rem);
+}
+
+.heroFacts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: .9rem 1.75rem;
+  margin: 1.6rem 0 0;
+}
+
+.heroFacts > div { min-width: 0; display: grid; gap: .3rem; }
+.heroFacts dt { color: var(--color-text-muted); font-size: .68rem; font-weight: 600; }
+.heroFacts dd { margin: 0; color: var(--color-text-secondary); font-size: .82rem; }
+.heroFacts code {
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  font: .78rem/1.4 var(--font-data);
+}
+
+.withheldNote {
+  display: flex;
+  align-items: flex-start;
+  gap: .7rem;
+  max-width: 62ch;
+  margin: 1.4rem 0 0;
+  border: 1px solid color-mix(in oklch, var(--color-warning) 34%, var(--color-border));
+  border-radius: var(--och-radius-control);
+  padding: .85rem .95rem;
+  background: color-mix(in oklch, var(--color-warning) 6%, transparent);
+  color: var(--color-text-secondary);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.withheldNote svg { flex: none; margin-top: .1rem; color: var(--color-warning); }
+
+/* Crista decorativa (aria-hidden). Sem texto útil, sem preço, sem ação. */
+.crest {
+  width: clamp(7rem, 14vw, 10.5rem);
+  aspect-ratio: 1;
+  border-radius: var(--och-radius-panel);
+}
+
+.crestMark {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  border: 1px solid color-mix(in oklch, var(--color-action) 34%, var(--color-border));
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 32% 26%, color-mix(in oklch, var(--color-action) 20%, transparent), transparent 62%),
+    linear-gradient(150deg, var(--color-surface-raised), var(--color-surface));
+  color: var(--color-action);
+  font: 750 clamp(2rem, 4vw, 3.1rem)/1 var(--font-display);
+  letter-spacing: -.02em;
+}
+
+/* ---------- Faixa de confiança + denúncia ---------- */
+
+.trustStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-block: 1.1rem;
+  color: var(--color-text-muted);
+  font-size: .74rem;
+}
+
+.trustStrip > span {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+.trustStrip svg { flex: none; color: var(--color-success); }
+
+.reportArea {
+  display: grid;
+  gap: .8rem;
+  margin-left: auto;
+}
+
+.reportArea > div:empty { display: none; }
+
+/* ---------- Reputação ---------- */
+
+.reputation,
+.listings {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: clamp(2.25rem, 5vw, 3.75rem);
+}
+
+.sectionHead { max-width: 64ch; }
+.sectionHead h2 {
+  margin: .55rem 0 0;
+  font: 750 clamp(1.9rem, 3.6vw, 3rem)/.92 var(--font-display);
+  letter-spacing: -.025em;
+}
+.sectionHead p { margin: .7rem 0 0; color: var(--color-text-secondary); font-size: .86rem; }
+
+.derivedBlock {
+  display: grid;
+  gap: 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-card);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  background: color-mix(in oklch, var(--color-surface) 86%, transparent);
+}
+
+.derivedHead { display: grid; gap: .5rem; justify-items: start; }
+.derivedHead h3 { margin: 0; font: 720 1.15rem/1.2 var(--font-body); }
+.derivedHead p { max-width: 66ch; margin: 0; color: var(--color-text-secondary); font-size: .8rem; }
+.derivedHead code { overflow-wrap: anywhere; color: var(--color-action); font: .76rem/1.4 var(--font-data); }
+
+.coverageWarning {
+  margin: 0;
+  border-left: 2px solid color-mix(in oklch, var(--color-info) 60%, var(--color-border));
+  padding: .1rem 0 .1rem .8rem;
+  color: var(--color-text-secondary);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.factList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: .8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.factList > li { min-width: 0; display: grid; }
+
+.factCard {
+  min-width: 0;
+  height: 100%;
+  display: grid;
+  align-content: start;
+  gap: .4rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-card);
+  padding: 1rem;
+  background: var(--color-surface);
+  transition: border-color var(--och-duration-fast) var(--och-ease-out);
+}
+
+.factCard:hover { border-color: color-mix(in oklch, var(--color-action) 38%, var(--color-border)); }
+
+.factIcon {
+  display: inline-flex;
+  color: var(--color-action);
+}
+
+.factLabel { color: var(--color-text-muted); font-size: .7rem; font-weight: 600; }
+
+.factValue {
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  font: 700 1.45rem/1.1 var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.factCoverage { color: var(--color-text-secondary); font-size: .73rem; line-height: 1.5; }
+
+.privacyNote {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  max-width: 78ch;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: .74rem;
+  line-height: 1.55;
+}
+
+.privacyNote svg { flex: none; margin-top: .15rem; color: var(--color-action); }
+
+/* ---------- Filtros dos anúncios ---------- */
+
+.filters {
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-card);
+  padding: 1.05rem;
+  background: color-mix(in oklch, var(--color-surface) 88%, transparent);
+}
+
+.filterHeading {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: .85rem;
+  color: var(--color-action);
+  font: 700 .84rem/1.2 var(--font-body);
+}
+
+.filterHeading svg { flex: none; }
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: .7rem;
+  align-items: end;
+}
+
+.field { min-width: 0; display: grid; gap: .38rem; }
+.field label { color: var(--color-text-secondary); font-size: .72rem; font-weight: 650; }
+
+.field select {
+  width: 100%;
+  min-height: 2.85rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-control);
+  padding-inline: .8rem;
+  background: var(--color-input);
+  color: var(--color-text);
+}
+
+.filterStatus {
+  margin: .8rem 0 0;
+  color: var(--color-text-muted);
+  font-size: .72rem;
+}
+
+/* ---------- Grid de ofertas ---------- */
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cardGrid > li { min-width: 0; display: grid; }
+
+/* Envelope do brilho especular: sem transform, para não mover o preço. */
+.cardShine {
+  min-width: 0;
+  height: 100%;
+  border-radius: var(--och-radius-card);
+}
+
+.cardShine > * { height: 100%; }
+
+.gridEnd {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: .74rem;
+}
+
+.loadMore {
+  min-height: 3rem;
+  display: grid;
+  place-items: center;
+  gap: .6rem;
+  text-align: center;
+}
+
+.loadMore:empty { display: none; }
+.paginationError { margin: 0; color: var(--color-danger); font-size: .78rem; }
+
+/* ---------- Responsivo ---------- */
+
+@media (max-width: 62rem) {
+  .cardGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .crest { justify-self: start; }
+  .reportArea { margin-left: 0; }
+}
+
+@media (max-width: 40rem) {
+  .cardGrid { grid-template-columns: minmax(0, 1fr); }
+  .trustStrip { flex-direction: column; align-items: flex-start; }
+  .reportArea { width: 100%; }
+}

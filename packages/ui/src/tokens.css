@@ -1,0 +1,178 @@
+/* Midas Foundry design tokens: primitive -> semantic -> component.
+   Valores canônicos: docs 03 (direção de arte) e 18 (brand kit), OKLCH. */
+:root {
+  color-scheme: dark;
+
+  /* Primitives — paleta Midas Foundry */
+  --och-color-paper: oklch(13% 0.012 75);
+  --och-color-paper-2: oklch(17% 0.014 75);
+  --och-color-paper-3: oklch(22% 0.016 75);
+  --och-color-ink: oklch(94% 0.012 85);
+  --och-color-ink-2: oklch(78% 0.012 80);
+  --och-color-muted: oklch(66% 0.012 75);
+  --och-color-rule: oklch(31% 0.016 75);
+  --och-color-rule-2: oklch(26% 0.014 75);
+  /* AÇÃO — cor exclusiva de elemento clicável.
+     Gestalt §8 (semelhança): uma única cor de ação por superfície. Se esta
+     cor aparecer em elemento não-clicável, é bug, não estilo.
+     A escada de estado existe porque affordance visível é conversão: o
+     elemento precisa parecer interativo ANTES do clique. */
+  --och-color-gold: oklch(78% 0.160 80);
+  --och-color-gold-hover: oklch(82% 0.175 80);
+  --och-color-gold-active: oklch(72% 0.150 80);
+  --och-color-gold-focus: oklch(84% 0.190 80);
+  --och-color-gold-ink: oklch(18% 0.018 75);
+  /* Ouro de ação em baixa intensidade: borda e texto de ação secundária.
+     Nunca preenche botão primário — senão a hierarquia entre primário e
+     secundário desaparece. */
+  --och-color-gold-quiet: oklch(70% 0.075 80);
+
+  /* AMBIENTE — cenário, não ação.
+     Antes: oklch(68% 0.110 78), a dois graus de matiz da cor de ação e com
+     croma alto. O véu de fundo lavava a tela inteira na MESMA família do CTA,
+     então o botão não tinha para onde saltar (figura-fundo colapsado).
+     Agora: matiz deslocada para 62 (âmbar-terra, não ouro) e croma cortado a
+     0.045. Continua quente e premium como fundo, e deixa de competir.
+     Teto de croma para ambiente: 0.060. Acima disso, volta a competir. */
+  --och-color-antique-gold: oklch(64% 0.045 62);
+  /* RARIDADE — cor como INFORMAÇÃO, nunca como ação.
+     Quem compra item de jogo já leu esse código em outro lugar: a cor diz o
+     quanto a peça é rara antes de qualquer texto. É semelhança (Gestalt §8)
+     usada para classificar, e por isso obedece a duas regras duras:
+     1. raridade NUNCA preenche botão nem link — a única cor de ação é o ouro.
+        Se uma destas aparecer num elemento clicável, é bug.
+     2. croma teto 0.150 e matizes afastadas do ouro (80°), para a escada de
+        raridade não disputar a atenção do CTA.
+     A escada sobe em croma, não em luminosidade, para continuar legível sobre
+     o fundo escuro e sobreviver ao daltonismo mais comum (deutan): a posição
+     na escada também é dita por texto, nunca só pela cor. */
+  --och-rarity-common: oklch(70% 0.020 260);
+  /* 120, nao 200. O tema comercial publico usa ciano (matiz 195) como cor de
+     acao, e a 200 esta etiqueta ficava a 5 graus do botao de comprar — a
+     raridade passava a parecer clicavel, que e exatamente o que estes tokens
+     existem para impedir. A 120 ela fica a 75 do ciano e a 40 do ouro. */
+  --och-rarity-uncommon: oklch(72% 0.090 120);
+  --och-rarity-rare: oklch(68% 0.120 255);
+  --och-rarity-epic: oklch(66% 0.140 310);
+  --och-rarity-legendary: oklch(70% 0.150 25);
+  --och-rarity-mythic: oklch(74% 0.145 350);
+  --och-rarity-contraband: oklch(76% 0.140 55);
+
+  /* SINAL — o acento frio da marca.
+     Vem da referencia visual que o dono forneceu ("Cessna Academy Prototype
+     V2"): o turquesa #68d4c8 ao lado do dourado #d6b152 sobre obsidiana
+     #080c11. Confirma o que `docs/03` ja mandava: "Ciano chama para acao,
+     dourado sinaliza valor". Os concorrentes de `docs/20` usam o mesmo par —
+     o sinal de vantagem da Nesha Store e ciano rgb(0,229,229).
+     Papel: destaque INFORMATIVO que precisa ser lido antes do resto e nao
+     pode ser confundido com o CTA — dado vivo, variacao, contagem.
+     Nunca preenche botao: a unica cor de acao continua sendo o ouro. */
+  --och-color-signal: oklch(80% 0.105 195);
+  --och-color-signal-quiet: oklch(62% 0.060 195);
+
+  --och-color-success: oklch(72% 0.130 150);
+  --och-color-info: oklch(74% 0.120 225);
+  --och-color-warning: oklch(78% 0.150 70);
+  --och-color-danger: oklch(65% 0.190 28);
+
+  --och-space-1: 0.25rem;
+  --och-space-2: 0.5rem;
+  --och-space-3: 0.75rem;
+  --och-space-4: 1rem;
+  --och-space-5: 1.25rem;
+  --och-space-6: 1.5rem;
+  --och-space-7: 1.75rem;
+  --och-space-8: 2rem;
+  --och-space-10: 2.5rem;
+  --och-space-12: 3rem;
+  --och-space-16: 4rem;
+
+  /* Brand kit: 6px controle · 10px card · 14px modal · pílula só para chip */
+  --och-radius-control: 0.375rem;
+  --och-radius-card: 0.625rem;
+  --och-radius-modal: 0.875rem;
+  --och-radius-panel: 1rem;
+  --och-radius-pill: 999px;
+
+  /* Motion: acabamento de entrada 180–260ms; reveal 650ms (doc 18 §9) */
+  --och-duration-fast: 180ms;
+  --och-duration-base: 180ms;
+  --och-duration-normal: var(--och-duration-base);
+  --och-duration-slow: 260ms;
+  --och-duration-reveal: 650ms;
+  --och-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Sombra curta e difusa: só quando luminosidade não separa superfícies */
+  --och-shadow-short: 0 1px 2px oklch(0% 0 0 / 0.35), 0 2px 8px oklch(0% 0 0 / 0.2);
+
+  /* Semantic aliases */
+  --color-canvas: var(--och-color-paper);
+  --color-surface: var(--och-color-paper-2);
+  --color-surface-raised: var(--och-color-paper-3);
+  --color-border-subtle: var(--och-color-rule-2);
+  --color-border: var(--color-border-subtle);
+  --color-border-strong: var(--och-color-rule);
+  --color-text: var(--och-color-ink);
+  --color-text-secondary: var(--och-color-ink-2);
+  --color-text-muted: var(--och-color-muted);
+  --color-action: var(--och-color-gold);
+  --color-action-hover: var(--och-color-gold-hover);
+  --color-action-active: var(--och-color-gold-active);
+  --color-action-quiet: var(--och-color-gold-quiet);
+  --color-action-foreground: var(--och-color-gold-ink);
+  --color-action-text: var(--color-action-foreground);
+  --color-input: var(--color-canvas);
+  --color-focus: var(--och-color-gold-focus);
+  --color-danger: var(--och-color-danger);
+  --color-success: var(--och-color-success);
+  --color-info: var(--och-color-info);
+  --color-signal: var(--och-color-signal);
+  --color-signal-quiet: var(--och-color-signal-quiet);
+  --color-warning: var(--och-color-warning);
+
+  --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans Variable", "IBM Plex Sans", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, monospace;
+
+  --page-max-public: 75rem;
+  --page-max-operational: 80rem;
+  --page-max-reading: 45rem;
+  --page-gutter: 2rem;
+  --shell-header-height: 4rem;
+  --context-rail-width: 15rem;
+  --sticky-action-height: 4.5rem;
+
+  /* Component tokens */
+  --button-height: 2.75rem; /* alvo de toque >= 44px */
+  --button-padding-inline: var(--och-space-4);
+  --button-radius: var(--och-radius-control);
+  --button-primary-bg: var(--color-action);
+  --button-primary-fg: var(--color-action-foreground);
+  --button-secondary-bg: var(--color-surface-raised);
+  --button-secondary-fg: var(--color-text);
+  --button-border: var(--color-border-strong);
+
+  --field-height: 3rem;
+  --field-bg: var(--color-canvas);
+  --field-border: var(--color-border-strong);
+  --field-radius: var(--och-radius-control);
+
+  --card-bg: var(--color-surface);
+  --card-border: var(--color-border-subtle);
+  --card-radius: var(--och-radius-card);
+  --card-padding: var(--och-space-6);
+  --card-shadow-hover: var(--och-shadow-short);
+}
+
+@media (max-width: 63.9375rem) {
+  :root {
+    --page-gutter: 1.5rem;
+    --shell-header-height: 3.5rem;
+  }
+}
+
+@media (max-width: 29.9375rem) {
+  :root {
+    --page-gutter: 1rem;
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.midas.example/events/finance.payment_resolution.rejected.v1",
+  "allOf": [
+    { "$ref": "https://schemas.midas.example/events/outbox-event-envelope.v1" },
+    { "type": "object", "properties": {
+      "eventType": { "const": "finance.payment_resolution.rejected.v1" }, "schemaVersion": { "const": 1 },
+      "aggregateType": { "const": "PaymentResolutionCase" }, "sourceModule": { "const": "finance" }, "dataClassification": { "const": "FINANCIAL" },
+      "payload": { "type": "object", "additionalProperties": false,
+        "required": ["resolutionCaseId","paymentId","caseStatus","reviewedByUserId","reviewedAt"],
+        "properties": { "resolutionCaseId": { "type": "string", "format": "uuid" }, "paymentId": { "type": "string", "format": "uuid" }, "caseStatus": { "const": "REJECTED" }, "reviewedByUserId": { "type": "string", "format": "uuid" }, "reviewedAt": { "type": "string", "format": "date-time" } }
+      }
+    } }
+  ]
+}

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Midas — Atlas de layouts e templates</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      color-scheme: dark;
+      --bg: #080a0e;
+      --panel: #11141a;
+      --panel-2: #171b23;
+      --line: #303640;
+      --text: #f7f5ee;
+      --muted: #9da4b1;
+      --gold: #e2b84f;
+      --cyan: #42c6e8;
+      --green: #61d095;
+      --rose: #ed7182;
+      --violet: #a78bfa;
+    }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(226,184,79,.12), transparent 30rem),
+        radial-gradient(circle at 92% 12%, rgba(66,198,232,.08), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main { width: min(1480px, calc(100% - 40px)); margin: 0 auto; padding: 32px 0 48px; }
+    header { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; }
+    .eyebrow { color: var(--gold); font: 700 11px/1.2 ui-monospace, monospace; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 9px 0 7px; font-size: clamp(28px, 4vw, 50px); line-height: .98; letter-spacing: -.055em; }
+    .lead { max-width: 82ch; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .status { padding: 12px 14px; border: 1px solid rgba(226,184,79,.5); border-radius: 12px; background: rgba(226,184,79,.06); }
+    .status strong { display: block; color: var(--gold); font: 800 11px ui-monospace, monospace; }
+    .status span { color: var(--muted); font-size: 10px; }
+    .numbers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 24px 0 12px; }
+    .number { padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: rgba(17,20,26,.9); }
+    .number b { display: block; color: var(--gold); font: 800 26px/1 ui-monospace, monospace; }
+    .number span { display: block; margin-top: 7px; color: var(--muted); font-size: 11px; }
+    section { margin-top: 26px; }
+    .section-head { display: flex; justify-content: space-between; gap: 20px; align-items: end; margin-bottom: 12px; }
+    h2 { margin: 0; font-size: 18px; letter-spacing: -.025em; }
+    .section-head p { max-width: 72ch; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; text-align: right; }
+    .hierarchy { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+    .level { position: relative; min-height: 72px; padding: 12px; border: 1px solid #3a414d; border-radius: 9px; background: var(--panel-2); }
+    .level:not(:last-child)::after { content: "→"; position: absolute; right: -14px; top: 25px; color: var(--cyan); font-weight: 900; }
+    .level b { display: block; color: var(--cyan); font: 800 10px ui-monospace, monospace; }
+    .level span { display: block; margin-top: 7px; color: var(--muted); font-size: 10px; line-height: 1.35; }
+    .shells { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .shell { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(17,20,26,.94); }
+    .shell-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 11px; }
+    .shell h3 { margin: 0; font-size: 13px; }
+    .tag { padding: 3px 6px; border: 1px solid #3b4654; border-radius: 999px; color: var(--muted); font: 700 8px ui-monospace, monospace; }
+    .wire { display: grid; grid-template-columns: 25% 1fr; grid-template-rows: 25px 86px 18px; gap: 5px; height: 144px; padding: 7px; border: 1px solid #353b46; border-radius: 8px; background: #0b0e13; }
+    .wire > i { display: grid; place-items: center; overflow: hidden; border: 1px solid #343a44; border-radius: 4px; background: #171b22; color: #68707c; font: 700 7px ui-monospace, monospace; font-style: normal; }
+    .wire .head { grid-column: 1 / 3; border-color: rgba(66,198,232,.45); }
+    .wire .nav { grid-row: 2; border-color: rgba(167,139,250,.4); }
+    .wire .body { grid-row: 2; border-color: rgba(226,184,79,.45); }
+    .wire .foot { grid-column: 1 / 3; }
+    .wire.public { grid-template-columns: 1fr; }
+    .wire.public .head, .wire.public .body, .wire.public .foot { grid-column: 1; }
+    .wire.public .nav { display: none; }
+    .wire.auth { grid-template-columns: 1fr 55% 1fr; }
+    .wire.auth .head, .wire.auth .foot { grid-column: 1 / 4; }
+    .wire.auth .body { grid-column: 2; }
+    .wire.auth .nav { display: none; }
+    .wire.studio { grid-template-columns: 24% 1fr 29%; grid-template-rows: 25px 104px; }
+    .wire.studio .head { grid-column: 1 / 4; }
+    .wire.studio .nav { grid-column: 1; grid-row: 2; }
+    .wire.studio .body { grid-column: 2; grid-row: 2; border-color: rgba(97,208,149,.52); }
+    .wire.studio .foot { grid-column: 3; grid-row: 2; }
+    .shell p { min-height: 43px; margin: 10px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .families { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .family { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+    .family b { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; }
+    .family b em { color: var(--gold); font: 800 16px ui-monospace, monospace; font-style: normal; }
+    .family ul { margin: 12px 0 0; padding: 0; list-style: none; color: var(--muted); font: 9px/1.6 ui-monospace, monospace; }
+    .rules { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .rule { padding: 14px; border-left: 3px solid var(--gold); background: rgba(226,184,79,.045); }
+    .rule:nth-child(2) { border-color: var(--cyan); background: rgba(66,198,232,.04); }
+    .rule:nth-child(3) { border-color: var(--green); background: rgba(97,208,149,.04); }
+    .rule:nth-child(4) { border-color: var(--rose); background: rgba(237,113,130,.04); }
+    .rule b { display: block; font-size: 11px; }
+    .rule span { display: block; margin-top: 7px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+    footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid var(--line); color: #6f7783; font: 10px ui-monospace, monospace; text-align: center; }
+    @media (max-width: 1040px) {
+      .shells { grid-template-columns: repeat(2, 1fr); }
+      .families { grid-template-columns: repeat(2, 1fr); }
+      .hierarchy { grid-template-columns: repeat(3, 1fr); }
+      .level:nth-child(3)::after { display: none; }
+      .rules { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 680px) {
+      main { width: min(100% - 24px, 1480px); padding-top: 20px; }
+      header { grid-template-columns: 1fr; }
+      .numbers, .shells, .families, .rules, .hierarchy { grid-template-columns: 1fr; }
+      .level::after { display: none; }
+      .section-head { align-items: start; flex-direction: column; }
+      .section-head p { text-align: left; }
+    }
+    @media print { body { background: #080a0e; } main { width: 100%; padding: 0; } .shell, .family, .rule { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <div class="eyebrow">Midas Foundry · atlas pré-código</div>
+        <h1>Layouts com hierarquia real</h1>
+        <p class="lead">Mapa visual derivado dos contratos documentais. Ele separa tela, shell e template para impedir 95 páginas artesanais. Não representa frontend implementado nem dados operacionais.</p>
+      </div>
+      <div class="status"><strong>SDD_PRONTO_IMPLEMENTACAO_PENDENTE</strong><span>sem runtime · sem mocks · 22/08/2026</span></div>
+    </header>
+
+    <div class="numbers" aria-label="Contagem consolidada">
+      <div class="number"><b>95</b><span>contratos de tela `SCR-*`</span></div>
+      <div class="number"><b>9</b><span>shells/contextos de produto</span></div>
+      <div class="number"><b>41</b><span>templates reutilizáveis</span></div>
+      <div class="number"><b>0</b><span>layouts sem família definida</span></div>
+    </div>
+
+    <section>
+      <div class="section-head"><h2>Hierarquia de composição</h2><p>Autorização e dados chegam da feature/backend. Shell e template organizam a experiência; não calculam saldo, ranking, consentimento ou estado.</p></div>
+      <div class="hierarchy">
+        <div class="level"><b>01 · TOKEN</b><span>grid, spacing, densidade, largura e breakpoint</span></div>
+        <div class="level"><b>02 · PRIMITIVO</b><span>semântica, foco, input, dialog, table e feedback</span></div>
+        <div class="level"><b>03 · PADRÃO</b><span>card, filter bar, timeline, queue, inspector</span></div>
+        <div class="level"><b>04 · TEMPLATE</b><span>slots, precedência, estados e responsividade</span></div>
+        <div class="level"><b>05 · SHELL</b><span>navegação, contexto, overlays e viewport</span></div>
+        <div class="level"><b>06 · TELA SCR</b><span>rota + caso de uso + capability + fonte canônica</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>Os 9 shells</h2><p>O desenho muda quando a tarefa muda. Catálogo, conta, operação, governança, análise e Studio não compartilham um dashboard genérico.</p></div>
+      <div class="shells">
+        <article class="shell"><div class="shell-top"><h3>SH-PUBLIC</h3><span class="tag">discovery</span></div><div class="wire public"><i class="head">HEADER + BUSCA</i><i class="body">CATÁLOGO / PDP / RANKING</i><i class="foot">CONFIANÇA + FOOTER</i></div><p>Expressivo na descoberta; preço, compatibilidade, seller e proteção vencem o efeito visual.</p></article>
+        <article class="shell"><div class="shell-top"><h3>SH-AUTH</h3><span class="tag">foco</span></div><div class="wire auth"><i class="head">MARCA + AJUDA</i><i class="body">UMA TAREFA</i><i class="foot">SEGURANÇA + TERMOS</i></div><p>Entrada, cadastro e recuperação com uma ação principal e erro junto da origem.</p></article>
+        <article class="shell"><div class="shell-top"><h3>SH-ACCOUNT</h3><span class="tag">pessoa</span></div><div class="wire"><i class="head">CONTA + CONTEXTO</i><i class="nav">SEÇÕES</i><i class="body">PREFERÊNCIAS / SEGURANÇA</i><i class="foot">STATUS</i></div><p>Identidade global, privacidade, avaliações e conquistas sem duplicar domínios.</p></article>
+        <article class="shell"><div class="shell-top"><h3>SH-BUYER</h3><span class="tag">transação</span></div><div class="wire"><i class="head">PEDIDO / COMPRA</i><i class="nav">COMPRAS</i><i class="body">TIMELINE + PRÓXIMA AÇÃO</i><i class="foot">SUPORTE</i></div><p>Carrinho, checkout, entrega, disputa e suporte preservam o estado do pedido.</p></article>
+        <article class="shell"><div class="shell-top"><h3>SH-SELLER</h3><span class="tag">tenant</span></div><div class="wire"><i class="head">SELLERACCOUNT ATIVO</i><i class="nav">OPERAÇÃO</i><i class="body">VENDAS / SALDO / CRM</i><i class="foot">FRESHNESS + AÇÕES</i></div><p>Dashboard do vendedor prioriza fila acionável, hold, saques, clientes e campanhas.</p></article>
+        <article class="shell"><div class="shell-top"><h3>SH-ADMIN</h3><span class="tag">workbench</span></div><div class="wire"><i class="head">ESCOPO + FILTROS</i><i class="nav">FILAS</i><i class="body">LISTA + DETALHE + EVIDÊNCIA</i><i class="foot">AUDITORIA</i></div><p>Operação densa master-detail para pagamento, saque, disputa, catálogo e marketing.</p></article>
+        <article class="shell"><div class="shell-top"><h3>SH-MASTER</h3><span class="tag">governança</span></div><div class="wire"><i class="head">PLATAFORMA + STEP-UP</i><i class="nav">POLICIES</i><i class="body">VERSÃO + DIFF + APROVAÇÃO</i><i class="foot">ROLLBACK + AUDIT</i></div><p>Configuração sensível separa salvar, revisar, publicar e reverter.</p></article>
+        <article class="shell"><div class="shell-top"><h3>SH-GROWTH</h3><span class="tag">read model</span></div><div class="wire"><i class="head">TENANT + PERÍODO + ASOF</i><i class="nav">ANÁLISES</i><i class="body">KPI + FUNIL + COORTE</i><i class="foot">EVIDÊNCIA + DRILL-DOWN</i></div><p>Hipótese e diagnóstico; nunca movimenta dinheiro nem dispara campanha sozinho.</p></article>
+        <article class="shell"><div class="shell-top"><h3>SH-STUDIO</h3><span class="tag">imersivo</span></div><div class="wire studio"><i class="head">SELLER / ADMIN</i><i class="nav">LIBRARY</i><i class="body">STAGE 2D OU 1 CANVAS 3D</i><i class="foot">INSPECTOR</i></div><p>Modo interno de Seller/Admin: proveniência, composição, validação e publicação.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>41 templates em 5 famílias</h2><p>A matriz completa `SCR → shell → template` está no documento 21; aqui fica a leitura executiva da distribuição.</p></div>
+      <div class="families">
+        <article class="family"><b>Público + auth <em>10</em></b><ul><li>landing · catálogo · detalhe</li><li>perfil · editorial · viewer</li><li>ranking · progressão · auth</li></ul></article>
+        <article class="family"><b>Conta + buyer <em>10</em></b><ul><li>overview · settings · list · detail</li><li>inbox · thread · checkout</li><li>order · workflow · cart</li></ul></article>
+        <article class="family"><b>Seller + Studio <em>11</em></b><ul><li>overview · onboarding · team</li><li>list · detail · finance</li><li>CRM · marketing · Studio</li></ul></article>
+        <article class="family"><b>Admin + Master <em>6</em></b><ul><li>ops overview · workbench</li><li>config · policy console</li><li>audit · progression config</li></ul></article>
+        <article class="family"><b>Growth <em>4</em></b><ul><li>overview · analysis</li><li>entity · worklist</li><li>sempre read-only e explicável</li></ul></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>Regras que impedem o layout de degradar</h2><p>Esses limites transformam referência visual em contrato verificável.</p></div>
+      <div class="rules">
+        <div class="rule"><b>React Bits tem função limitada</b><span>Hero, reveal finito e microfeedback não crítico. Nunca tabela operacional, saldo, aprovação, disputa ou payout.</span></div>
+        <div class="rule"><b>Estado antes de decoração</b><span>Loading, empty, partial, stale, forbidden, conflict, unavailable e retry são parte de todo template remoto.</span></div>
+        <div class="rule"><b>Um fato, um owner</b><span>Shell recebe capability e projeção; comando relê Payment, Order, consentimento ou policy canônica antes de agir.</span></div>
+        <div class="rule"><b>Responsivo por tarefa</b><span>Fila + detalhe vira rota no compacto; Studio vira etapas; tabela preserva colunas críticas e oferece equivalente acessível.</span></div>
+      </div>
+    </section>
+
+    <footer>Fonte: docs/20 + docs/21 + specs/midas-marketplace · artefato documental, não runtime</footer>
+  </main>
+</body>
+</html>

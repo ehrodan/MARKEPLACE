@@ -1,0 +1,523 @@
+/* SCR-BUY-006 — entrega segura com custódia. Motion M0: sem parallax, sem
+   entrada coreografada, sem contagem. Só tokens de packages/ui/src/tokens.css. */
+
+.page,
+.loading {
+  width: min(calc(100% - 2rem), 82rem);
+  margin-inline: auto;
+  padding-block: var(--och-space-8) var(--och-space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-6);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  color: var(--color-text-muted);
+  font-size: .8rem;
+}
+
+.breadcrumb a {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  color: var(--color-text-secondary);
+}
+
+.breadcrumb a:hover { color: var(--color-text); }
+.breadcrumb [aria-current="page"] { color: var(--color-text); }
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--och-space-5);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--och-space-6);
+}
+
+.header h1 {
+  margin: var(--och-space-2) 0 var(--och-space-3);
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 1.2rem + 2vw, 2.9rem);
+  line-height: 1.05;
+  color: var(--color-text);
+}
+
+.header > div > p {
+  max-width: var(--page-max-reading);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .95rem;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  color: var(--color-action);
+  font: 650 .68rem/1 var(--font-data);
+  letter-spacing: .12em;
+}
+
+.headerMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--och-space-2);
+}
+
+.roleTag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-pill);
+  padding: var(--och-space-2) var(--och-space-4);
+  color: var(--color-text-secondary);
+  font-size: .78rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--och-space-6);
+}
+
+.mainColumn,
+.sideColumn,
+.loadingColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-6);
+  min-width: 0;
+}
+
+.loadingGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: var(--och-space-6);
+}
+
+.panelTitle {
+  margin: var(--och-space-2) 0 var(--och-space-3);
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  line-height: 1.15;
+  color: var(--color-text);
+}
+
+.panelLead {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-2);
+  color: var(--color-text-secondary);
+  font-size: .92rem;
+  line-height: 1.55;
+}
+
+/* ── Cofre / custódia ─────────────────────────────────────────────── */
+
+.custodyHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--och-space-3);
+}
+
+.vault {
+  position: relative;
+  width: 100%;
+  min-height: 9rem;
+  margin-block: var(--och-space-5);
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-card);
+  background:
+    radial-gradient(circle at 50% 40%, color-mix(in oklch, var(--color-action) 13%, transparent), transparent 60%),
+    var(--color-canvas);
+  color: var(--color-action);
+}
+
+.vaultRing {
+  position: absolute;
+  width: 6.5rem;
+  height: 6.5rem;
+  border: 1px dashed color-mix(in oklch, var(--color-action) 45%, transparent);
+  border-radius: var(--och-radius-pill);
+}
+
+.howBox {
+  margin-top: var(--och-space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-card);
+  background: var(--color-canvas);
+  padding: var(--och-space-5);
+}
+
+.howBox > strong {
+  display: block;
+  margin-bottom: var(--och-space-3);
+  color: var(--color-text);
+  font-size: .92rem;
+}
+
+.howList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-3);
+}
+
+.howList li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-3);
+  color: var(--color-text-secondary);
+  font-size: .88rem;
+  line-height: 1.5;
+}
+
+.howList svg { flex: none; margin-top: .15rem; color: var(--color-success); }
+
+.howNote {
+  margin: var(--och-space-4) 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-2);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--och-space-3);
+  color: var(--color-text-muted);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.howNote svg { flex: none; margin-top: .15rem; }
+
+/* ── Pacote de uso único ──────────────────────────────────────────── */
+
+.packageBox {
+  margin-top: var(--och-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-card);
+  padding: var(--och-space-5);
+}
+
+.packageBox h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.packageWarning,
+.packageNotice {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-3);
+  border-radius: var(--och-radius-control);
+  padding: var(--och-space-4);
+  font-size: .86rem;
+  line-height: 1.5;
+}
+
+.packageWarning {
+  border: 1px solid color-mix(in oklch, var(--color-warning) 45%, var(--color-border-strong));
+  background: color-mix(in oklch, var(--color-warning) 9%, transparent);
+  color: var(--color-text);
+}
+
+.packageNotice {
+  border: 1px solid var(--color-border);
+  background: var(--color-canvas);
+  color: var(--color-text-secondary);
+}
+
+.packageWarning svg,
+.packageNotice svg { flex: none; margin-top: .1rem; }
+
+.packageNotice code {
+  font: 400 .82rem/1.4 var(--font-data);
+  word-break: break-word;
+}
+
+.deadline {
+  margin: var(--och-space-5) 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-2);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--och-space-4);
+  color: var(--color-text-secondary);
+  font-size: .84rem;
+  line-height: 1.5;
+}
+
+.deadline svg { flex: none; margin-top: .15rem; }
+.deadline time { color: var(--color-text); font-family: var(--font-data); }
+
+/* ── Confirmação dupla ────────────────────────────────────────────── */
+
+.confirmationGrid {
+  margin: var(--och-space-5) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--och-space-4);
+}
+
+.confirmationCard {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--och-radius-card);
+  background: var(--color-canvas);
+  padding: var(--och-space-5);
+}
+
+.confirmationCard[data-viewer="true"] {
+  border-color: color-mix(in oklch, var(--color-action) 45%, var(--color-border-strong));
+}
+
+.confirmationIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-pill);
+  color: var(--color-text-secondary);
+}
+
+.confirmationBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--och-space-2);
+  min-width: 0;
+}
+
+.confirmationBody strong { color: var(--color-text); font-size: .95rem; }
+
+.confirmationBody p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .85rem;
+  line-height: 1.5;
+}
+
+.actionRow {
+  margin-top: var(--och-space-6);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  align-items: start;
+  gap: var(--och-space-4);
+}
+
+.actionSlot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-2);
+  min-width: 0;
+}
+
+/* Saída de conflito com o MESMO peso do confirmar: mesma altura, mesma
+   largura de coluna, mesmo alvo de toque. Só o preenchimento muda, porque
+   confirmar é a ação de valor — esconder a saída seria dark pattern. */
+.exitAction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--och-space-2);
+  width: 100%;
+  min-height: 3.25rem;
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.exitAction:hover {
+  border-color: var(--color-action);
+  filter: none;
+}
+
+.exitAction svg { flex: none; }
+
+.actionReason {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: .78rem;
+  line-height: 1.45;
+}
+
+.actionError {
+  margin: var(--och-space-3) 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-2);
+  color: var(--color-danger);
+  font-size: .84rem;
+  line-height: 1.45;
+}
+
+.actionError svg { flex: none; margin-top: .1rem; }
+
+.exitNote {
+  margin: var(--och-space-4) 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-2);
+  color: var(--color-text-muted);
+  font-size: .8rem;
+  line-height: 1.5;
+}
+
+.exitNote svg { flex: none; margin-top: .15rem; }
+
+/* ── Passo deliberado (confirmar / revelar / disputar) ────────────── */
+
+.deliberateBox {
+  margin-top: var(--och-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-card);
+  background: var(--color-canvas);
+  padding: var(--och-space-5);
+}
+
+.deliberateBox > strong { color: var(--color-text); font-size: .95rem; }
+
+.deliberateBox > p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .87rem;
+  line-height: 1.55;
+}
+
+.deliberateActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--och-space-3);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-3);
+  min-height: 2.75rem;
+  color: var(--color-text);
+  font-size: .88rem;
+  line-height: 1.5;
+}
+
+.checkboxRow input {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: .1rem;
+  accent-color: var(--color-action);
+}
+
+.checkboxRow input:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* ── Coluna lateral ───────────────────────────────────────────────── */
+
+.turnFacts {
+  margin: var(--och-space-5) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-4);
+}
+
+.turnFacts > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-1);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--och-space-3);
+}
+
+.turnFacts dt {
+  color: var(--color-text-muted);
+  font: 650 .68rem/1 var(--font-data);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.turnFacts dd {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .87rem;
+  line-height: 1.55;
+}
+
+.eventList {
+  margin: var(--och-space-4) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-4);
+}
+
+.eventList li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-1);
+  border-left: 2px solid var(--color-border-strong);
+  padding-left: var(--och-space-4);
+}
+
+.eventList strong { color: var(--color-text); font-size: .88rem; }
+
+.eventList time {
+  color: var(--color-text-muted);
+  font: 400 .76rem/1 var(--font-data);
+}
+
+.disputePanel {
+  border-color: color-mix(in oklch, var(--color-danger) 45%, var(--color-border-strong));
+}
+
+.confirmationPanel,
+.custodyCard,
+.turnPanel,
+.helpPanel,
+.eventsPanel {
+  min-width: 0;
+}
+
+@media (max-width: 63.9375rem) {
+  .grid,
+  .loadingGrid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .loading * {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}

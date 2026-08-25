@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.midas.example/events/seller.account.created.v1",
+  "title": "seller.account.created.v1",
+  "allOf": [
+    { "$ref": "https://schemas.midas.example/events/outbox-event-envelope.v1" },
+    {
+      "type": "object",
+      "properties": {
+        "eventType": { "const": "seller.account.created.v1" },
+        "schemaVersion": { "const": 1 },
+        "aggregateType": { "const": "SellerAccount" },
+        "aggregateId": { "type": "string", "pattern": "^sac_[0-9a-f-]{36}$" },
+        "aggregateVersion": { "const": 1 },
+        "sourceModule": { "const": "sellers" },
+        "sellerAccountId": { "type": "string", "pattern": "^sac_[0-9a-f-]{36}$" },
+        "dataClassification": { "const": "INTERNAL" },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sellerAccountId", "accountType", "sellerAccountStatus"],
+          "properties": {
+            "sellerAccountId": { "type": "string", "pattern": "^sac_[0-9a-f-]{36}$" },
+            "accountType": { "enum": ["INDIVIDUAL", "ORGANIZATION"] },
+            "sellerAccountStatus": { "const": "ONBOARDING_REQUIRED" }
+          }
+        }
+      }
+    }
+  ]
+}

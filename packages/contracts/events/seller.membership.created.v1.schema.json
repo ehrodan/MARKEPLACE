@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.midas.example/events/seller.membership.created.v1",
+  "title": "seller.membership.created.v1",
+  "allOf": [
+    { "$ref": "https://schemas.midas.example/events/outbox-event-envelope.v1" },
+    { "type": "object", "properties": {
+      "eventType": { "const": "seller.membership.created.v1" },
+      "aggregateType": { "const": "SellerMembership" },
+      "aggregateId": { "type": "string", "pattern": "^smb_[0-9a-f-]{36}$" },
+      "sourceModule": { "const": "sellers" },
+      "sellerAccountId": { "type": "string", "pattern": "^sac_[0-9a-f-]{36}$" },
+      "payload": { "type": "object", "additionalProperties": false, "required": ["sellerMembershipId", "sellerAccountId", "membershipRole"], "properties": {
+        "sellerMembershipId": { "type": "string", "pattern": "^smb_[0-9a-f-]{36}$" },
+        "sellerAccountId": { "type": "string", "pattern": "^sac_[0-9a-f-]{36}$" },
+        "membershipRole": { "const": "OWNER" }
+      }}
+    }}
+  ]
+}

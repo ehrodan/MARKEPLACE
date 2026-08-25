@@ -1,0 +1,181 @@
+{
+  "node_count": 2680,
+  "unverified_node_count": 0,
+  "raw_edge_count": 4323,
+  "non_object_edges": 0,
+  "missing_endpoint_edges": 0,
+  "dangling_endpoint_edges": 565,
+  "self_loop_edges": 0,
+  "valid_candidate_edges": 3758,
+  "exact_duplicate_edges": 49,
+  "directed_unique_endpoint_pairs": 3673,
+  "directed_same_endpoint_collapsed_edges": 85,
+  "undirected_unique_endpoint_pairs": 3673,
+  "undirected_same_endpoint_collapsed_edges": 85,
+  "same_endpoint_group_count": 85,
+  "relation_variant_groups": 41,
+  "source_file_variant_groups": 0,
+  "source_location_variant_groups": 0,
+  "context_variant_groups": 0,
+  "post_build_graph_type": "Graph",
+  "post_build_node_count": 2680,
+  "post_build_edge_count": 3673,
+  "post_build_error": "",
+  "producer_suppression": {
+    "path": "C:\\Users\\ELISOR\\AppData\\Roaming\\uv\\tools\\graphifyy\\Lib\\site-packages\\graphify\\extract.py",
+    "total_sites": 10,
+    "sites": [
+      {
+        "line": 1055,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 1205,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 1207,
+        "name": "seen_doc_refs",
+        "tuple_arity": 0,
+        "sample": "seen_doc_refs: set[str] = set()"
+      },
+      {
+        "line": 1630,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 2099,
+        "name": "seen_keys",
+        "tuple_arity": 0,
+        "sample": "seen_keys: set[tuple] = set()"
+      },
+      {
+        "line": 3034,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 3142,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 3221,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 3736,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 3737,
+        "name": "seen_edges",
+        "tuple_arity": 4,
+        "sample": "seen_edges: set[tuple[str, str, str, str | None]] = set()"
+      }
+    ],
+    "error": ""
+  },
+  "examples": [
+    {
+      "source": "apps_api_src_finance_routes_registerfinanceroutes",
+      "target": "apps_api_src_finance_routes_serializeresolution",
+      "edge_count": 2,
+      "relations": [
+        "calls",
+        "indirect_call"
+      ],
+      "source_files": [
+        "apps/api/src/finance-routes.ts"
+      ],
+      "source_locations": [
+        "L233",
+        "L268"
+      ],
+      "contexts": [
+        "argument",
+        "call"
+      ]
+    },
+    {
+      "source": "apps_web_components_account_account_shell",
+      "target": "packages_ui_src_button_button",
+      "edge_count": 2,
+      "relations": [
+        "imports"
+      ],
+      "source_files": [
+        "apps/web/components/account/account-shell.tsx"
+      ],
+      "source_locations": [
+        "L18"
+      ],
+      "contexts": [
+        "import"
+      ]
+    },
+    {
+      "source": "apps_web_components_account_data_provenance",
+      "target": "packages_ui_src_freshness_freshness",
+      "edge_count": 2,
+      "relations": [
+        "imports"
+      ],
+      "source_files": [
+        "apps/web/components/account/data-provenance.tsx"
+      ],
+      "source_locations": [
+        "L2"
+      ],
+      "contexts": [
+        "import"
+      ]
+    },
+    {
+      "source": "apps_web_components_account_overview_view",
+      "target": "packages_ui_src_freshness_freshness",
+      "edge_count": 2,
+      "relations": [
+        "imports"
+      ],
+      "source_files": [
+        "apps/web/components/account/overview-view.tsx"
+      ],
+      "source_locations": [
+        "L5"
+      ],
+      "contexts": [
+        "import"
+      ]
+    },
+    {
+      "source": "apps_web_components_account_overview_view",
+      "target": "packages_ui_src_money_money",
+      "edge_count": 2,
+      "relations": [
+        "imports"
+      ],
+      "source_files": [
+        "apps/web/components/account/overview-view.tsx"
+      ],
+      "source_locations": [
+        "L5"
+      ],
+      "contexts": [
+        "import"
+      ]
+    }
+  ]
+}

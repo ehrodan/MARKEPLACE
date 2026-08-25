@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Emblema Trígono">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="42%">
+      <stop offset="0%" stop-color="oklch(72% 0.14 281)"/>
+      <stop offset="70%" stop-color="oklch(38% 0.08 281)"/>
+      <stop offset="100%" stop-color="oklch(16% 0.02 281)"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" fill="oklch(13% 0.012 75)"/>
+  <circle cx="200" cy="188" r="120" fill="url(#g)" opacity="0.5"/>
+  <polygon points="200.0,122.0 267.5,239.0 132.5,239.0" fill="none" stroke="oklch(78% 0.16 80)" stroke-width="3"
+    transform="rotate(-46 200 200)" opacity="0.92"/>
+  <text x="200" y="212" text-anchor="middle" font-family="monospace" font-size="52"
+    font-weight="700" fill="oklch(94% 0.012 85)" opacity="0.9">ET</text>
+</svg>

@@ -1,0 +1,164 @@
+/* Abertura da loja.
+   Duas variáveis vêm do componente, ambas em [0, 1]: `--piece-out` (a peça
+   saindo) e `--words-out` (o texto saindo). Sem JS elas não existem, e os
+   fallbacks do `var()` deixam tudo visível e parado — a abertura vira um bloco
+   estático legível, com o mesmo texto e o mesmo link. */
+
+.track {
+  position: relative;
+  /* MEDIDO: com trilho de 200svh o primeiro produto caia a 2,74 dobras de
+     scroll. Numa loja isso e o erro — os concorrentes de docs/20 poem produto
+     na PRIMEIRA dobra. O trilho encolheu para 120svh: sobra curso suficiente
+     para a peca girar e dissolver, e a vitrine sobe quase duas telas. */
+  height: 120svh;
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  /* Menos que a tela cheia: o topo da vitrine ja aparece por baixo da
+     abertura, e a pessoa ve que ha loja antes de rolar. */
+  height: 84svh;
+  display: grid;
+  grid-template-areas: "stage";
+  place-items: center;
+  overflow: clip;
+}
+
+.stage > * { grid-area: stage; }
+
+/* ---- a peça ---- */
+
+/* A peca e PLANO DE FUNDO da primeira dobra: ela da materia a tela sem
+   ocupar o lugar do conteudo. Antes dividia a dobra com o texto e empurrava
+   as entradas para baixo. */
+.piece {
+  position: relative;
+  z-index: 0;
+  width: min(46vw, 24rem);
+  aspect-ratio: 1;
+  opacity: calc(1 - var(--piece-out, 0));
+  scale: calc(1 - var(--piece-out, 0) * 0.22);
+  translate: 0 calc(var(--piece-out, 0) * -8vh);
+  /* Só `filter` e `opacity` — nenhuma propriedade de layout é animada. */
+  filter: blur(calc(var(--piece-out, 0) * 7px));
+  will-change: opacity, scale, translate;
+}
+
+.piece::after {
+  /* Halo dourado atrás da peça: dá matéria ao fundo escuro sem imagem, e
+     morre junto com ela. */
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--color-action) 26%, transparent),
+    transparent 68%
+  );
+}
+
+.piece :global(.store-overture__canvas) {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* O PNG de fallback tem fundo preto sólido. Sobre o fundo escuro da loja ele
+   aparecia como um retângulo mais escuro em volta da peça — uma moldura que
+   ninguém desenhou. `mix-blend-mode: screen` faz o preto virar transparente e
+   deixa só a peça. */
+.poster {
+  object-fit: contain;
+  mix-blend-mode: screen;
+}
+
+/* ---- as palavras ---- */
+
+.words {
+  position: relative;
+  z-index: 1;
+  width: min(100% - 2rem, 72rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--och-space-5);
+  text-align: center;
+  opacity: calc(1 - var(--words-out, 0));
+  translate: 0 calc(var(--words-out, 0) * -4vh);
+  will-change: opacity, translate;
+}
+
+/*  saiu daqui: o titulo agora e , que carrega o
+   proprio estilo. Duas regras para o mesmo elemento e uma delas fica errada. */
+
+.lede {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--color-text-secondary);
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--och-space-3);
+}
+
+/* `.primary` e `.secondary` saíram daqui: os dois botões da abertura passaram a
+   ser `ShimmerCta`, que carrega o próprio estilo em `animated-heading.module.css`
+   com a escada de intensidade medida no benchmark. Manter as regras órfãs
+   deixaria duas fontes de verdade para o mesmo botão. */
+
+/* Espaco das portas de entrada dentro da dobra. */
+/* O bloco de palavras centraliza o proprio texto; as portas nao herdam isso.
+   Rotulo, contagem e faixa de preco alinham a esquerda para o olho descer uma
+   coluna so — centralizado, cada linha comeca num ponto diferente e a leitura
+   quebra tres vezes por porta. */
+.slot {
+  width: 100%;
+  margin-top: var(--och-space-4);
+  text-align: left;
+}
+
+/* ---- o convite a rolar ---- */
+
+.cue {
+  z-index: 1;
+  align-self: end;
+  margin: 0 0 var(--och-space-6);
+  color: var(--color-text-muted);
+  font: 600 0.62rem/1 var(--font-data);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  opacity: calc(1 - var(--words-out, 0));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Sem trilho e sem sticky: a abertura vira um bloco normal, na ordem do DOM,
+     com a peça parada e o mesmo texto. Nada de conteúdo se perde. */
+  .track { height: auto; }
+  .stage {
+    position: static;
+    height: auto;
+    /* Sai do grid de área única, senão peça e texto continuariam empilhados
+       um sobre o outro — ilegível sem o fade que os separava. */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-block: var(--och-space-16);
+    gap: var(--och-space-8);
+  }
+  .stage > * { grid-area: auto; }
+  .piece,
+  .words,
+  .cue { opacity: 1; scale: 1; translate: none; filter: none; will-change: auto; }
+  .piece { width: min(60vw, 26rem); }
+  .cue { display: none; }
+}

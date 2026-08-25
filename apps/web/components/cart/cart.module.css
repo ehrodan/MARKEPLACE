@@ -1,0 +1,444 @@
+/* SCR-BUY-012 — carrinho multivendedor.
+
+   MOTION M0. Utilidade pura. Nenhum parallax, nenhuma entrada coreografada,
+   nenhuma contagem, nenhum pulso, nenhuma animação de urgência. As únicas
+   transições são de cor de borda/texto em hover e foco — feedback funcional de
+   controle, não decoração. O bloco `prefers-reduced-motion` zera até isso.
+
+   GESTALT DE REGIÃO COMUM (o que sustenta a leitura desta tela):
+   cada vendedor é um pedido separado, então cada grupo é uma SUPERFÍCIE
+   FECHADA — borda própria, fundo próprio, raio próprio, rodapé de ação
+   próprio — e o espaço ENTRE grupos (--och-space-10) é maior que qualquer
+   espaço DENTRO do grupo (máximo --och-space-5). A separação entre pedidos
+   vence a separação entre itens em toda a hierarquia.
+
+   Cor nunca comunica estado sozinha: `data-state` só reforça o rótulo textual
+   que o componente já renderiza em <StatusBadge> e no parágrafo de aviso.
+
+   Somente tokens de packages/ui/src/tokens.css. Zero hex. */
+
+.page,
+.loading {
+  width: min(calc(100% - 2rem), 82rem);
+  margin-inline: auto;
+  padding-block: var(--och-space-8) var(--och-space-16);
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-5);
+}
+
+.loading { color: var(--color-text-secondary); }
+
+.headerMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  color: var(--color-text-muted);
+  font: 500 .8rem/1.4 var(--font-data);
+}
+
+.headerBody {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .92rem;
+}
+
+/* Região viva: reserva altura fixa para o anúncio de subtotal não empurrar
+   o conteúdo quando aparece. Mudança de layout também é movimento. */
+.liveRegion {
+  min-height: 1.35rem;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .84rem;
+}
+
+/* ---------------------------------------------------------------- avisos */
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-3);
+  padding: var(--och-space-4);
+  color: var(--color-text-secondary);
+  font-size: .86rem;
+  line-height: 1.55;
+}
+
+.banner svg { flex: none; margin-top: .15rem; color: var(--color-action); }
+.banner > div { display: grid; gap: var(--och-space-2); }
+.banner p { margin: 0; }
+.banner code { font: 500 .78rem/1.4 var(--font-data); color: var(--color-text); }
+
+.mutationError {
+  margin: 0;
+  border: 1px solid color-mix(in oklch, var(--color-danger) 52%, var(--color-border));
+  border-radius: var(--och-radius-control);
+  padding: var(--och-space-3) var(--och-space-4);
+  background: color-mix(in oklch, var(--color-danger) 9%, var(--color-surface));
+  color: var(--color-text);
+  font-size: .86rem;
+}
+
+/* ----------------------------------------------- grupos = pedidos separados */
+
+.groups {
+  display: grid;
+  gap: var(--och-space-10);
+  margin-block: var(--och-space-3);
+}
+
+.group {
+  display: grid;
+  gap: var(--och-space-5);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-panel);
+  padding: var(--och-space-6);
+  background: var(--color-surface);
+}
+
+/* Grupo travado perde o realce de ação, não o conteúdo: o motivo continua
+   legível e as linhas continuam editáveis. */
+.group[data-blocked] { border-color: var(--color-border); }
+
+.groupHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--och-space-4);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--och-space-4);
+}
+
+.groupHeader > div:first-child { display: grid; gap: var(--och-space-1); }
+
+.groupEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  color: var(--color-action);
+  font: 650 .66rem/1.2 var(--font-data);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.groupHeader h3 {
+  margin: 0;
+  font: 720 clamp(1.25rem, 2.4vw, 1.7rem)/1.15 var(--font-display);
+  letter-spacing: -.02em;
+}
+
+.groupNote { margin: 0; color: var(--color-text-muted); font-size: .78rem; }
+
+.groupTotals {
+  display: grid;
+  gap: var(--och-space-1);
+  justify-items: end;
+  text-align: right;
+}
+
+.groupTotals span { color: var(--color-text-muted); font-size: .76rem; }
+.groupTotals strong { font: 700 clamp(1.1rem, 2vw, 1.45rem)/1.1 var(--font-data); }
+
+/* ----------------------------------------------------------------- linhas */
+
+.lines {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem);
+  align-items: start;
+  gap: var(--och-space-5);
+  padding-block: var(--och-space-4);
+}
+
+.line + .line { border-top: 1px solid var(--color-border); }
+
+.lineMain { min-width: 0; display: grid; gap: var(--och-space-2); }
+
+.lineHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--och-space-3);
+}
+
+.lineTitle { margin: 0; font: 650 1rem/1.3 var(--font-body); }
+.lineTitle a { text-decoration: underline; text-decoration-color: var(--color-border-strong); text-underline-offset: .25em; }
+.lineTitle a:hover { text-decoration-color: var(--color-action); }
+
+.lineUnit { margin: 0; color: var(--color-text-secondary); font-size: .86rem; }
+.linePrevious { color: var(--color-text-muted); text-decoration: line-through; }
+
+/* Aviso por linha: divergência de preço, estoque, moeda ou verificação.
+   Fica DENTRO da linha, colado ao item que mudou, nunca em um resumo distante. */
+.lineNotice {
+  display: grid;
+  gap: var(--och-space-3);
+  border-left: 3px solid var(--color-action);
+  border-radius: var(--och-radius-control);
+  padding: var(--och-space-3) var(--och-space-4);
+  background: color-mix(in oklch, var(--color-action) 7%, var(--color-surface-raised));
+}
+
+.lineNotice p { margin: 0; color: var(--color-text-secondary); font-size: .84rem; line-height: 1.55; }
+
+.lineNoticeActions { display: flex; flex-wrap: wrap; gap: var(--och-space-2); }
+
+.line[data-state="GONE"] .lineNotice,
+.line[data-state="CURRENCY_CHANGED"] .lineNotice {
+  border-left-color: var(--color-danger);
+  background: color-mix(in oklch, var(--color-danger) 8%, var(--color-surface-raised));
+}
+
+.line[data-state="CHECKING"] .lineNotice {
+  border-left-color: var(--color-border-strong);
+  background: var(--color-surface-raised);
+}
+
+/* ------------------------------------------------------------- controles */
+
+.lineControls {
+  display: grid;
+  gap: var(--och-space-3);
+  justify-items: stretch;
+}
+
+.quantityField { display: grid; gap: var(--och-space-2); }
+.quantityField label { color: var(--color-text-secondary); font-size: .74rem; font-weight: 650; }
+
+.quantityRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-1);
+  width: fit-content;
+}
+
+/* Alvo de toque 2.75rem (44px), acima do mínimo de 24px exigido. */
+.stepper {
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-control);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color var(--och-duration-fast) var(--och-ease-out), color var(--och-duration-fast) var(--och-ease-out);
+}
+
+.stepper:hover:not(:disabled) { border-color: var(--color-action); color: var(--color-action); }
+.stepper:disabled { opacity: .45; cursor: not-allowed; }
+
+.quantityInput {
+  width: 4.5rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-control);
+  padding-inline: var(--och-space-3);
+  background: var(--color-input);
+  color: var(--color-text);
+  font: 600 .95rem/1 var(--font-data);
+  text-align: center;
+}
+
+.quantityInput:disabled { opacity: .55; cursor: not-allowed; }
+.quantityInput[aria-invalid="true"] { border-color: var(--color-danger); }
+
+.fieldError { margin: 0; color: var(--color-danger); font-size: .76rem; }
+
+.lineTotal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--och-space-3);
+  margin: 0;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--och-space-3);
+}
+
+.lineTotal span { color: var(--color-text-muted); font-size: .76rem; }
+.lineTotal strong { font: 700 1.05rem/1.1 var(--font-data); }
+
+.lineActions { display: flex; flex-wrap: wrap; gap: var(--och-space-2); }
+
+.lineAction {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--och-radius-control);
+  padding-inline: var(--och-space-3);
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--och-duration-fast) var(--och-ease-out), color var(--och-duration-fast) var(--och-ease-out);
+}
+
+.lineAction:hover:not(:disabled) { border-color: var(--color-border-strong); color: var(--color-text); }
+.lineAction[aria-pressed="true"] { border-color: var(--color-border-strong); color: var(--color-action); }
+.lineAction:disabled { opacity: .45; cursor: not-allowed; }
+.lineAction svg { flex: none; }
+
+/* ------------------------------------------------------- rodapé do grupo */
+
+.groupFooter {
+  display: grid;
+  gap: var(--och-space-4);
+  justify-items: start;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--och-space-5);
+}
+
+.groupBlocked {
+  display: grid;
+  gap: var(--och-space-2);
+  justify-items: start;
+  width: 100%;
+}
+
+.groupBlocked ul {
+  display: grid;
+  gap: var(--och-space-2);
+  margin: 0;
+  padding-left: var(--och-space-5);
+  color: var(--color-text-secondary);
+  font-size: .84rem;
+  line-height: 1.55;
+}
+
+.groupProblem {
+  width: 100%;
+  margin: 0;
+  border: 1px solid color-mix(in oklch, var(--color-danger) 52%, var(--color-border));
+  border-radius: var(--och-radius-control);
+  padding: var(--och-space-3) var(--och-space-4);
+  background: color-mix(in oklch, var(--color-danger) 9%, var(--color-surface-raised));
+  color: var(--color-text-secondary);
+  font-size: .85rem;
+  line-height: 1.55;
+}
+
+.groupProblem strong { display: block; color: var(--color-text); }
+.groupProblem code { display: block; margin-top: var(--och-space-1); font: 500 .76rem/1.4 var(--font-data); }
+
+.groupDone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--och-space-3);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .86rem;
+}
+
+/* --------------------------------------------------- guardados para depois */
+
+.savedSection {
+  display: grid;
+  gap: var(--och-space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--och-radius-card);
+  padding: var(--och-space-5);
+}
+
+.savedSection h2 { margin: 0; font: 700 1.05rem/1.2 var(--font-body); }
+.savedSection > p { margin: 0; color: var(--color-text-muted); font-size: .82rem; }
+
+.savedList { display: grid; gap: var(--och-space-2); margin: 0; padding: 0; list-style: none; }
+
+.savedList li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--och-space-3);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--och-space-3);
+}
+
+.savedList li > span:first-child { flex: 1 1 12rem; min-width: 0; font-weight: 600; }
+.savedPrice { color: var(--color-text-secondary); font: 500 .84rem/1.2 var(--font-data); }
+
+/* ------------------------------------------------------------ explicações */
+
+.explainers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: var(--och-space-4);
+  margin-top: var(--och-space-4);
+}
+
+.explainer { display: grid; gap: var(--och-space-2); align-content: start; }
+
+.explainerKicker {
+  color: var(--color-action);
+  font: 650 .64rem/1.2 var(--font-data);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.explainer h2 { margin: 0; font: 700 1.02rem/1.3 var(--font-body); }
+.explainer p { margin: 0; color: var(--color-text-secondary); font-size: .85rem; line-height: 1.55; }
+
+.explainerNote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-space-2);
+  color: var(--color-text-muted);
+  font-size: .78rem;
+}
+
+.explainerNote svg { flex: none; margin-top: .12rem; }
+
+.couponField { display: grid; gap: var(--och-space-2); }
+.couponField label { color: var(--color-text-secondary); font-size: .74rem; font-weight: 650; }
+
+.couponField input {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-control);
+  padding-inline: var(--och-space-3);
+  background: var(--color-input);
+  color: var(--color-text);
+}
+
+.couponField input:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  background: var(--color-surface-raised);
+}
+
+/* ------------------------------------------------------------ responsivo */
+
+@media (max-width: 52rem) {
+  .line { grid-template-columns: minmax(0, 1fr); }
+  .group { padding: var(--och-space-5); }
+  .groupTotals { justify-items: start; text-align: left; }
+  .lineTotal { border-top: none; padding-top: 0; }
+}
+
+/* M0 sob preferência reduzida: nenhuma transição sobrevive. Conteúdo e ação
+   permanecem idênticos — o que muda é só o feedback de cor ser instantâneo. */
+@media (prefers-reduced-motion: reduce) {
+  .stepper,
+  .lineAction {
+    transition: none;
+  }
+}

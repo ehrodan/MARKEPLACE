@@ -1,0 +1,134 @@
+/* Faixa de preços ao vivo.
+   Uma única animação de `transform` numa faixa; o compositor resolve, sem JS
+   por quadro. A duração é longa de propósito: uma régua que corre depressa
+   vira ruído e ninguém lê o preço, que é justamente o que ela existe para
+   mostrar. */
+
+.ticker {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--och-space-4);
+  border-block: 1px solid var(--color-border-subtle);
+  padding-block: var(--och-space-2);
+  background: color-mix(in oklch, var(--color-surface) 60%, var(--color-canvas));
+}
+
+/* Etiqueta fixa à esquerda, no lugar onde o benchmark põe a origem do dado. */
+.label {
+  flex: none;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  padding-inline: var(--och-space-4);
+  border-right: 1px solid var(--color-border-subtle);
+  color: var(--color-signal);
+  font: 700 0.6rem/1 var(--font-data);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.pulse {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--color-signal);
+  box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-signal) 60%, transparent);
+  animation: pulse 2.4s var(--och-ease-out) infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-signal) 55%, transparent); }
+  70% { box-shadow: 0 0 0 0.5rem transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* A faixa NÃO se move sozinha.
+   `docs/07 §1.4` proíbe "preço animado" no perfil M2, que é o desta tela, e
+   uma régua que translada preços pela tela é exatamente isso. O movimento
+   passa a ser da pessoa: rolagem horizontal nativa, o mesmo gesto que a faixa
+   de categorias logo abaixo já usa.
+   O que se perde é o efeito de letreiro. O que se ganha é que o preço fica
+   parado o tempo suficiente para ser lido — que era o motivo de mostrá-lo. */
+.viewport {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  /* As pontas somem em vez de cortar no seco, e ainda sinalizam que há mais
+     conteúdo para arrastar (lei do fechamento). */
+  mask-image: linear-gradient(90deg, transparent, #000 2rem, #000 calc(100% - 3rem), transparent);
+}
+
+.track {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  width: max-content;
+  list-style: none;
+}
+
+.inner {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  list-style: none;
+}
+
+.clone { display: flex; }
+
+.item { flex: none; }
+
+/* 44px: docs/03 linha 358 exige alvo minimo de 44x44, mais estrito que o
+   minimo WCAG de 24x24. Medido em 320/375/414px: estava em 36. */
+.link {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-space-2);
+  padding-inline: var(--och-space-5);
+  border-right: 1px solid var(--color-border-subtle);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.link:hover .name { color: var(--color-text); }
+.link:hover .price { color: var(--color-action-hover); }
+
+.dot {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  /* A raridade tinge o ponto, nunca o preço nem o link. */
+  background: var(--rarity, var(--color-text-muted));
+}
+
+.name { color: var(--color-text-secondary); }
+
+.price {
+  color: var(--color-action);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.item[data-rarity="COMMON"] { --rarity: var(--och-rarity-common); }
+.item[data-rarity="UNCOMMON"] { --rarity: var(--och-rarity-uncommon); }
+.item[data-rarity="RARE"] { --rarity: var(--och-rarity-rare); }
+.item[data-rarity="EPIC"] { --rarity: var(--och-rarity-epic); }
+.item[data-rarity="LEGENDARY"] { --rarity: var(--och-rarity-legendary); }
+.item[data-rarity="MYTHIC"] { --rarity: var(--och-rarity-mythic); }
+.item[data-rarity="CONTRABAND"] { --rarity: var(--och-rarity-contraband); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Vira uma lista estática que quebra em linhas, com os mesmos links e os
+     mesmos preços. A cópia sai de cena para não duplicar o conteúdo visível. */
+  /* Sem wrap: a faixa ja e arrastavel na horizontal, entao quebrar em tres
+     linhas so rouba altura da vitrine sem revelar nada novo. */
+  .track { flex-wrap: nowrap; }
+  .pulse { animation: none; }
+  .viewport { mask-image: none; }
+}

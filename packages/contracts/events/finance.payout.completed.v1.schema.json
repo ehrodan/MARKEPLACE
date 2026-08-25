@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.midas.example/events/finance.payout.completed.v1",
+  "allOf": [
+    { "$ref": "https://schemas.midas.example/events/outbox-event-envelope.v1" },
+    { "type": "object", "properties": {
+      "eventType": { "const": "finance.payout.completed.v1" }, "schemaVersion": { "const": 1 },
+      "aggregateType": { "const": "PayoutRequest" }, "sourceModule": { "const": "finance" }, "dataClassification": { "const": "FINANCIAL" },
+      "payload": { "type": "object", "additionalProperties": false,
+        "required": ["payoutRequestId","payoutAttemptId","payoutStatus","amountMinor","currency","completedAt"],
+        "properties": { "payoutRequestId": { "type": "string", "format": "uuid" }, "payoutAttemptId": { "type": "string", "format": "uuid" }, "payoutStatus": { "const": "PAID" }, "amountMinor": { "type": "string", "pattern": "^[1-9][0-9]*$" }, "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }, "completedAt": { "type": "string", "format": "date-time" } }
+      }
+    } }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "runs": [
+    {
+      "date": "2026-08-23T14:31:37.608899+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 252,
+      "telemetry": "unavailable_from_subagents"
+    },
+    {
+      "date": "2026-08-23T15:19:00.580809+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 407,
+      "telemetry": "unavailable_from_subagents"
+    }
+  ],
+  "total_input_tokens": 0,
+  "total_output_tokens": 0
+}

@@ -1,0 +1,225 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Node 24 · Podman · quality gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CI: "true"
+      NODE_ENV: test
+      NEXT_TELEMETRY_DISABLED: "1"
+      TURBO_TELEMETRY_DISABLED: "1"
+      DO_NOT_TRACK: "1"
+      FORCE_COLOR: "1"
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm 11
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.15.1
+          run_install: false
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install Podman and Compose provider
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends podman podman-compose
+
+          if ! command -v powershell >/dev/null 2>&1; then
+            sudo ln -s "$(command -v pwsh)" /usr/local/bin/powershell
+          fi
+
+          podman --version
+          podman compose version
+          pnpm --version
+          node --version
+
+      - name: Install dependencies from lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate ephemeral runtime secrets
+        run: |
+          set -euo pipefail
+          umask 077
+
+          postgres_password="$(openssl rand -hex 32)"
+          valkey_password="$(openssl rand -hex 32)"
+          nats_password="$(openssl rand -hex 32)"
+          minio_password="$(openssl rand -hex 32)"
+          session_pepper="$(openssl rand -hex 32)"
+
+          for secret in \
+            "$postgres_password" \
+            "$valkey_password" \
+            "$nats_password" \
+            "$minio_password" \
+            "$session_pepper"; do
+            printf '::add-mask::%s\n' "$secret"
+          done
+
+          install -m 600 /dev/null infra/podman/.runtime.env
+          {
+            printf 'POSTGRES_USER=%s\n' 'midas_ci'
+            printf 'POSTGRES_PASSWORD=%s\n' "$postgres_password"
+            printf 'POSTGRES_DB=%s\n' 'midas_ci'
+            printf 'VALKEY_PASSWORD=%s\n' "$valkey_password"
+            printf 'NATS_USER=%s\n' 'midas_ci'
+            printf 'NATS_PASSWORD=%s\n' "$nats_password"
+            printf 'MINIO_ROOT_USER=%s\n' 'midasci'
+            printf 'MINIO_ROOT_PASSWORD=%s\n' "$minio_password"
+          } > infra/podman/.runtime.env
+
+          {
+            printf 'DATABASE_URL=postgresql://midas_ci:%s@127.0.0.1:5432/midas_ci\n' "$postgres_password"
+            printf 'TEST_DATABASE_URL=postgresql://midas_ci:%s@127.0.0.1:5432/midas_ci\n' "$postgres_password"
+            printf 'VALKEY_URL=redis://:%s@127.0.0.1:6379\n' "$valkey_password"
+            printf 'NATS_URL=nats://midas_ci:%s@127.0.0.1:4222\n' "$nats_password"
+            printf 'NATS_USER=%s\n' 'midas_ci'
+            printf 'NATS_PASSWORD=%s\n' "$nats_password"
+            printf 'S3_ENDPOINT=%s\n' 'http://127.0.0.1:9000'
+            printf 'S3_REGION=%s\n' 'us-east-1'
+            printf 'S3_ACCESS_KEY_ID=%s\n' 'midasci'
+            printf 'S3_SECRET_ACCESS_KEY=%s\n' "$minio_password"
+            printf 'S3_BUCKET_PRIVATE=%s\n' 'midas-ci-private'
+            printf 'S3_BUCKET_PUBLIC=%s\n' 'midas-ci-public'
+            printf 'SMTP_HOST=%s\n' '127.0.0.1'
+            printf 'SMTP_PORT=%s\n' '1025'
+            printf 'SMTP_FROM=%s\n' 'ci@midas.invalid'
+            printf 'SMTP_SECURE=%s\n' 'false'
+            printf 'SESSION_COOKIE_NAME=%s\n' 'midas_ci_session'
+            printf 'SESSION_PEPPER=%s\n' "$session_pepper"
+            printf 'WEB_ORIGIN=%s\n' 'http://127.0.0.1:3000'
+            printf 'API_ORIGIN=%s\n' 'http://127.0.0.1:3001'
+            printf 'PUBLIC_WEB_URL=%s\n' 'http://127.0.0.1:3000'
+            printf 'CORS_ALLOWED_ORIGINS=%s\n' 'http://127.0.0.1:3000'
+            printf 'MIDAS_API_URL=%s\n' 'http://127.0.0.1:3001'
+            printf 'WEB_PORT=%s\n' '3000'
+            printf 'API_PORT=%s\n' '3001'
+            printf 'PORT=%s\n' '3001'
+            printf 'REALTIME_PORT=%s\n' '3002'
+            printf 'WORKER_PORT=%s\n' '3003'
+            printf 'NEXT_PUBLIC_TERMS_VERSION=%s\n' 'ci-v1'
+            printf 'NEXT_PUBLIC_BRAND_NAME=%s\n' 'OCHPOCH MARKET'
+          } >> "$GITHUB_ENV"
+
+      - name: Start infrastructure
+        run: pnpm infra:up
+
+      - name: Wait for infrastructure health
+        run: pnpm infra:wait
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Traceability contracts
+        run: pnpm lint:traceability
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit and architecture tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Validate database migration layout
+        run: pnpm db:generate
+
+      - name: Apply database migrations
+        run: pnpm db:migrate
+
+      - name: Verify database state
+        run: pnpm db:check
+
+      - name: Integration tests
+        run: pnpm test:integration
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: pnpm test:e2e
+
+      - name: Collect failure diagnostics
+        if: failure()
+        run: |
+          set +e
+          mkdir -p artifacts/ci
+
+          {
+            printf 'node='; node --version
+            printf 'pnpm='; pnpm --version
+            printf 'podman='; podman --version
+            printf 'compose='; podman compose version
+          } > artifacts/ci/tool-versions.txt 2>&1
+
+          podman ps --all \
+            --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Ports}}' \
+            > artifacts/ci/containers.txt 2>&1
+          pnpm infra:logs > artifacts/ci/infra.log 2>&1
+          git status --short > artifacts/ci/git-status.txt 2>&1
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ci-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/ci
+            playwright-report
+            test-results
+            coverage
+            apps/*/coverage
+            packages/*/coverage
+            modules/*/coverage
+            apps/web/.next/trace
+            apps/web/.next/diagnostics
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 14
+
+      - name: Stop infrastructure without deleting volumes
+        if: always()
+        run: |
+          set -euo pipefail
+
+          cleanup_runtime_secrets() {
+            rm -f infra/podman/.runtime.env
+          }
+          trap cleanup_runtime_secrets EXIT
+
+          if [[ -f infra/podman/.runtime.env ]]; then
+            pnpm infra:down
+          else
+            echo 'Runtime env ausente; nenhuma infraestrutura deste job precisa ser encerrada.'
+          fi

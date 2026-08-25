@@ -1,0 +1,952 @@
+[
+  {
+    "id": "SCR-PUB-001",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/",
+    "access": "Público",
+    "purpose": "Orientar entrada por busca, categoria, P2P ou Midas sem misturar canais.",
+    "source": "`DiscoveryReadModel`: busca, categorias, recomendações consentidas e ofertas; `asOf`.",
+    "actions": "Buscar; abrir categoria; alternar P2P/Midas; abrir item/anúncio; desligar personalização."
+  },
+  {
+    "id": "SCR-PUB-002",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/market",
+    "access": "Público",
+    "purpose": "Explorar exclusivamente ofertas P2P publicadas.",
+    "source": "`GET /v1/search` com canal P2P; projeções de anúncio, preço e vendedor.",
+    "actions": "Filtrar; ordenar; paginar por cursor; favoritar após login; abrir anúncio."
+  },
+  {
+    "id": "SCR-PUB-003",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/midas",
+    "access": "Público; canal habilitado por capability",
+    "purpose": "Exibir estoque próprio inequivocamente rotulado como “Vendido pelo Midas”.",
+    "source": "`GET /v1/channels/midas/listings`; estoque/preço canônico do Midas. Se a fonte estiver indisponível, não publicar valor nem disponibilidade inventados.",
+    "actions": "Filtrar; comparar; abrir oferta; iniciar compra quando a capability transacional estiver ativa."
+  },
+  {
+    "id": "SCR-PUB-004",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/buscar",
+    "access": "Público",
+    "purpose": "Resolver uma consulta com filtros, ordenação, correção e recuperação.",
+    "source": "`GET /v1/search?q=`; índice de busca e explicação de ranking.",
+    "actions": "Pesquisar; aplicar/remover filtros; ordenar; alternar canal; abrir resultado; limpar busca."
+  },
+  {
+    "id": "SCR-PUB-005",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/itens/:slug",
+    "access": "Público",
+    "purpose": "Mostrar item-base, histórico licenciado e ofertas disponíveis.",
+    "source": "Catálogo canônico; `GET /v1/prices/items/{catalogItemId}` e `/candles`; ofertas, poster e `Model3DArtifact` ativo quando existir.",
+    "actions": "Trocar período; abrir tabela equivalente; comparar ofertas; abrir `SCR-PUB-013`; abrir anúncio; reportar dado ausente."
+  },
+  {
+    "id": "SCR-PUB-006",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/anuncios/:listingId",
+    "access": "Público; ações relacionais exigem login",
+    "purpose": "Permitir avaliar oferta, craft, vendedor, disponibilidade, proteção e preço antes de agir.",
+    "source": "`GET /v1/listings/{id}`, component quotes, preço com `asOf`, resumo público do vendedor e `Model3DArtifact` publicado do item.",
+    "actions": "Abrir `SCR-PUB-013` preservando a origem; favoritar; conversar; propor; denunciar; iniciar checkout; voltar ao item-base."
+  },
+  {
+    "id": "SCR-PUB-007",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/vendedores/:sellerAccountId",
+    "access": "Público",
+    "purpose": "Exibir reputação e ofertas públicas do contexto comercial, sem revelar membros/PII.",
+    "source": "Projeção pública de `SellerAccount`, reputação e anúncios; endpoint de leitura ainda a formalizar.",
+    "actions": "Filtrar anúncios; abrir anúncio; denunciar perfil/oferta."
+  },
+  {
+    "id": "SCR-PUB-008",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/ajuda",
+    "access": "Público",
+    "purpose": "Oferecer autosserviço por compra, venda, entrega, disputa, segurança e contato.",
+    "source": "Conteúdo versionado da central de ajuda; taxonomia compartilhada com tickets.",
+    "actions": "Buscar artigo; navegar categoria; abrir artigo; iniciar ticket após login."
+  },
+  {
+    "id": "SCR-PUB-009",
+    "group": "PUB",
+    "documentedStatus": "PROPOSTO",
+    "route": "/ajuda/:articleSlug",
+    "access": "Público",
+    "purpose": "Tornar artigo de ajuda endereçável, versionado e mensurável.",
+    "source": "CMS/registro de políticas proposto, com versão, revisão e proprietário.",
+    "actions": "Navegar tópicos; copiar link; avaliar utilidade; abrir suporte contextual."
+  },
+  {
+    "id": "SCR-PUB-010",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/seguranca",
+    "access": "Público",
+    "purpose": "Explicar proteção, anti-PII, entrega, fraude, denúncia e recuperação.",
+    "source": "Conteúdo de Trust & Safety aprovado e versionado.",
+    "actions": "Abrir orientação; denunciar; acessar segurança da conta; abrir ajuda."
+  },
+  {
+    "id": "SCR-PUB-011",
+    "group": "PUB",
+    "documentedStatus": "PROPOSTO",
+    "route": "/politicas",
+    "access": "Público",
+    "purpose": "Indexar políticas vigentes e versões anteriores publicáveis.",
+    "source": "`PolicyRegistry` proposto: título, versão, vigência, escopo e URL.",
+    "actions": "Abrir política; comparar vigência; baixar versão acessível."
+  },
+  {
+    "id": "SCR-PUB-012",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/politicas/:policySlug",
+    "access": "Público",
+    "purpose": "Exibir termos, privacidade, cookies, taxas, vendedor, disputa, conteúdo e acessibilidade.",
+    "source": "Snapshot versionado de política. Aliases `/termos`, `/privacidade`, `/cookies` e `/taxas` redirecionam aqui.",
+    "actions": "Ler; buscar no texto; baixar; abrir versão anterior; ajustar cookies quando aplicável."
+  },
+  {
+    "id": "SCR-PUB-013",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/itens/:slug/3d",
+    "access": "Público; item e artefato precisam estar publicados",
+    "purpose": "Inspecionar uma arma/item por tela e rota própria, com uma entrada premium curta seguida de controle direto.",
+    "source": "Item/variante canônicos + `GET /v1/catalog/items/{itemId}/model-3d-manifest`; exatamente um `Model3DArtifact` ativo, poster e fallback 2D; query opcional `variant`/`from` é allowlisted e não redefine o item.",
+    "actions": "Interromper ou pular a intro; rotacionar; zoom; escolher vista; reset; fullscreen; compartilhar deep link; voltar à origem preservada; selecionar outro item descartando o anterior."
+  },
+  {
+    "id": "SCR-PUB-014",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/ranking",
+    "access": "Público; identidade mascarada conforme política",
+    "purpose": "Exibir temporada corrente e encerradas com fórmula, moeda, posição, pontos, GMV elegível e premiação verificáveis.",
+    "source": "`LeaderboardProjection`, `LeaderboardSeason`, `LeaderboardAward`, `asOf` e policy version.",
+    "actions": "Trocar temporada; abrir perfil público; entender fórmula/desempate; consultar top 3 e prêmio."
+  },
+  {
+    "id": "SCR-PUB-015",
+    "group": "PUB",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/recompensas",
+    "access": "Público",
+    "purpose": "Explicar níveis 1–10, critérios, benefícios, insígnias e premiações sem prometer item ainda não definido.",
+    "source": "`AccountLevelDefinition`, `BadgeDefinition`, `RewardDefinition` publicados e vigentes.",
+    "actions": "Comparar níveis; abrir regra; consultar insígnia/prêmio; navegar ao ranking ou cadastro."
+  },
+  {
+    "id": "SCR-ACC-001",
+    "group": "ACC",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/entrar",
+    "access": "Anônimo",
+    "purpose": "Autenticar sem revelar existência de conta ou reduzir segurança.",
+    "source": "Auth/Identity; opções WebAuthn e política de sessão.",
+    "actions": "Entrar com passkey/senha; responder MFA; iniciar recuperação; ir ao cadastro."
+  },
+  {
+    "id": "SCR-ACC-002",
+    "group": "ACC",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/cadastro",
+    "access": "Anônimo",
+    "purpose": "Criar identidade única e registrar aceites versionados.",
+    "source": "`POST /v1/auth/register`; políticas vigentes; age gate.",
+    "actions": "Cadastrar; verificar contato; aceitar políticas; iniciar passkey; retomar cadastro."
+  },
+  {
+    "id": "SCR-ACC-003",
+    "group": "ACC",
+    "documentedStatus": "PROPOSTO",
+    "route": "/recuperar-acesso",
+    "access": "Anônimo; rate limit e resposta não enumerável",
+    "purpose": "Recuperar conta com prova suficiente e revogação de sessões de risco.",
+    "source": "Identity recovery; contrato de API ainda não formalizado.",
+    "actions": "Solicitar recuperação; validar desafio; redefinir fator; encerrar sessões."
+  },
+  {
+    "id": "SCR-ACC-004",
+    "group": "ACC",
+    "documentedStatus": "BLOQUEADO",
+    "route": "/verificar-idade",
+    "access": "Usuário autenticado quando exigido",
+    "purpose": "Executar age assurance minimizando dados e oferecendo contestação.",
+    "source": "`/v1/age-assurance/sessions` e `/status`; método/provedor e política etária pendentes.",
+    "actions": "Iniciar verificação; acompanhar; contestar; excluir captura temporária; voltar."
+  },
+  {
+    "id": "SCR-ACC-005",
+    "group": "ACC",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta",
+    "access": "Usuário autenticado",
+    "purpose": "Entregar visão contextual sem duplicar fatos dos domínios.",
+    "source": "`GET /v1/me/overview`; capacidades e alertas derivados.",
+    "actions": "Abrir compras, vendas, saldo, tickets, segurança e próxima ação autorizada."
+  },
+  {
+    "id": "SCR-ACC-006",
+    "group": "ACC",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/seguranca",
+    "access": "Usuário; step-up para mutações sensíveis",
+    "purpose": "Resumir fatores, risco, sessões e dispositivos.",
+    "source": "Identity, WebAuthn, MFA e `DeviceTrust`.",
+    "actions": "Criar/remover passkey; configurar TOTP; gerar recovery codes; abrir sessões/dispositivos."
+  },
+  {
+    "id": "SCR-ACC-007",
+    "group": "ACC",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/seguranca/sessoes",
+    "access": "Usuário; propriedade da sessão",
+    "purpose": "Listar sessões ativas com sinais suficientes para revogação.",
+    "source": "`GET /v1/me/sessions`.",
+    "actions": "Revogar uma sessão; revogar outras; atualizar; reportar atividade."
+  },
+  {
+    "id": "SCR-ACC-008",
+    "group": "ACC",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/seguranca/dispositivos",
+    "access": "Usuário; step-up para trust",
+    "purpose": "Gerenciar dispositivos confiáveis sem prometer identidade infalível.",
+    "source": "`GET /v1/me/devices`; device challenge/enrollment.",
+    "actions": "Nomear; confiar após desafio; revogar; remover; revisar último uso."
+  },
+  {
+    "id": "SCR-ACC-009",
+    "group": "ACC",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/favoritos",
+    "access": "Usuário",
+    "purpose": "Reunir itens e ofertas salvos, distinguindo removido/indisponível.",
+    "source": "Projeção de favoritos e anúncios; API de favoritos ainda a formalizar.",
+    "actions": "Abrir; remover; mover entre filtros; localizar oferta alternativa."
+  },
+  {
+    "id": "SCR-ACC-010",
+    "group": "ACC",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/preferencias",
+    "access": "Usuário",
+    "purpose": "Controlar personalização, cookies e comunicações por finalidade/canal.",
+    "source": "`GET/PATCH /v1/me/privacy/preferences`; preferências de notificação.",
+    "actions": "Alterar consentimentos/preferências; desligar personalização; salvar; restaurar defaults protetivos."
+  },
+  {
+    "id": "SCR-ACC-011",
+    "group": "ACC",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/privacidade",
+    "access": "Usuário; step-up para exportação/eliminação",
+    "purpose": "Explicar tratamento e permitir exercer direitos sobre dados.",
+    "source": "`GET /v1/me/privacy`; solicitações de direitos.",
+    "actions": "Solicitar acesso, correção, exportação, oposição ou eliminação; acompanhar protocolos."
+  },
+  {
+    "id": "SCR-ACC-012",
+    "group": "ACC",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/privacidade/solicitacoes/:requestId",
+    "access": "Usuário; propriedade do protocolo",
+    "purpose": "Acompanhar uma solicitação LGPD sem expor notas internas.",
+    "source": "`GET /v1/me/data-rights-requests/{id}`.",
+    "actions": "Ver prazo/escopo; complementar identidade de forma segura; baixar resultado; recorrer ao canal indicado."
+  },
+  {
+    "id": "SCR-ACC-013",
+    "group": "ACC",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/recurso",
+    "access": "Usuário com restrição recorrível",
+    "purpose": "Explicar restrição, fundamento permitido, prazo e devido processo.",
+    "source": "`/v1/me/account-restrictions` e recurso associado.",
+    "actions": "Criar recurso; anexar evidência segura; acompanhar; responder pedido de informação."
+  },
+  {
+    "id": "SCR-ACC-014",
+    "group": "ACC",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/notificacoes",
+    "access": "Usuário",
+    "purpose": "Centralizar notificações transacionais sem depender de e-mail/push.",
+    "source": "`NotificationReadModel` proposto; preferências e outbox canônica.",
+    "actions": "Marcar como lida; filtrar; abrir contexto; ajustar canal; reenviar quando permitido."
+  },
+  {
+    "id": "SCR-ACC-015",
+    "group": "ACC",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/avaliacoes",
+    "access": "Usuário; somente pedidos em que foi parte",
+    "purpose": "Criar e acompanhar avaliações bilaterais sem revelar nota antes da regra de publicação nem misturar reputação de comprador/vendedor.",
+    "source": "`OrderReview`, elegibilidade do `Order`, moderação e `ReputationProjection`.",
+    "actions": "Avaliar 0–5; editar dentro da janela; responder; denunciar; recorrer de moderação; abrir pedido."
+  },
+  {
+    "id": "SCR-ACC-016",
+    "group": "ACC",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/conquistas",
+    "access": "Usuário; contexto pessoal e SellerAccount selecionado",
+    "purpose": "Mostrar nível, progresso, insígnias e recompensas concedidas com regra e origem.",
+    "source": "`AccountLevelAssignment`, contribuições, `BadgeAward`, `RewardAward` e freshness.",
+    "actions": "Trocar contexto; abrir regra/origem; organizar slots permitidos; acompanhar fulfillment; abrir recompensas públicas."
+  },
+  {
+    "id": "SCR-BUY-001",
+    "group": "BUY",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/mensagens",
+    "access": "Usuário participante",
+    "purpose": "Listar conversas e propostas sem vazar participantes ou conteúdo.",
+    "source": "Projeção de conversas; endpoints de listagem ainda a formalizar.",
+    "actions": "Filtrar; abrir conversa; iniciar a partir de anúncio; arquivar localmente."
+  },
+  {
+    "id": "SCR-BUY-002",
+    "group": "BUY",
+    "documentedStatus": "PROPOSTO",
+    "route": "/mensagens/:conversationId",
+    "access": "Participante da conversa; anti-BOLA",
+    "purpose": "Conversar e negociar por proposta estruturada antes da compra.",
+    "source": "Conversation/Message/Offer; leitura da thread ainda a formalizar.",
+    "actions": "Enviar mensagem; propor; contrapropor; aceitar; denunciar; abrir anúncio. PII bloqueada antes da entrega."
+  },
+  {
+    "id": "SCR-BUY-003",
+    "group": "BUY",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/checkout/:paymentId",
+    "access": "Comprador autenticado; age/risco/política/estoque elegíveis",
+    "purpose": "Reservar uma unidade e concluir pagamento via PSP sem expor dados de cartão ao Midas.",
+    "source": "Order, Reservation, Payment, policy snapshot e sessão PSP.",
+    "actions": "Revisar; aceitar política; criar/retomar sessão PSP; cancelar quando permitido; atualizar status."
+  },
+  {
+    "id": "SCR-BUY-004",
+    "group": "BUY",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/compras",
+    "access": "Comprador; somente próprios pedidos",
+    "purpose": "Listar compras com filtros, status e próxima ação.",
+    "source": "`GET /v1/me/purchases?cursor=`.",
+    "actions": "Filtrar; pesquisar; abrir pedido; retomar pagamento; abrir suporte."
+  },
+  {
+    "id": "SCR-BUY-005",
+    "group": "BUY",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/compras/:orderId",
+    "access": "Comprador do pedido",
+    "purpose": "Consolidar resumo, timeline, valores e casos relacionados sem editar fatos.",
+    "source": "`GET /v1/orders/{id}`, timeline e related-cases.",
+    "actions": "Abrir entrega, disputa, ticket ou reembolso elegível; baixar recibo; avaliar."
+  },
+  {
+    "id": "SCR-BUY-006",
+    "group": "BUY",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/pedidos/:orderId/entrega",
+    "access": "Comprador ou vendedor do pedido; somente após settlement válido",
+    "purpose": "Conduzir entrega segura e confirmações independentes.",
+    "source": "Order/Delivery/Vault; confirmações e policy snapshot.",
+    "actions": "Revelar pacote autorizado; enviar instrução; confirmar; reportar problema; abrir disputa."
+  },
+  {
+    "id": "SCR-BUY-007",
+    "group": "BUY",
+    "documentedStatus": "PROPOSTO",
+    "route": "/pedidos/:orderId/disputa/:disputeId",
+    "access": "Parte do pedido; evidência bilateral escopada",
+    "purpose": "Acompanhar disputa, prazos, evidências, decisão e recurso.",
+    "source": "`/v1/disputes/{id}`, evidências e appeal.",
+    "actions": "Abrir quando elegível; enviar/fechar submissão; responder; recorrer; ver decisão executada."
+  },
+  {
+    "id": "SCR-BUY-008",
+    "group": "BUY",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/suporte",
+    "access": "Usuário",
+    "purpose": "Listar e criar tickets com categoria coerente e vínculo contextual.",
+    "source": "`GET/POST /v1/tickets`.",
+    "actions": "Filtrar; criar; vincular pedido; anexar; abrir ticket."
+  },
+  {
+    "id": "SCR-BUY-009",
+    "group": "BUY",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/suporte/:ticketId",
+    "access": "Solicitante/participante autorizado",
+    "purpose": "Manter thread, SLA e anexos de um caso.",
+    "source": "`GET /v1/tickets/{id}` e mensagens.",
+    "actions": "Responder; anexar; reabrir quando permitido; avaliar resolução."
+  },
+  {
+    "id": "SCR-BUY-010",
+    "group": "BUY",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/reembolsos",
+    "access": "Comprador; somente próprios pedidos",
+    "purpose": "Listar solicitações sem confundir workflow humano com refund financeiro.",
+    "source": "`GET /v1/me/refund-requests?cursor=&status=`.",
+    "actions": "Filtrar; abrir solicitação; voltar ao pedido; responder pendência."
+  },
+  {
+    "id": "SCR-BUY-011",
+    "group": "BUY",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/reembolsos/:refundRequestId",
+    "access": "Solicitante; propriedade da solicitação",
+    "purpose": "Mostrar valor elegível, decisão, execução e falha recuperável.",
+    "source": "`GET /v1/refund-requests/{id}`; estado financeiro canônico separado.",
+    "actions": "Complementar informação; acompanhar; abrir ticket; ver/escalar disputa quando permitido."
+  },
+  {
+    "id": "SCR-BUY-012",
+    "group": "BUY",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/carrinho",
+    "access": "Usuário; visitante pode manter carrinho local com merge seguro após login",
+    "purpose": "Revisar itens multivendedor, validade, relações opcionais e separação dos pedidos antes de pagar.",
+    "source": "`Cart`, `CartLine`, `CatalogItemRelation`, `CheckoutGroup`, preço/disponibilidade revalidados e cupom aplicável.",
+    "actions": "Alterar quantidade quando suportada; remover; salvar; aplicar cupom; aceitar complemento explicitamente; iniciar checkout por grupos."
+  },
+  {
+    "id": "SCR-SEL-001",
+    "group": "SEL",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/vender/cadastro",
+    "access": "Usuário com fator forte; gates de idade/política",
+    "purpose": "Criar `SellerAccount`, concluir elegibilidade/KYC/KYB e destino de recebimento.",
+    "source": "Seller onboarding e sessão do provedor/PSP.",
+    "actions": "Criar contexto; continuar etapas; abrir provedor; cadastrar destino; corrigir/reapresentar."
+  },
+  {
+    "id": "SCR-SEL-002",
+    "group": "SEL",
+    "documentedStatus": "PROPOSTO",
+    "route": "/vender",
+    "access": "`SellerMembership` ativa",
+    "purpose": "Mostrar saúde comercial, próximas ações e métricas do SellerAccount selecionado.",
+    "source": "Sales metrics, listings, balance e alerts; `asOf`.",
+    "actions": "Trocar SellerAccount; criar anúncio; abrir vendas/saldo/equipe; corrigir bloqueio."
+  },
+  {
+    "id": "SCR-SEL-003",
+    "group": "SEL",
+    "documentedStatus": "PROPOSTO",
+    "route": "/vender/equipe",
+    "access": "Membership com grant de gestão",
+    "purpose": "Gerenciar membros sem duplicar `User` nem conceder privilégio superior ao próprio.",
+    "source": "`/v1/seller-accounts/{id}/members`.",
+    "actions": "Convidar; ajustar papel/escopo/validade; revogar; reenviar convite."
+  },
+  {
+    "id": "SCR-SEL-004",
+    "group": "SEL",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/vender/novo",
+    "access": "Vendedor elegível; `listing.create` implícito a formalizar",
+    "purpose": "Criar anúncio em wizard com craft, preço, mídia, entrega, plano e prévia.",
+    "source": "`CatalogLibrary`, `Listing`/`ListingRevision` em rascunho, capabilities, plano e política de entrega.",
+    "actions": "Salvar revisão em rascunho; selecionar item; definir craft/preço/plano; anexar mídia/prova; pré-visualizar; enviar revisão."
+  },
+  {
+    "id": "SCR-SEL-005",
+    "group": "SEL",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/vender/anuncios",
+    "access": "Membership no SellerAccount",
+    "purpose": "Listar rascunhos, revisões, publicados, reservados e encerrados.",
+    "source": "Listings do SellerAccount; paginação e filtros.",
+    "actions": "Filtrar; criar; duplicar dados permitidos; abrir; retirar quando elegível."
+  },
+  {
+    "id": "SCR-SEL-006",
+    "group": "SEL",
+    "documentedStatus": "PROPOSTO",
+    "route": "/vender/anuncios/:listingId",
+    "access": "Membership com acesso ao anúncio",
+    "purpose": "Editar apenas revisão mutável e compreender decisão/moderação.",
+    "source": "Listing, revisions, review decision e capabilities.",
+    "actions": "Editar rascunho; corrigir; reenviar; retirar; abrir prova; ver histórico imutável."
+  },
+  {
+    "id": "SCR-SEL-007",
+    "group": "SEL",
+    "documentedStatus": "PROPOSTO",
+    "route": "/vender/anuncios/:listingId/prova-posse",
+    "access": "Dono/membro autorizado; step-up quando exigido",
+    "purpose": "Capturar prova de posse/disponibilidade com expiração e revalidação.",
+    "source": "OwnershipProof e provider/source autorizado.",
+    "actions": "Enviar; refazer; acompanhar verificação; excluir rascunho de prova."
+  },
+  {
+    "id": "SCR-SEL-008",
+    "group": "SEL",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/vendas",
+    "access": "Membership no SellerAccount",
+    "purpose": "Exibir dashboard e pedidos de venda no escopo correto.",
+    "source": "Sales metrics e `/v1/seller-accounts/{id}/sales`.",
+    "actions": "Trocar conta; filtrar; pesquisar; abrir venda; ir para entrega/saldo."
+  },
+  {
+    "id": "SCR-SEL-009",
+    "group": "SEL",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/vendas/:orderId",
+    "access": "Membership com acesso ao pedido",
+    "purpose": "Mostrar timeline da venda, entrega, hold, disputa e líquido previsto.",
+    "source": "Order, Delivery, Funds, Payout e casos relacionados.",
+    "actions": "Abrir entrega; responder disputa/ticket; ver retenção; baixar documento."
+  },
+  {
+    "id": "SCR-SEL-010",
+    "group": "SEL",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/carteira",
+    "access": "Membership; nome público “Saldo de vendas”",
+    "purpose": "Separar pendente, em retenção, congelado, disponível e transferido pelo PSP.",
+    "source": "`GET /v1/sales-balance?sellerAccountId=`; ledger espelho.",
+    "actions": "Trocar conta; abrir extrato/retenções; solicitar saque quando elegível."
+  },
+  {
+    "id": "SCR-SEL-011",
+    "group": "SEL",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/carteira/extrato",
+    "access": "Membership; somente lançamentos do SellerAccount",
+    "purpose": "Exibir bruto, comissão, tarifa PSP, ajuste e líquido com origem.",
+    "source": "`/v1/sales-balance/ledger?cursor=`.",
+    "actions": "Filtrar período/tipo; abrir origem; exportar com step-up e grant; contestar via suporte."
+  },
+  {
+    "id": "SCR-SEL-012",
+    "group": "SEL",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/carteira/retencoes",
+    "access": "Membership",
+    "purpose": "Explicar cada hold, prazo mínimo e gates que impedem disponibilidade.",
+    "source": "`/v1/sales-balance/holds?cursor=`.",
+    "actions": "Filtrar; abrir venda/disputa; acompanhar gate; abrir suporte."
+  },
+  {
+    "id": "SCR-SEL-013",
+    "group": "SEL",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/saques",
+    "access": "Membership com `payout.request`; step-up",
+    "purpose": "Solicitar e listar transferências executadas pelo PSP.",
+    "source": "`GET/POST /v1/payouts`; saldo elegível e destinos verificados.",
+    "actions": "Solicitar; escolher destino; filtrar; abrir; cancelar antes do processamento quando permitido."
+  },
+  {
+    "id": "SCR-SEL-014",
+    "group": "SEL",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/saques/:payoutId",
+    "access": "Membership; propriedade do payout",
+    "purpose": "Exibir tentativas, falha, retorno, retry e comprovante sem duplicar saldo.",
+    "source": "`GET /v1/payouts/{id}` e tentativas.",
+    "actions": "Repetir quando permitido; cancelar; atualizar; abrir suporte; baixar comprovante."
+  },
+  {
+    "id": "SCR-SEL-015",
+    "group": "SEL",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/conta/vendas/clientes",
+    "access": "Membership com `customer_insights.read`; dados minimizados",
+    "purpose": "Mostrar compradores, recompra, lifecycle, carrinhos e oportunidades consentidas sem entregar telefone/PII ao seller.",
+    "source": "`SellerCustomerInsight`, `ProductLifecyclePolicy`, pedidos, consentimento e supressão.",
+    "actions": "Filtrar segmento/coorte; abrir histórico permitido; criar audiência; navegar ao pedido/campanha; excluir contato não elegível."
+  },
+  {
+    "id": "SCR-SEL-016",
+    "group": "SEL",
+    "documentedStatus": "PROPOSTO",
+    "route": "/conta/vendas/marketing",
+    "access": "Membership com grants de campanha; canal homologado",
+    "purpose": "Criar campanhas, jornadas, cupons, links e criativos sobre audiência elegível.",
+    "source": "`Campaign`, `Journey`, `ConsentRecord`, `SuppressionEntry`, `Coupon`, `AttributionSnapshot` e health de canal.",
+    "actions": "Criar versão; selecionar audiência; montar template/criativo; validar estimativa; pedir aprovação; ativar/pausar; acompanhar entrega/conversão."
+  },
+  {
+    "id": "SCR-SEL-017",
+    "group": "SEL",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/vender/studio",
+    "access": "Vendedor elegível; acesso à biblioteca publicada",
+    "purpose": "Encontrar produto 2D/3D pré-cadastrado, criar anúncio pré-preenchido ou submeter contribuição sem duplicar catálogo.",
+    "source": "`CatalogLibrary`, `CatalogItem`, `CatalogAsset`, `Model3DArtifact`, `CatalogSubmission` e capabilities.",
+    "actions": "Buscar/filtrar; inspecionar 2D/3D; iniciar Listing; anexar instruções/prova; propor item/asset; acompanhar submissão."
+  },
+  {
+    "id": "SCR-ADM-001",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin",
+    "access": "Staff com grants explícitos",
+    "purpose": "Priorizar filas, SLA, alertas e incidentes sem criar métricas paralelas.",
+    "source": "Read models operacionais por domínio; health/freshness.",
+    "actions": "Abrir fila autorizada; reconhecer alerta; acionar runbook; trocar escopo."
+  },
+  {
+    "id": "SCR-ADM-002",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin/anuncios[/:listingId]",
+    "access": "`listing.review` e ação atômica correspondente",
+    "purpose": "Assumir e decidir revisão congelada de anúncio.",
+    "source": "ListingRevision, checklist, ownership proof e histórico.",
+    "actions": "Claim; verificar prova; aprovar; solicitar alteração; rejeitar; revalidar. Autoaprovação proibida."
+  },
+  {
+    "id": "SCR-ADM-003",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin/catalogo[/:resourceType/:resourceId]",
+    "access": "`catalog.read` e grants de escrita/publicação",
+    "purpose": "Operar itens, taxonomia, ativos, modelos 3D e importações com proveniência.",
+    "source": "Catalog, conjunto versionado de `CatalogAsset` de origem, `Model3DJob`, `Model3DArtifact` e import jobs.",
+    "actions": "Criar/editar; importar PNG/SVG/GLB; reunir múltiplas vistas; quarentenar; iniciar job 2D→3D; abrir `SCR-ADM-015`; aprovar ativo; publicar; tombstone/merge governado."
+  },
+  {
+    "id": "SCR-ADM-004",
+    "group": "ADM",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/vendedores[/:onboardingId]",
+    "access": "Staff de onboarding; maker-checker conforme risco",
+    "purpose": "Revisar elegibilidade, KYC/KYB e destino sem copiar dossiê do provedor.",
+    "source": "`/v1/admin/seller-onboarding`; sinais mínimos do provedor.",
+    "actions": "Claim; solicitar correção; aprovar; rejeitar; suspender/escalar conforme grant."
+  },
+  {
+    "id": "SCR-ADM-005",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin/confianca[/:caseId]",
+    "access": "Trust & Safety; grants por tipo de caso",
+    "purpose": "Tratar PII, fraude, risco, dispositivo, restrição e recurso.",
+    "source": "RiskDecision, DeviceTrust, Restriction, Appeal e audit trail.",
+    "actions": "Claim; desafiar/revogar dispositivo; advertir/restringir; decidir recurso; escalar."
+  },
+  {
+    "id": "SCR-ADM-006",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin/usuarios[/:userId]",
+    "access": "`user.*` e finalidade explícita",
+    "purpose": "Ver contexto 360° mascarado e executar somente ações autorizadas.",
+    "source": "User overview derivado; account/seller/orders/cases por seção.",
+    "actions": "Buscar; abrir; restringir/desbanir com grant; revogar sessão; acessar caso; registrar motivo."
+  },
+  {
+    "id": "SCR-ADM-007",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin/pedidos[/:orderId]",
+    "access": "`order.read/intervene` escopado",
+    "purpose": "Investigar timeline de pedido, reserva, pagamento, entrega e hold.",
+    "source": "Order 360°, Payment, Delivery, Funds e eventos.",
+    "actions": "Buscar; abrir; congelar ação relacionada; abrir disputa/ticket; executar intervenção permitida."
+  },
+  {
+    "id": "SCR-ADM-008",
+    "group": "ADM",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/disputas[/:disputeId]",
+    "access": "`dispute.read/resolve`; segregação de decisão",
+    "purpose": "Operar evidências, prazos, decisão, recurso e execução.",
+    "source": "Dispute, EvidenceSubmission, Appeal e efeitos financeiros.",
+    "actions": "Claim; pedir evidência; decidir `BUYER/SELLER/SPLIT`; encaminhar recurso; solicitar execução."
+  },
+  {
+    "id": "SCR-ADM-009",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin/suporte[/:ticketId]",
+    "access": "`ticket.read`; campos/ações por grant",
+    "purpose": "Unificar inbox, SLA, thread, anexos e contexto 360° autorizado.",
+    "source": "Ticket, e-mail normalizado e `/v1/admin/tickets/{id}/context`.",
+    "actions": "Claim/atribuir; responder; pedir informação; resolver; reabrir; escalar; abrir reembolso/disputa."
+  },
+  {
+    "id": "SCR-ADM-010",
+    "group": "ADM",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/reembolsos[/:refundRequestId]",
+    "access": "`refund.read`; decidir/executar separados",
+    "purpose": "Operar `RefundRequest` sem confundir decisão humana com refund confirmado pelo PSP.",
+    "source": "RefundRequest, RefundAttempt, Payment e ledger espelho.",
+    "actions": "Claim; pedir informação; aprovar/rejeitar; enviar para execução; retry; escalar disputa."
+  },
+  {
+    "id": "SCR-ADM-011",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin/financeiro[/:caseType/:caseId]",
+    "access": "Financeiro; maker-checker e step-up",
+    "purpose": "Consolidar conciliação, holds, refunds, payouts e exceções com dupla aprovação.",
+    "source": "PSP reconciliation, ledger, holds, payouts e casos financeiros.",
+    "actions": "Conciliar; propor ajuste compensatório; aprovar ação alheia; congelar/liberar; exportar governado."
+  },
+  {
+    "id": "SCR-ADM-012",
+    "group": "ADM",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/pagamentos[/:paymentId]",
+    "access": "Financeiro com grant de exceção",
+    "purpose": "Resolver settlement tardio/quarentena sem dupla venda ou revelação indevida.",
+    "source": "`/v1/admin/payments/quarantined`; Order/Reservation/Payment.",
+    "actions": "Reassociar atomicamente; solicitar refund; manter quarentena; abrir incidente."
+  },
+  {
+    "id": "SCR-ADM-013",
+    "group": "ADM",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/saques[/:payoutId]",
+    "access": "`payout.read/approve`; maker-checker",
+    "purpose": "Revisar payout, falha, retorno, retry e risco.",
+    "source": "PayoutRequest, PayoutAttempt, PSP e saldo reservado.",
+    "actions": "Claim; aprovar/rejeitar; agendar retry; reverter reserva; escalar fraude."
+  },
+  {
+    "id": "SCR-ADM-014",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin/midas[/:inventoryId]",
+    "access": "`midas.inventory/manage_price`; SoD configurável",
+    "purpose": "Gerir inventário e preço próprio mantendo canal e contabilidade separados.",
+    "source": "MidasInventory, Catalog, Price e policy de aprovação.",
+    "actions": "Criar/retirar estoque; definir preço; pedir/aprovar publicação; reconciliar venda."
+  },
+  {
+    "id": "SCR-ADM-015",
+    "group": "ADM",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/catalogo/modelos-3d/:jobId",
+    "access": "`asset.manage`; reviewer diferente quando a política exigir",
+    "purpose": "Acompanhar job 2D→3D e revisar uma saída real antes de vinculá-la ao catálogo.",
+    "source": "`Model3DJob`, conjunto imutável de `CatalogAsset` de origem, `Model3DArtifact`, proveniência, logs sanitizados e métricas de validação; contratos executáveis ainda inexistentes.",
+    "actions": "Comparar PNG/SVG/vistas/GLB de entrada; inspecionar mesh/textura; orbitar/zoom; aprovar, rejeitar, cancelar ou reprocessar; nunca publicar automaticamente."
+  },
+  {
+    "id": "SCR-ADM-016",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin/avaliacoes[/:orderReviewId]",
+    "access": "`review.moderate`; segregação quando houver sanção",
+    "purpose": "Moderar avaliações, denúncias, manipulação e recursos preservando a projeção reconstruível.",
+    "source": "`OrderReview`, `Order`, sinais antiabuso, decisão e `ReputationProjection`.",
+    "actions": "Claim; ocultar/restaurar com motivo; decidir denúncia/recurso; marcar fraude; reconstruir projeção via job autorizado."
+  },
+  {
+    "id": "SCR-ADM-017",
+    "group": "ADM",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/marketing[/:resourceType/:resourceId]",
+    "access": "`marketing.platform.*` por recurso/finalidade",
+    "purpose": "Operar aprovações, saúde de canais, templates, supressões, abuso, campanhas e atribuição em visão master-detail.",
+    "source": "Campaign/Journey/Dispatch, Meta adapters, consentimento, cupons, afiliados, criativos e métricas reconciliadas.",
+    "actions": "Aprovar/rejeitar; pausar; suprimir; testar canal; investigar delivery; bloquear abuso; revisar atribuição; abrir incidente."
+  },
+  {
+    "id": "SCR-ADM-018",
+    "group": "ADM",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/admin/studio[/:resourceType/:resourceId]",
+    "access": "`catalog.studio.*`; publicação separada de criação",
+    "purpose": "Curar biblioteca 2D/3D, submissões, relations, lifecycle e assets com proveniência.",
+    "source": "`CatalogSubmission`, `CatalogItem`, `CatalogAsset`, jobs/artifacts, policies e trilha.",
+    "actions": "Claim; comparar; classificar; vincular/mesclar; aprovar/rejeitar; iniciar/reprocessar job; publicar/tombstone em decisão separada."
+  },
+  {
+    "id": "SCR-MST-001",
+    "group": "MST",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/master",
+    "access": "L4 com passkey/2FA; default deny",
+    "purpose": "Exibir saúde de configuração, acessos, integrações, auditoria e kill switches.",
+    "source": "ConfigRegistry, IAM, integration health e audit summaries.",
+    "actions": "Abrir domínio; reconhecer alerta; iniciar mudança versionada; acionar emergência auditada."
+  },
+  {
+    "id": "SCR-MST-002",
+    "group": "MST",
+    "documentedStatus": "PROPOSTO",
+    "route": "/master/acessos",
+    "access": "`roles.read/manage`; step-up; maker-checker",
+    "purpose": "Gerir roles, grants, escopos, validade, convites e break-glass.",
+    "source": "`/v1/admin/roles`, grants e admin memberships.",
+    "actions": "Criar versão; conceder/revogar; convidar; expirar elevação; revisar acesso. Ninguém concede o que não possui."
+  },
+  {
+    "id": "SCR-MST-003",
+    "group": "MST",
+    "documentedStatus": "PROPOSTO",
+    "route": "/master/configuracoes",
+    "access": "Grant por namespace de configuração",
+    "purpose": "Alterar políticas, taxas, prazos e feature flags sem hardcode.",
+    "source": "ConfigRegistry versionado e policy snapshots.",
+    "actions": "Criar rascunho; validar impacto; pedir aprovação; publicar/rollback; comparar versões."
+  },
+  {
+    "id": "SCR-MST-004",
+    "group": "MST",
+    "documentedStatus": "PROPOSTO",
+    "route": "/master/integracoes",
+    "access": "Grant por integração; segredo nunca retornado",
+    "purpose": "Configurar PSP, e-mail, analytics e fontes autorizadas com health e rotação.",
+    "source": "Integration registry, secret references e health checks.",
+    "actions": "Testar conexão; rotacionar referência; habilitar/desabilitar; ver falha sanitizada; abrir runbook."
+  },
+  {
+    "id": "SCR-MST-005",
+    "group": "MST",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/master/auditoria",
+    "access": "`audit.read/export`; step-up para exportar",
+    "purpose": "Consultar trilha imutável por ator, objeto, decisão e correlação.",
+    "source": "`GET /v1/admin/audit`; armazenamento append-only.",
+    "actions": "Filtrar; abrir evento; seguir correlação; exportar governado; verificar integridade. Nunca editar/excluir."
+  },
+  {
+    "id": "SCR-MST-006",
+    "group": "MST",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/master/progressao",
+    "access": "`progression.manage`; maker-checker para publicação",
+    "purpose": "Definir níveis, recompensas, insígnias, slots e prêmios do ranking por versão e vigência.",
+    "source": "`AccountLevelDefinition`, `RewardDefinition`, `BadgeDefinition`, `LeaderboardSeason/Award` e impacto projetado.",
+    "actions": "Criar versão; enviar/aprovar/publicar; anexar arte licenciada; definir top 3; revogar award com motivo; comparar/rollback seguro."
+  },
+  {
+    "id": "SCR-MST-007",
+    "group": "MST",
+    "documentedStatus": "DOCUMENTADO",
+    "route": "/master/planos-de-anuncio",
+    "access": "`listing_plan.manage`; financeiro aprova fee",
+    "purpose": "Definir Básico/VIP/Premium, comissão, prioridade e SLA sem alterar pedidos históricos.",
+    "source": "`ListingPlanPolicyVersion`, simulação de impacto e `ListingCommercialSnapshot` históricos.",
+    "actions": "Criar versão; simular; pedir dupla aprovação; publicar/agendar; descontinuar; comparar adesão/resultado."
+  },
+  {
+    "id": "SCR-MST-008",
+    "group": "MST",
+    "documentedStatus": "PROPOSTO",
+    "route": "/master/marketing",
+    "access": "`marketing.governance`; finalidade e step-up",
+    "purpose": "Governar canais, remetentes, finalidades, frequência, opt-in, templates, afiliados, mercados e kill switches.",
+    "source": "Channel/Market policies, integration capabilities, consent registry, suppression, campaign governance e audit.",
+    "actions": "Configurar draft; testar; aprovar; ativar/desativar; pausar globalmente; definir limites/comissão; revisar conformidade."
+  },
+  {
+    "id": "SCR-GRW-001",
+    "group": "GRW",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/growth",
+    "access": "`growth.read` proposto; ABAC por escopo",
+    "purpose": "Visão global de aquisição, ativação, transação, retenção e risco.",
+    "source": "`GrowthGlobalReadModel` proposto, derivado de eventos canônicos e KPI Registry.",
+    "actions": "Filtrar; comparar período; abrir funil/coorte/tenant; salvar visão; exportar somente com grant."
+  },
+  {
+    "id": "SCR-GRW-002",
+    "group": "GRW",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/growth/funil",
+    "access": "`growth.read`",
+    "purpose": "Explicar conversão por estágio comprador/vendedor e seus bloqueios.",
+    "source": "`GrowthFunnelReadModel`, `stageModelVersion` e `asOf`.",
+    "actions": "Escolher jornada; segmentar; comparar; abrir estágio; perfurar tenant/membro/interação."
+  },
+  {
+    "id": "SCR-GRW-003",
+    "group": "GRW",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/growth/tenants",
+    "access": "`growth.platform.read`; isolamento por escopo",
+    "purpose": "Listar `SellerAccount` por situação, estágio, bloqueio e próxima ação derivada.",
+    "source": "`GrowthTenantBucket` + catálogo semântico; nenhum cadastro paralelo.",
+    "actions": "Filtrar; ordenar; comparar; abrir o tenant; seguir link para o objeto canônico autorizado."
+  },
+  {
+    "id": "SCR-GRW-004",
+    "group": "GRW",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/growth/tenants/:sellerAccountId",
+    "access": "`growth.platform.read` + field policy",
+    "purpose": "Consolidar estágio, membros, interações, funil e oportunidades do `SellerAccount`.",
+    "source": "`GrowthTenantBucket`, `GrowthFunnelBucket`, contribuições e timelines derivadas.",
+    "actions": "Trocar período; abrir membership/interação/contribuição; navegar ao objeto canônico. Não há mutação Growth."
+  },
+  {
+    "id": "SCR-GRW-005",
+    "group": "GRW",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/growth/membros",
+    "access": "`growth.platform.read`; IDs pseudonimizados por padrão",
+    "purpose": "Listar `SellerMembership`/`User` sem duplicar identidade nem perfil.",
+    "source": "Membership canônica + projeções de estágio escopadas por `sellerAccountId`.",
+    "actions": "Filtrar; abrir membership; comparar estágio; exportar somente agregado autorizado."
+  },
+  {
+    "id": "SCR-GRW-006",
+    "group": "GRW",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/growth/membros/:membershipId",
+    "access": "Autorização por membership, tenant, finalidade e campo",
+    "purpose": "Mostrar jornada e interações necessárias à análise autorizada.",
+    "source": "`User`/`SellerMembership` + `GrowthTimelineProjection`; conteúdo de chat, segredo e payload bruto excluídos.",
+    "actions": "Abrir evento contextual; navegar ao tenant/objeto canônico; registrar anomalia pelo fluxo operacional existente."
+  },
+  {
+    "id": "SCR-GRW-007",
+    "group": "GRW",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/growth/coortes",
+    "access": "`growth.read`",
+    "purpose": "Comparar retenção e conversão com definição de coorte estável.",
+    "source": "`GrowthCohortReadModel`; definição, timezone, janela, moeda, exclusões e `asOf`.",
+    "actions": "Criar comparação; trocar métrica; segmentar; abrir composição; exportar agregado."
+  },
+  {
+    "id": "SCR-GRW-008",
+    "group": "GRW",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/growth/interacoes",
+    "access": "`growth.read`; finalidade e minimização",
+    "purpose": "Auditar eventos de jornada sem expor payload bruto indevido.",
+    "source": "Timeline derivada de analytics consentido e eventos de domínio allowlisted.",
+    "actions": "Filtrar evento/origem; abrir contexto autorizado; inspecionar freshness; reportar anomalia."
+  },
+  {
+    "id": "SCR-GRW-009",
+    "group": "GRW",
+    "documentedStatus": "PROPOSTO",
+    "route": "/admin/growth/oportunidades",
+    "access": "`growth.platform.read`",
+    "purpose": "Priorizar bloqueios e próximas ações **derivadas**, sem criar CRM ou estado comercial paralelo.",
+    "source": "`GrowthObjectContribution`, regras versionadas e fontes canônicas; cada recomendação carrega motivo, freshness e link.",
+    "actions": "Filtrar; ordenar; abrir explicação; navegar ao objeto/fluxo operacional que possui a ação. Growth não atribui nem conclui oportunidade."
+  }
+]

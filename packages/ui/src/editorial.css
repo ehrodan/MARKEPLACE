@@ -1,0 +1,430 @@
+/* ============================================================
+   Midas Foundry — sistema editorial
+   Fonte conceitual: Gestalt (Wertheimer/Köhler/Koffka, via Gomes Filho)
+   e Big Black Book 3 (Agora) — economia do funil.
+
+   Ordem de decisão codificada aqui, na sequência em que o cérebro decide:
+     1. pregnância   — a mensagem-mãe lê em 1s
+     2. figura-fundo — o que é figura, o que é cenário
+     3. segregação   — o CTA e o preço saltam
+     4. proximidade  — grupos separados por regra 2:1
+     5. continuidade — o olho desliza em Z até o CTA
+     6. fechamento   — sangria convida a participação
+     7. unificação   — a peça é UMA coisa
+
+   Regras duras:
+   - somente token semântico; nenhuma cor literal fora do bloco :root abaixo;
+   - estado nunca é só cor;
+   - motion não essencial morre em prefers-reduced-motion;
+   - nada aqui anima preço, CTA ou cria urgência (docs/03 §10).
+   ============================================================ */
+
+:root {
+  /* Proximidade — regra 2:1: o espaço ENTRE grupos é o dobro do espaço DENTRO.
+     Use sempre o par (dentro, entre); nunca escolha um gap solto. */
+  --och-ed-gap-inner-tight: var(--och-space-2);
+  --och-ed-gap-outer-tight: var(--och-space-4);
+  --och-ed-gap-inner: var(--och-space-3);
+  --och-ed-gap-outer: var(--och-space-6);
+  --och-ed-gap-inner-loose: var(--och-space-4);
+  --och-ed-gap-outer-loose: var(--och-space-8);
+
+  /* Segregação — respiro do CTA = 2x a altura do próprio alvo (Ebbinghaus:
+     o elemento parece maior cercado de vizinhos menores e de vazio). */
+  --och-ed-cta-breath: var(--och-space-12);
+
+  /* Medida de leitura confortável: 60–75 caracteres. */
+  --och-ed-measure: 66ch;
+  --och-ed-measure-tight: 52ch;
+
+  /* Escala tipográfica editorial — pregnância decrescente.
+     Display só em título curto; corpo sempre em fonte de alta pregnância. */
+  --och-ed-size-mega: clamp(2.75rem, 7vw, 5.5rem);
+  --och-ed-size-headline: clamp(2rem, 4.5vw, 3.25rem);
+  --och-ed-size-title: clamp(1.375rem, 2.4vw, 1.875rem);
+  --och-ed-size-lede: clamp(1.0625rem, 1.4vw, 1.25rem);
+  --och-ed-size-kicker: 0.75rem;
+
+  --och-ed-tracking-kicker: 0.16em;
+  --och-ed-tracking-display: -0.02em;
+  --och-ed-leading-display: 0.94;
+  --och-ed-leading-body: 1.62;
+
+  /* Fundo profissional: profundidade por camada, não por enfeite.
+     Obsidiana + ouro envelhecido + grão fino + vinheta. Zero imagem. */
+  --och-ed-ground-veil: color-mix(in oklch, var(--och-color-antique-gold) 9%, transparent);
+  --och-ed-ground-veil-far: color-mix(in oklch, var(--och-color-antique-gold) 4%, transparent);
+  --och-ed-ground-grain: color-mix(in oklch, var(--och-color-ink) 3%, transparent);
+  --och-ed-ground-vignette: color-mix(in oklch, var(--och-color-paper) 88%, transparent);
+  --och-ed-rule: color-mix(in oklch, var(--och-color-antique-gold) 26%, transparent);
+}
+
+/* ============================================================
+   1. FIGURA-FUNDO — o fundo é cenário e nunca disputa a figura
+   ============================================================ */
+
+/* Cenário. Contraste mantido baixo de propósito: quem sobe é a figura. */
+.ed-ground {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--color-canvas);
+}
+
+.ed-ground::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background:
+    radial-gradient(58rem 40rem at 82% -12%, var(--och-ed-ground-veil), transparent 70%),
+    radial-gradient(44rem 34rem at 8% 108%, var(--och-ed-ground-veil-far), transparent 72%);
+  pointer-events: none;
+}
+
+/* Grão fino: dá matéria à superfície sem virar textura decorativa.
+   Gradiente repetido em vez de imagem — custo zero de rede. */
+.ed-ground::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  opacity: 0.5;
+  background-image: repeating-linear-gradient(
+    115deg,
+    var(--och-ed-ground-grain) 0 1px,
+    transparent 1px 4px
+  );
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+/* Vinheta: fecha a composição e empurra o olho para o centro-baixo,
+   onde mora o CTA no padrão Z. */
+.ed-ground--vignette::before {
+  box-shadow: inset 0 0 12rem 4rem var(--och-ed-ground-vignette);
+}
+
+/* Figura. Requisito de legibilidade, não de gosto: contraste >= 4.5:1. */
+.ed-figure {
+  position: relative;
+  z-index: 1;
+  color: var(--color-text);
+}
+
+/* ============================================================
+   2. CONTINUIDADE — grade de leitura em Z
+   z1 abertura (alto-esq) -> z2 âncora (alto-dir)
+   -> diagonal -> z3 prova (baixo-esq) -> z4 ação (baixo-dir)
+   O Z é a ordem do DOM. Sem JavaScript, a leitura permanece correta.
+   ============================================================ */
+
+.ed-z {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-areas:
+    "z1 z2"
+    "z3 z4";
+  align-items: start;
+  gap: var(--och-ed-gap-outer-loose) var(--och-ed-gap-outer-loose);
+}
+
+.ed-z > .ed-z1 { grid-area: z1; }
+.ed-z > .ed-z2 { grid-area: z2; }
+.ed-z > .ed-z3 { grid-area: z3; }
+.ed-z > .ed-z4 { grid-area: z4; align-self: end; justify-self: end; }
+
+/* A diagonal explícita: uma guia fina que conduz z2 -> z3.
+   Puramente decorativa, então sai da árvore de acessibilidade. */
+.ed-z__trace {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  z-index: 0;
+  align-self: stretch;
+  background: linear-gradient(
+    to bottom right,
+    transparent 0 42%,
+    var(--och-ed-rule) 50%,
+    transparent 58% 100%
+  );
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Mobile: o Z colapsa em coluna única. A ordem do DOM já é a ordem certa,
+   então não há reordenação — apenas empilhamento. */
+@media (max-width: 60rem) {
+  .ed-z {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "z1" "z2" "z3" "z4";
+    gap: var(--och-ed-gap-outer);
+  }
+  .ed-z > .ed-z4 { justify-self: stretch; }
+  .ed-z__trace { display: none; }
+}
+
+/* ============================================================
+   3. PREGNÂNCIA — hierarquia por escala e peso, nunca por cor
+   ============================================================ */
+
+.ed-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--och-ed-gap-inner-tight);
+  margin: 0 0 var(--och-ed-gap-inner) 0;
+  color: var(--color-text-muted);
+  font: 600 var(--och-ed-size-kicker) / 1.2 var(--font-data);
+  letter-spacing: var(--och-ed-tracking-kicker);
+  text-transform: uppercase;
+}
+
+.ed-mega,
+.ed-headline {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: var(--och-ed-leading-display);
+  letter-spacing: var(--och-ed-tracking-display);
+  text-wrap: balance;
+}
+
+.ed-mega { font-size: var(--och-ed-size-mega); }
+.ed-headline { font-size: var(--och-ed-size-headline); }
+
+.ed-title {
+  margin: 0;
+  font: 700 var(--och-ed-size-title) / 1.18 var(--font-display);
+  letter-spacing: var(--och-ed-tracking-display);
+  text-wrap: balance;
+}
+
+.ed-lede {
+  max-width: var(--och-ed-measure);
+  margin: var(--och-ed-gap-inner) 0 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--och-ed-size-lede);
+  line-height: var(--och-ed-leading-body);
+  text-wrap: pretty;
+}
+
+.ed-body {
+  max-width: var(--och-ed-measure);
+  color: var(--color-text-secondary);
+  line-height: var(--och-ed-leading-body);
+  text-wrap: pretty;
+}
+
+.ed-body--tight { max-width: var(--och-ed-measure-tight); }
+
+/* Filete editorial: separa sem desenhar caixa. */
+.ed-rule {
+  height: 1px;
+  margin: var(--och-ed-gap-outer) 0;
+  border: 0;
+  background: linear-gradient(to right, var(--och-ed-rule), transparent);
+}
+
+/* ============================================================
+   4. PROXIMIDADE — grupos com a regra 2:1 embutida
+   ============================================================ */
+
+.ed-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-ed-gap-inner);
+}
+
+.ed-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-ed-gap-outer);
+}
+
+.ed-stack--loose { gap: var(--och-ed-gap-outer-loose); }
+
+/* Região comum: agrupa por superfície delimitada, sem precisar de borda dura.
+   É o recurso que separa visualmente pedidos de vendedores diferentes. */
+.ed-region {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--och-radius-card);
+  padding: var(--och-ed-gap-outer);
+  background: var(--color-surface);
+}
+
+/* ============================================================
+   5. SEGREGAÇÃO — preço e CTA saltam por 2 canais simultâneos
+   ============================================================ */
+
+/* Ancoragem de preço (Ebbinghaus): o valor a pagar fica cercado de
+   elementos MENORES, então é percebido como menor do que é.
+   A âncora precisa ser um preço realmente praticado — preço riscado
+   que nunca existiu é vedado por docs/03 §10. */
+.ed-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--och-ed-gap-inner-tight) var(--och-ed-gap-inner);
+}
+
+.ed-price__now {
+  color: var(--color-text);
+  font: 700 clamp(1.75rem, 3.2vw, 2.5rem) / 1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--och-ed-tracking-display);
+}
+
+.ed-price__anchor {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  text-decoration: line-through;
+}
+
+.ed-price__frame {
+  color: var(--color-text-secondary);
+  font: 600 0.8125rem / 1.2 var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Decomposição obrigatória: subtotal, taxa e total nunca fundidos. */
+.ed-price__breakdown {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--och-ed-gap-inner-tight) var(--och-ed-gap-inner);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.ed-price__breakdown dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Zona de ação: o vazio ao redor é o que faz o CTA parecer grande.
+   Exatamente 1 elemento de segregação máxima por peça. */
+.ed-cta-zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--och-ed-gap-inner-loose);
+  padding-block: var(--och-ed-cta-breath);
+}
+
+.ed-cta-zone--flush { padding-block: var(--och-ed-gap-outer-loose); }
+
+/* Nota de redução de risco, colada ao CTA por proximidade.
+   Só afirma fato verificável: custódia, confirmação dupla, disputa. */
+.ed-cta-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--och-ed-gap-inner-tight);
+  max-width: var(--och-ed-measure-tight);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   6. FECHAMENTO — sangria convida a completar a forma
+   Corte entre 30% e 40%: abaixo de 60% visível o cérebro desiste
+   de fechar e passa a ver ruído.
+   ============================================================ */
+
+.ed-bleed {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--och-radius-card);
+}
+
+.ed-bleed > :where(img, svg, canvas, picture) {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.ed-bleed--right { margin-right: calc(-1 * var(--och-ed-gap-outer-loose)); }
+
+/* Trilha horizontal com snap: a peça cortada na borda é o próprio
+   affordance de "arraste". Scroll nativo — nunca sequestrado. */
+.ed-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(15rem, 19rem);
+  gap: var(--och-ed-gap-outer);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  padding-block-end: var(--och-ed-gap-inner);
+}
+
+.ed-rail > * { scroll-snap-align: start; }
+
+/* ============================================================
+   7. UNIFICAÇÃO — sem becos sem saída (Big Black Book 3)
+   Toda seção termina abrindo a porta seguinte. Um bloco de
+   continuidade padronizado mantém o sistema coerente.
+   ============================================================ */
+
+.ed-next-door {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--och-ed-gap-inner-loose);
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--och-ed-gap-outer);
+}
+
+.ed-next-door__label {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+/* ============================================================
+   8. ACABAMENTO
+   ============================================================ */
+
+/* Realce de superfície no foco/hover. Transform e opacity apenas:
+   propriedades compostas, sem reflow. */
+.ed-lift {
+  transition:
+    border-color var(--och-duration-fast) var(--och-ease-out),
+    transform var(--och-duration-fast) var(--och-ease-out);
+}
+
+.ed-lift:hover,
+.ed-lift:focus-within {
+  border-color: var(--color-border-strong);
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ed-lift,
+  .ed-lift:hover,
+  .ed-lift:focus-within {
+    transform: none;
+    transition: none;
+  }
+  .ed-rail { scroll-snap-type: none; }
+  .ed-ground::after { display: none; }
+}
+
+/* Impressão e contraste forçado: o fundo decorativo desaparece,
+   o conteúdo permanece completo. */
+@media print {
+  .ed-ground::before,
+  .ed-ground::after,
+  .ed-z__trace { display: none; }
+}
+
+@media (forced-colors: active) {
+  .ed-ground::before,
+  .ed-ground::after,
+  .ed-z__trace { display: none; }
+  .ed-region { border: 1px solid CanvasText; }
+}

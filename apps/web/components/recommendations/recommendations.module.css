@@ -1,0 +1,47 @@
+/* Ofertas relacionadas. A trilha horizontal e o corte na borda vêm de
+   .ed-rail em packages/ui/src/editorial.css — aqui só o que é local. */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-ed-gap-outer, var(--och-space-6));
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--och-space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: var(--och-space-4);
+}
+
+.note {
+  max-width: 28ch;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-ed-gap-inner-tight, var(--och-space-2));
+}
+
+/* O motivo lidera o card: a pessoa entende a relevância antes de olhar preço. */
+.reason {
+  display: inline-flex;
+  align-self: flex-start;
+  margin: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--och-radius-pill);
+  padding: var(--och-space-1) var(--och-space-3);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: 600 0.6875rem / 1.4 var(--font-data);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

@@ -1,0 +1,21 @@
+/* A peça ocupa exatamente o espaço que a imagem estática ocupava na faixa de
+   abertura: o layout da seção não muda ao trocar imagem por canvas. */
+
+.host {
+  position: absolute;
+  inset: 0;
+}
+
+.host :global(.store-overture__canvas) {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* O PNG tem fundo preto sólido; sobre o fundo escuro da loja ele aparecia como
+   um retângulo mais escuro em volta da peça. `screen` faz o preto sumir. */
+.poster {
+  object-fit: contain;
+  mix-blend-mode: screen;
+}

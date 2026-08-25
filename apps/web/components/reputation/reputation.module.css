@@ -1,0 +1,174 @@
+/* SCR-ACC-015 — avaliações. Perfil de motion M1: só feedback de seleção. */
+
+.pageStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-ed-gap-outer, var(--och-space-6));
+}
+
+.doubleBlind {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-2);
+  padding: var(--och-space-5);
+}
+
+.doubleBlind ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-2);
+  margin: 0;
+  padding-left: var(--och-space-5);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-ed-gap-outer, var(--och-space-6));
+}
+
+.counter {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-ed-gap-inner, var(--och-space-3));
+  padding: var(--och-space-5);
+}
+
+.cardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--och-space-3);
+}
+
+.cardHeader small {
+  display: block;
+  margin-top: var(--och-space-1);
+  color: var(--color-text-muted);
+}
+
+.reason,
+.deadline,
+.blocked {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.blocked {
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--och-space-3);
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.scoreField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-2);
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.scoreField legend {
+  padding: 0;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.scoreOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--och-space-2);
+}
+
+/* Alvo de 2.75rem: acima do mínimo de 24px da WCAG 2.2 e confortável no toque. */
+.scoreOption {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-control);
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color var(--och-duration-fast) var(--och-ease-out),
+    border-color var(--och-duration-fast) var(--och-ease-out);
+}
+
+/* O input real fica presente e focável, apenas visualmente coberto pelo rótulo. */
+.scoreOption input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.scoreOption:hover { border-color: var(--color-action-quiet); }
+
+.scoreOption:has(input:checked) {
+  border-color: var(--color-action);
+  background: var(--color-action);
+  color: var(--color-action-foreground);
+  font-weight: 700;
+}
+
+.scoreOption:has(input:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.scoreHint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.commentField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--och-space-2);
+  font-size: 0.875rem;
+}
+
+.commentField textarea {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--och-radius-control);
+  padding: var(--och-space-3);
+  background: var(--color-input);
+  color: var(--color-text);
+  font: inherit;
+  resize: vertical;
+}
+
+.commentField small { color: var(--color-text-muted); }
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--och-space-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scoreOption { transition: none; }
+}
